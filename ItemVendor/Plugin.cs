@@ -11,6 +11,7 @@ using Dalamud.Game.Text.SeStringHandling;
 using System.Collections.Generic;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using System;
+using System.Linq;
 
 namespace ItemVendor
 {
@@ -133,36 +134,9 @@ namespace ItemVendor
             this.XivCommon.Functions.ContextMenu.OpenContextMenu += this.OnOpenContextMenu;
         }
 
-        private bool itemSoldByVendor(Lumina.Excel.GeneratedSheets.Item item)
+        private bool isItemSoldByVendor(Lumina.Excel.GeneratedSheets.Item item)
         {
-            // TODO: This might be able to be replaced with the code in the inventory plugin that checks if an item is sold by a vendor
-            // As it stands, this is pretty inefficient, but will work for testing
-            GarlandToolsWrapper.Models.Data data = GarlandToolsWrapper.WebRequests.GetData();
-            string itemName = item.Name;
-            List<GarlandToolsWrapper.Models.ItemSearchResult> results = GarlandToolsWrapper.WebRequests.ItemSearch(itemName);
-            GarlandToolsWrapper.Models.ItemSearchResult exactMatch = null;
-            if (results.Count > 1)
-            {
-                // search for exact match
-                exactMatch = results.Find(i => string.Equals(i.obj.n, itemName, StringComparison.OrdinalIgnoreCase))!;
-                if (exactMatch != null)
-                {
-                    Logger.LogDebug("Found exact match");
-                }
-            }
-            else
-            {
-                exactMatch = results[0];
-            }
-            GarlandToolsWrapper.Models.ItemDetails itemDetails = GarlandToolsWrapper.WebRequests.GetItemDetails(exactMatch!.obj.i);
-            if (itemDetails.item.vendors.Count == 0)
-            {
-                Logger.LogDebug($"{itemName} doesn't appear to have any vendors!");
-                return false;
-            }
-            ulong firstVendorId = itemDetails.item.vendors[0];
-            GarlandToolsWrapper.Models.Partial firstVendor = itemDetails.partials.Find(i => i.obj.i == firstVendorId)!;
-            return firstVendor != null;
+            return dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GilShopItem>().Any(i => i.Item.Row == item.RowId);
         }
 
         private void OnOpenContextMenu(XivCommon.Functions.ContextMenu.ContextMenuOpenArgs args)
@@ -173,8 +147,8 @@ namespace ItemVendor
                 case "DailyQuestSupply":
                 case "ItemSearch":
                     var item_id = (uint)gameGui.HoveredItem;
-                    this.selectedItem = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(item_id)!;
-                    if (itemSoldByVendor(this.selectedItem))
+                    this.selectedItem = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>().GetRow(item_id);
+                    if (isItemSoldByVendor(this.selectedItem))
                     {
                         args.Items.Add(this.contextMenuItem);
                     }
@@ -185,7 +159,7 @@ namespace ItemVendor
         private void OnOpenInventoryContextMenu(XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuOpenArgs args)
         {
             this.selectedItem = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(args.ItemId)!;
-            if (itemSoldByVendor(this.selectedItem))
+            if (isItemSoldByVendor(this.selectedItem))
             {
                 Logger.LogDebug("adding inventory context menu");
                 args.Items.Add(this.inventoryContextMenuItem);
@@ -194,20 +168,17 @@ namespace ItemVendor
 
         private void ContextItemChanged(XivCommon.Functions.ContextMenu.ContextMenuItemSelectedArgs args)
         {
-            Logger.LogDebug("Handling context item");
             HandleItem(this.selectedItem!);
         }
 
         private void InventoryContextItemChanged(XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuItemSelectedArgs args)
         {
-            Logger.LogDebug("Handling inventory item");
             HandleItem(this.selectedItem!);
         }
 
         private void HandleItem(Lumina.Excel.GeneratedSheets.Item item)
         {
 
-            Logger.LogDebug("Got to handle item");
             TextPayload textPayload;
 
             // TODO: Crazy inefficient, literally copy pasta from itemSoldByVendor(), but going this route for testing
@@ -243,7 +214,6 @@ namespace ItemVendor
                 new TextPayload($" can be bought from {firstVendor.obj.n} at ")
             };
             payload.Append(new SeString(payloadList));
-            //SeString maplink = SeString.CreateMapLink(internalLocationIndex[0], internalLocationIndex[1], (float)firstVendor.obj.c[0], (float)firstVendor.obj.c[1]);
             payload.Append(SeString.CreateMapLink(internalLocationIndex[0], internalLocationIndex[1], (float)firstVendor.obj.c[0], (float)firstVendor.obj.c[1]));
             Chat.PrintChat(new XivChatEntry
             {

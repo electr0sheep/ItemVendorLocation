@@ -33,7 +33,7 @@
 
   <ItemGroup>
     <PackageReference Include="Dalamud.DrunkenToad" Version="1.1.8" />
-    <PackageReference Include="DalamudPackager" Version="2.1.4" />
+    <PackageReference Include="DalamudPackager" Version="2.1.5" />
     <PackageReference Include="ILRepack" Version="2.0.18" />
     <PackageReference Include="XivCommon" Version="3.2.0" />
     <Reference Include="FFXIVClientStructs">

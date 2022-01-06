@@ -1,9 +1,9 @@
 {
   "Author": "electr0sheep",
-  "Name": "Item Vendor",
+  "Name": "Item Vendor Location",
   "Punchline": "Shows you where to buy vendor items",
   "Description": "Adds a context menu option for items that will show you where to find items you can buy off a vendor",
-  "InternalName": "itemVendor",
+  "InternalName": "itemVendorLocation",
   "ApplicableVersion": "any",
   "Tags": [
     "vendor",

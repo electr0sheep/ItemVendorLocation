@@ -1,10 +1,11 @@
 {
+  "ApplicableVersion": "any",
   "Author": "electr0sheep",
-  "Name": "Item Vendor Location",
-  "Punchline": "Shows you where to buy vendor items",
   "Description": "Adds a context menu option for items that will show you where to find items you can buy off a vendor",
   "InternalName": "itemVendorLocation",
-  "ApplicableVersion": "any",
+  "Name": "Item Vendor Location",
+  "Punchline": "Shows you where to buy vendor items",
+  "RepoUrl": "https://github.com/electr0sheep/ItemVendorLocation",
   "Tags": [
     "vendor",
     "plugin",

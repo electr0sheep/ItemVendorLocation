@@ -98,7 +98,7 @@ namespace ItemVendorLocation
             { "Ingleside Apartment Lobby", new uint[] { 985, 681 } },
             { "Kholusia", new uint[] { 814, 492 } },
             { "Kobai Goten Apartment Lobby", new uint[] { 654, 388 } },
-            { "Kugane", new uint[] { 638, 370 } },
+            { "Kugane", new uint[] { 628, 370 } },
             { "Labyrinthos", new uint[] { 956, 695 } },
             { "Lakeland", new uint[] { 813, 491 } },
             { "Lily Hills Apartment Lobby", new uint[] { 574, 321 } },

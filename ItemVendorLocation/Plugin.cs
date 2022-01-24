@@ -16,17 +16,14 @@ using ImGuiNET;
 
 namespace ItemVendorLocation
 {
-    public sealed class Plugin : IDalamudPlugin
+    public class VendorPlugin : IDalamudPlugin
     {
         /// <summary>
         /// XivCommon library instance.
         /// </summary>
-        public XivCommonBase XivCommon = null!;
+        private readonly XivCommonBase XivCommon;
 
         public string Name => "Item Vendor Location";
-
-        private readonly XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuItem inventoryContextMenuItem;
-        private readonly XivCommon.Functions.ContextMenu.NormalContextMenuItem contextMenuItem;
 
         private Lumina.Excel.GeneratedSheets.Item? selectedItem;
 
@@ -158,7 +155,7 @@ namespace ItemVendorLocation
             { "Zadnor", new uint[] { 975, 665 } }
         };
 
-        public Plugin(
+        public VendorPlugin(
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
@@ -171,9 +168,6 @@ namespace ItemVendorLocation
             // you might normally want to embed resources and load them from the manifest stream
             var assemblyLocation = Assembly.GetExecutingAssembly().Location;
             this.PluginUi = new PluginUI(this.Configuration);
-
-            this.inventoryContextMenuItem = new XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuItem("Vendor Location", this.InventoryContextItemChanged);
-            this.contextMenuItem = new XivCommon.Functions.ContextMenu.NormalContextMenuItem("Vendor Location", this.ContextItemChanged);
 
             this.PluginInterface.UiBuilder.Draw += DrawUI;
             this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
@@ -199,7 +193,10 @@ namespace ItemVendorLocation
                     this.selectedItem = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(item_id)!;
                     if (isItemSoldByVendor(this.selectedItem))
                     {
-                        args.Items.Add(this.contextMenuItem);
+                        args.Items.Add(new XivCommon.Functions.ContextMenu.NormalContextMenuItem("Vendor Location", selectedArgs =>
+                        {
+                            HandleItem(this.selectedItem);
+                        }));
                     }
                     return;
             }
@@ -210,18 +207,11 @@ namespace ItemVendorLocation
             this.selectedItem = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(args.ItemId)!;
             if (isItemSoldByVendor(this.selectedItem))
             {
-                args.Items.Add(this.inventoryContextMenuItem);
+                args.Items.Add(new XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuItem("Vendor Location", selectedArgs =>
+                {
+                    HandleItem(this.selectedItem);
+                }));
             }
-        }
-
-        private void ContextItemChanged(XivCommon.Functions.ContextMenu.ContextMenuItemSelectedArgs args)
-        {
-            HandleItem(this.selectedItem!);
-        }
-
-        private void InventoryContextItemChanged(XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuItemSelectedArgs args)
-        {
-            HandleItem(this.selectedItem!);
         }
 
         private ulong FindGarlondToolsItemId(Lumina.Excel.GeneratedSheets.Item item)
@@ -291,7 +281,7 @@ namespace ItemVendorLocation
                     DisplayAllVendors(garlondToolsId);
                 }
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 Logger.LogError(e.Message);
             }

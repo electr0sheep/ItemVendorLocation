@@ -96,7 +96,7 @@ namespace ItemVendorLocation
                     foreach (GarlandToolsWrapper.Models.Partial vendor in vendorsWithLocation)
                     {
                         string vendorLocationName = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
-                        uint[] internalLocationIndex = VendorPlugin.commonLocationNameToInternalCoords[vendorLocationName];
+                        uint[] internalLocationIndex = VendorPlugin.CommonLocationNameToInternalCoords[vendorLocationName];
                         MapLinkPayload vendorLocation = new MapLinkPayload(internalLocationIndex[0], internalLocationIndex[1], (float)vendor.obj.c[0], (float)vendor.obj.c[1]);
                         ImGui.TableNextRow();
                         ImGui.TableNextColumn();

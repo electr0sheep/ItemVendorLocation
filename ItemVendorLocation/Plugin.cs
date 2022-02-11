@@ -47,6 +47,18 @@ namespace ItemVendorLocation
             public MapLinkPayload location;
         }
 
+        //// key is our mock gc name
+        //// value is what the data looks like in Garland Tools
+        //public static Dictionary<string, string> GcName = new()
+        //{
+        //    { "Maelstrom", "Maelstrom" },
+        //    { "Adder", "Order of the Twin Adder" },
+        //    { "Flames", "Immortal Flames" },
+        //};
+
+        // mock for the player's gc
+        //public static string TestGcName = "Maelstrom";
+
 
         // frustratingly, it seems like there are multiple entries for the same thing in the placename table
         // for example, there are at least 2 Kuganes, one that has an entry in the territorytype table, one that
@@ -72,7 +84,7 @@ namespace ItemVendorLocation
         //    }
         //}
 
-        public static readonly Dictionary<string, uint[]> commonLocationNameToInternalCoords = new()
+        public static readonly Dictionary<string, uint[]> CommonLocationNameToInternalCoords = new()
         {
             { "Amh Araeng", new uint[] { 815, 493 } },
             { "Azys Lla", new uint[] { 402, 216 } },
@@ -244,7 +256,7 @@ namespace ItemVendorLocation
             GarlandToolsWrapper.Models.Partial firstVendor = itemDetails.partials.Find(i => i.obj.i == firstVendorId)!;
             textPayload = new TextPayload($"{itemDetails.item.name} can be bought from {firstVendor.obj.n}");
             string firstVendorLocationName = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[firstVendor.obj.l.ToString()].name;
-            uint[] internalLocationIndex = commonLocationNameToInternalCoords[firstVendorLocationName];
+            uint[] internalLocationIndex = CommonLocationNameToInternalCoords[firstVendorLocationName];
             MapLinkPayload vendorLocation = new(internalLocationIndex[0], internalLocationIndex[1], (float)firstVendor.obj.c[0], (float)firstVendor.obj.c[1]);
             _ = gameGui.OpenMapWithMapLink(vendorLocation);
             SeString payload = new();

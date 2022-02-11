@@ -35,7 +35,7 @@ namespace GarlandToolsWrapper
             public string n;
             // l can either be an int, or a string
             public dynamic l;
-            // c can either be an array of floats, or an int
+            // c can either be an array of floats, an int, or not present
             public dynamic c;
             public object t;
             public int g;
@@ -43,6 +43,11 @@ namespace GarlandToolsWrapper
             public int z;
             public int p;
             public dynamic f;
+
+            public bool cIsValid()
+            {
+                return c?.GetType()?.Name == "JArray";
+            }
         }
         public class ItemSearchResult
         {
@@ -64,6 +69,24 @@ namespace GarlandToolsWrapper
             public Obj obj;
         }
 
+        public class TradeShop
+        {
+            public string shop;
+            public List<ulong> npcs;
+            public List<Listing> listings;
+        }
+
+        public class Listing
+        {
+            public List<Currency> currency;
+        }
+
+        public class Currency
+        {
+            public string id;
+            public ulong amount;
+        }
+
         public class Item
         {
             public string name;
@@ -71,7 +94,7 @@ namespace GarlandToolsWrapper
             public int id;
             public float patch;
             public int patchCategory;
-            public int price;
+            public ulong price;
             public int ilvl;
             public int category;
             public int tradeable;
@@ -82,6 +105,7 @@ namespace GarlandToolsWrapper
             public AttrHq attr_hq;
             public int icon;
             public List<ulong> vendors;
+            public List<TradeShop> tradeShops;
             public List<Craft> craft;
             //public object ingredient_of;
             public List<int> quests;

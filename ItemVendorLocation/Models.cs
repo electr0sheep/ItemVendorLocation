@@ -9,6 +9,9 @@ namespace ItemVendorLocation
 {
     public class Models
     {
+        /// <summary>
+        /// Models vendor information displayed in the plugin results window
+        /// </summary>
         public class Vendor
         {
             public string? name = null;
@@ -25,6 +28,9 @@ namespace ItemVendorLocation
             }
         }
 
+        /// <summary>
+        /// Models vendor information displayed in the UITest project
+        /// </summary>
         public class TestVendor
         {
             public string? name = null;

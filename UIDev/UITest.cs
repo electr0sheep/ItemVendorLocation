@@ -12,9 +12,9 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 
 namespace UIDev
 {
-    class UITest : IPluginUIMock
+    internal class UITest : IPluginUIMock
     {
-        public static void Main(string[] args)
+        public static void Main()
         {
             UIBootstrap.Inititalize(new UITest());
         }
@@ -86,7 +86,7 @@ namespace UIDev
             ImGui.SetNextWindowSizeConstraints(new Vector2(375, 330), new Vector2(float.MaxValue, float.MaxValue));
             if (ImGui.Begin("Test", ref mainWindowVisible, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse | ImGuiWindowFlags.NoCollapse))
             {
-                ImGui.InputText("Item Name", ref itemName, 50);
+                _ = ImGui.InputText("Item Name", ref itemName, 50);
                 if (ImGui.Button("Search for Item"))
                 {
                     vendorResults = new List<ItemVendorLocation.Models.TestVendor>();
@@ -173,13 +173,13 @@ namespace UIDev
                     foreach (ItemVendorLocation.Models.TestVendor vendor in vendorResults)
                     {
                         ImGui.TableNextRow();
-                        ImGui.TableNextColumn();
+                        _ = ImGui.TableNextColumn();
                         ImGui.Text(vendor.name);
-                        ImGui.TableNextColumn();
+                        _ = ImGui.TableNextColumn();
                         ImGui.Text(vendor.location);
-                        ImGui.TableNextColumn();
+                        _ = ImGui.TableNextColumn();
                         ImGui.Text(vendor.cost.ToString());
-                        ImGui.TableNextColumn();
+                        _ = ImGui.TableNextColumn();
                         ImGui.Text(vendor.currency);
                     }
                 }

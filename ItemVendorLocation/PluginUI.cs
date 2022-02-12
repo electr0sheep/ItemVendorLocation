@@ -19,7 +19,7 @@ namespace ItemVendorLocation
         // this extra bool exists for ImGui, since you can't ref a property
         private bool vendorLocationsVisable = false;
         private bool settingsVisible = false;
-        private List<GarlandToolsWrapper.Models.Partial> vendorsWithLocation = null!;
+        private List<Models.Vendor>? formattedVendors = null;
         private string itemName = null!;
 
         private void retrieveGarlondToolsInfo(ulong itemId)
@@ -34,7 +34,17 @@ namespace ItemVendorLocation
             List<GarlandToolsWrapper.Models.Partial> allVendors = itemDetails.partials.Where(i => vendorIds.Contains(i.obj.i)).ToList();
 
             // further filter vendors that don't have a location
-            vendorsWithLocation = allVendors.Where(i => i.obj.c is not null).ToList();
+            // these typically seem to be housing npcs
+            List<GarlandToolsWrapper.Models.Partial> vendorsWithLocation = allVendors.Where(i => i.obj.c is not null).ToList();
+
+            formattedVendors = new List<Models.Vendor>();
+            foreach (GarlandToolsWrapper.Models.Partial vendor in vendorsWithLocation)
+            {
+                string vendorLocationName = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
+                uint[] internalLocationIndex = VendorPlugin.CommonLocationNameToInternalCoords[vendorLocationName];
+
+                formattedVendors.Add(new Models.Vendor(vendor.obj.n, new MapLinkPayload(internalLocationIndex[0], internalLocationIndex[1], (float)vendor.obj.c[0], (float)vendor.obj.c[1]), itemDetails.item.price, "Gil"));
+            }
         }
 
 
@@ -79,7 +89,7 @@ namespace ItemVendorLocation
 
         public void DrawVendorLocationWindow()
         {
-            if (!vendorLocationsVisable)
+            if (!vendorLocationsVisable || formattedVendors == null)
             {
                 return;
             }
@@ -88,24 +98,27 @@ namespace ItemVendorLocation
             ImGui.SetNextWindowSizeConstraints(new Vector2(375, 200), new Vector2(float.MaxValue, float.MaxValue));
             if (ImGui.Begin($"{itemName} Vendors", ref vendorLocationsVisable))
             {
-                if (ImGui.BeginTable("Vendors", 2, ImGuiTableFlags.Resizable))
+                if (ImGui.BeginTable("Vendors", 4, ImGuiTableFlags.Resizable))
                 {
                     ImGui.TableSetupColumn("Name");
                     ImGui.TableSetupColumn("Location");
+                    ImGui.TableSetupColumn("Cost");
+                    ImGui.TableSetupColumn("Currency/Item");
                     ImGui.TableHeadersRow();
-                    foreach (GarlandToolsWrapper.Models.Partial vendor in vendorsWithLocation)
+                    foreach (Models.Vendor vendor in formattedVendors)
                     {
-                        string vendorLocationName = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
-                        uint[] internalLocationIndex = VendorPlugin.CommonLocationNameToInternalCoords[vendorLocationName];
-                        MapLinkPayload vendorLocation = new MapLinkPayload(internalLocationIndex[0], internalLocationIndex[1], (float)vendor.obj.c[0], (float)vendor.obj.c[1]);
                         ImGui.TableNextRow();
-                        ImGui.TableNextColumn();
-                        ImGui.Text(vendor.obj.n);
-                        ImGui.TableNextColumn();
-                        if (ImGui.Button($"{vendorLocationName} ({vendor.obj.c[0]}, {vendor.obj.c[1]})"))
+                        _ = ImGui.TableNextColumn();
+                        ImGui.Text(vendor.name);
+                        _ = ImGui.TableNextColumn();
+                        if (ImGui.Button(vendor.location!.CoordinateString))
                         {
-                            VendorPlugin.gameGui.OpenMapWithMapLink(vendorLocation);
+                            _ = VendorPlugin.gameGui.OpenMapWithMapLink(vendor.location);
                         }
+                        _ = ImGui.TableNextColumn();
+                        ImGui.Text(vendor.cost.ToString());
+                        _ = ImGui.TableNextColumn();
+                        ImGui.Text(vendor.currency);
                     }
                 }
                 ImGui.EndTable();

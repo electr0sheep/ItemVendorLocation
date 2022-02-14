@@ -1,7 +1,4 @@
-﻿using Dalamud.DrunkenToad;
-using Dalamud.Game.Gui;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.IoC;
+﻿using Dalamud.Game.Text.SeStringHandling.Payloads;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -19,15 +16,13 @@ namespace ItemVendorLocation
         // this extra bool exists for ImGui, since you can't ref a property
         private bool vendorLocationsVisable = false;
         private bool settingsVisible = false;
-        private List<Models.Vendor>? formattedVendors = null;
-        private string itemName = null!;
 
-        private void retrieveGarlondToolsInfo(ulong itemId)
+        private void RetrieveGarlondToolsInfo(ulong itemId)
         {
             //get preliminary data
             GarlandToolsWrapper.Models.ItemDetails itemDetails = GarlandToolsWrapper.WebRequests.GetItemDetails(itemId);
 
-            itemName = itemDetails.item.name;
+            ItemName = itemDetails.item.name;
 
             // get vendor data
             List<ulong> vendorIds = itemDetails.item.vendors;
@@ -37,20 +32,20 @@ namespace ItemVendorLocation
             // these typically seem to be housing npcs
             List<GarlandToolsWrapper.Models.Partial> vendorsWithLocation = allVendors.Where(i => i.obj.c is not null).ToList();
 
-            formattedVendors = new List<Models.Vendor>();
+            Vendors = new();
             foreach (GarlandToolsWrapper.Models.Partial vendor in vendorsWithLocation)
             {
                 string vendorLocationName = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
                 uint[] internalLocationIndex = VendorPlugin.CommonLocationNameToInternalCoords[vendorLocationName];
 
-                formattedVendors.Add(new Models.Vendor(vendor.obj.n, new MapLinkPayload(internalLocationIndex[0], internalLocationIndex[1], (float)vendor.obj.c[0], (float)vendor.obj.c[1]), itemDetails.item.price, "Gil"));
+                Vendors.Add(new Models.Vendor(vendor.obj.n, new MapLinkPayload(internalLocationIndex[0], internalLocationIndex[1], (float)vendor.obj.c[0], (float)vendor.obj.c[1]), vendorLocationName, itemDetails.item.price, "Gil"));
             }
         }
 
 
         public ulong GarlondToolsItemId
         {
-            set => retrieveGarlondToolsInfo(value);
+            set => RetrieveGarlondToolsInfo(value);
         }
 
         public bool VendorResultsVisible
@@ -65,10 +60,14 @@ namespace ItemVendorLocation
             set => settingsVisible = value;
         }
 
+        public string ItemName { get; set; } = "";
+
         public PluginUI(Configuration configuration)
         {
             this.configuration = configuration;
         }
+
+        public List<Models.Vendor> Vendors { get; set; } = new();
 
         public void Dispose()
         {
@@ -89,14 +88,14 @@ namespace ItemVendorLocation
 
         public void DrawVendorLocationWindow()
         {
-            if (!vendorLocationsVisable || formattedVendors == null)
+            if (!vendorLocationsVisable || Vendors.Count == 0)
             {
                 return;
             }
 
             ImGui.SetNextWindowSize(new Vector2(375, 200), ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowSizeConstraints(new Vector2(375, 200), new Vector2(float.MaxValue, float.MaxValue));
-            if (ImGui.Begin($"{itemName} Vendors", ref vendorLocationsVisable))
+            if (ImGui.Begin($"{ItemName} Vendors", ref vendorLocationsVisable))
             {
                 if (ImGui.BeginTable("Vendors", 4, ImGuiTableFlags.Resizable))
                 {
@@ -105,15 +104,29 @@ namespace ItemVendorLocation
                     ImGui.TableSetupColumn("Cost");
                     ImGui.TableSetupColumn("Currency/Item");
                     ImGui.TableHeadersRow();
-                    foreach (Models.Vendor vendor in formattedVendors)
+                    foreach (Models.Vendor vendor in Vendors)
                     {
                         ImGui.TableNextRow();
                         _ = ImGui.TableNextColumn();
                         ImGui.Text(vendor.name);
                         _ = ImGui.TableNextColumn();
-                        if (ImGui.Button(vendor.location!.CoordinateString))
+                        if (vendor.mapLink != null && vendor.mapLink.CoordinateString != "( 0.0  , 0.0 )")
                         {
-                            _ = VendorPlugin.gameGui.OpenMapWithMapLink(vendor.location);
+                            if (ImGui.Button($"{vendor.location} {vendor.mapLink.CoordinateString}"))
+                            {
+                                _ = VendorPlugin.GameGui.OpenMapWithMapLink(vendor.mapLink);
+                            }
+                        }
+                        else if (vendor.mapLink != null)
+                        {
+                            if (ImGui.Button(vendor.location))
+                            {
+                                _ = VendorPlugin.GameGui.OpenMapWithMapLink(vendor.mapLink);
+                            }
+                        }
+                        else
+                        {
+                            ImGui.Text("No Location");
                         }
                         _ = ImGui.TableNextColumn();
                         ImGui.Text(vendor.cost.ToString());

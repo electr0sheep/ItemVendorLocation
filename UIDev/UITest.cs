@@ -1,14 +1,8 @@
-﻿using HtmlAgilityPack;
-using ImGuiScene;
+﻿using ImGuiScene;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
-using System.Net;
 using System.Numerics;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Web;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 
 namespace UIDev
 {
@@ -29,8 +23,8 @@ namespace UIDev
             // eg, to load an image resource for use with ImGui 
             scene.OnBuildUI += Draw;
 
-            this.MainWindowVisible = true;
-            this.ResultsWindowVisible = false;
+            MainWindowVisible = true;
+            ResultsWindowVisible = false;
 
             // saving thi22 only so we can kill the test application by closing the window
             // (instead of just by hitting escape)
@@ -52,7 +46,7 @@ namespace UIDev
 
             if (!MainWindowVisible)
             {
-                this.scene!.ShouldQuit = true;
+                scene!.ShouldQuit = true;
             }
         }
 
@@ -63,14 +57,14 @@ namespace UIDev
         private List<ItemVendorLocation.Models.TestVendor>? vendorResults = null;
         public bool MainWindowVisible
         {
-            get { return mainWindowVisible; }
-            set { mainWindowVisible = value; }
+            get => mainWindowVisible;
+            set => mainWindowVisible = value;
         }
 
         public bool ResultsWindowVisible
         {
-            get { return resultsWindowVisible; }
-            set { resultsWindowVisible = value; }
+            get => resultsWindowVisible;
+            set => resultsWindowVisible = value;
         }
 
         // this is where you'd have to start mocking objects if you really want to match

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
+﻿using Dalamud.Game.Text.SeStringHandling.Payloads;
 
 namespace ItemVendorLocation
 {
@@ -14,14 +9,16 @@ namespace ItemVendorLocation
         /// </summary>
         public class Vendor
         {
-            public string? name = null;
-            public MapLinkPayload? location = null;
-            public ulong? cost = null;
-            public string? currency = null;
+            public string name = "";
+            public MapLinkPayload? mapLink = null;
+            public string location = "";
+            public ulong cost = 0;
+            public string currency = "";
 
-            public Vendor(string name, MapLinkPayload location, ulong cost, string currency)
+            public Vendor(string name, MapLinkPayload mapLink, string location, ulong cost, string currency)
             {
                 this.name = name;
+                this.mapLink = mapLink;
                 this.location = location;
                 this.cost = cost;
                 this.currency = currency;

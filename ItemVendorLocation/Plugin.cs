@@ -1,7 +1,6 @@
 ﻿using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using System.IO;
 using System.Reflection;
 using XivCommon;
 using Dalamud.DrunkenToad;
@@ -12,7 +11,6 @@ using System.Collections.Generic;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using System;
 using System.Linq;
-using ImGuiNET;
 
 namespace ItemVendorLocation
 {
@@ -33,8 +31,8 @@ namespace ItemVendorLocation
         private PluginUI PluginUi { get; init; }
 
         [PluginService] public static ChatGui Chat { get; private set; } = null!;
-        [PluginService] public static GameGui gameGui { get; private set; } = null!;
-        [PluginService] public static Dalamud.Data.DataManager dataManager { get; private set; } = null!;
+        [PluginService] public static GameGui GameGui { get; private set; } = null!;
+        [PluginService] public static Dalamud.Data.DataManager DataManager { get; private set; } = null!;
 
         public class VendorInformation
         {
@@ -171,27 +169,43 @@ namespace ItemVendorLocation
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
-            this.PluginInterface = pluginInterface;
-            this.CommandManager = commandManager;
+            PluginInterface = pluginInterface;
+            CommandManager = commandManager;
 
-            this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-            this.Configuration.Initialize(this.PluginInterface);
+            Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+            Configuration.Initialize(PluginInterface);
 
             // you might normally want to embed resources and load them from the manifest stream
-            var assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            this.PluginUi = new PluginUI(this.Configuration);
+            string? assemblyLocation = Assembly.GetExecutingAssembly().Location;
+            PluginUi = new PluginUI(Configuration);
 
-            this.PluginInterface.UiBuilder.Draw += DrawUI;
-            this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
-            this.XivCommon = new XivCommonBase(Hooks.ContextMenu);
-            this.XivCommon.Functions.ContextMenu.OpenInventoryContextMenu += this.OnOpenInventoryContextMenu;
-            this.XivCommon.Functions.ContextMenu.OpenContextMenu += this.OnOpenContextMenu;
+            PluginInterface.UiBuilder.Draw += DrawUI;
+            PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+            XivCommon = new XivCommonBase(Hooks.ContextMenu);
+            XivCommon.Functions.ContextMenu.OpenInventoryContextMenu += OnOpenInventoryContextMenu;
+            XivCommon.Functions.ContextMenu.OpenContextMenu += OnOpenContextMenu;
         }
 
-        private bool isItemSoldByVendor(Lumina.Excel.GeneratedSheets.Item item)
+        private static bool IsItemSoldByAnyVendor(Lumina.Excel.GeneratedSheets.Item item)
         {
-            return dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GilShopItem>()!.Any(i => i.Item.Row == item.RowId);
+            return IsItemSoldByGilVendor(item) || IsItemSoldByGCVendor(item);
         }
+
+        private static bool IsItemSoldByGilVendor(Lumina.Excel.GeneratedSheets.Item item)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GilShopItem>()!.Any(i => i.Item.Row == item.RowId);
+        }
+
+        private static bool IsItemSoldByGCVendor(Lumina.Excel.GeneratedSheets.Item item)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GCScripShopItem>()!.Any(i => i.Item.Row == item.RowId);
+        }
+
+        // Have to figure this one out
+        //private static bool IsItemSoldBySpecialVendor(Lumina.Excel.GeneratedSheets.Item item)
+        //{
+        //    return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.SpecialShop>()!.Any(i => i.I)
+        //}
 
         private void OnOpenContextMenu(XivCommon.Functions.ContextMenu.ContextMenuOpenArgs args)
         {
@@ -201,32 +215,34 @@ namespace ItemVendorLocation
                 case "DailyQuestSupply":
                 case "ItemSearch":
                 case "RecipeNote":
-                    var item_id = (uint)gameGui.HoveredItem;
-                    this.selectedItem = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(item_id)!;
-                    if (isItemSoldByVendor(this.selectedItem))
+                    uint item_id = (uint)GameGui.HoveredItem;
+                    selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(item_id)!;
+                    if (IsItemSoldByAnyVendor(selectedItem))
                     {
                         args.Items.Add(new XivCommon.Functions.ContextMenu.NormalContextMenuItem("Vendor Location", selectedArgs =>
                         {
-                            HandleItem(this.selectedItem);
+                            HandleItem(selectedItem);
                         }));
                     }
                     return;
+                default:
+                    break;
             }
         }
 
         private void OnOpenInventoryContextMenu(XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuOpenArgs args)
         {
-            this.selectedItem = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(args.ItemId)!;
-            if (isItemSoldByVendor(this.selectedItem))
+            selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(args.ItemId)!;
+            if (IsItemSoldByAnyVendor(selectedItem))
             {
                 args.Items.Add(new XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuItem("Vendor Location", selectedArgs =>
                 {
-                    HandleItem(this.selectedItem);
+                    HandleItem(selectedItem);
                 }));
             }
         }
 
-        private ulong FindGarlondToolsItemId(Lumina.Excel.GeneratedSheets.Item item)
+        private static ulong FindGarlondToolsItemId(Lumina.Excel.GeneratedSheets.Item item)
         {
             string itemName = item.Name;
             List<GarlandToolsWrapper.Models.ItemSearchResult> results = GarlandToolsWrapper.WebRequests.ItemSearch(itemName);
@@ -247,35 +263,115 @@ namespace ItemVendorLocation
             return exactMatch!.obj.i;
         }
 
-        private void DisplayOneVendor(ulong garlondToolsId, Lumina.Excel.GeneratedSheets.Item item)
+        private static List<Models.Vendor> GetVendors(ulong itemId)
         {
-            TextPayload textPayload;
+            //get preliminary data
+            GarlandToolsWrapper.Models.ItemDetails itemDetails = GarlandToolsWrapper.WebRequests.GetItemDetails(itemId);
+            List<Models.Vendor> vendorResults = new();
 
-            GarlandToolsWrapper.Models.ItemDetails itemDetails = GarlandToolsWrapper.WebRequests.GetItemDetails(garlondToolsId);
-            ulong firstVendorId = itemDetails.item.vendors[0];
-            GarlandToolsWrapper.Models.Partial firstVendor = itemDetails.partials.Find(i => i.obj.i == firstVendorId)!;
-            textPayload = new TextPayload($"{itemDetails.item.name} can be bought from {firstVendor.obj.n}");
-            string firstVendorLocationName = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[firstVendor.obj.l.ToString()].name;
-            uint[] internalLocationIndex = CommonLocationNameToInternalCoords[firstVendorLocationName];
-            MapLinkPayload vendorLocation = new(internalLocationIndex[0], internalLocationIndex[1], (float)firstVendor.obj.c[0], (float)firstVendor.obj.c[1]);
-            _ = gameGui.OpenMapWithMapLink(vendorLocation);
+            // gil vendor
+            if (itemDetails.item.vendors != null)
+            {
+                foreach (ulong vendorId in itemDetails.item.vendors)
+                {
+                    GarlandToolsWrapper.Models.Partial? vendor = itemDetails.partials.Find(i => i.obj.i == vendorId);
+
+                    if (vendor != null)
+                    {
+                        // get rid of any vendor that doesn't have a location
+                        // typically man/maid servants
+                        if (vendor.obj.l == null)
+                        {
+                            break;
+                        }
+
+                        string name = vendor.obj.n;
+                        string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
+                        uint[] internalLocationIndex = CommonLocationNameToInternalCoords[location];
+                        MapLinkPayload? mapLink = null;
+                        if (vendor.obj.CIsValid())
+                        {
+                            mapLink = new(internalLocationIndex[0], internalLocationIndex[1], (float)vendor.obj.c[0], (float)vendor.obj.c[1]);
+                        }
+                        else
+                        {
+                            // For now, we'll just set 0,0 as the coords for those vendors that Garland Tools doesn't have actual coords for
+                            mapLink = new(internalLocationIndex[0], internalLocationIndex[1], 0f, 0f);
+                        }
+                        ulong cost = itemDetails.item.price;
+                        string currency = "Gil";
+
+                        vendorResults.Add(new Models.Vendor(name, mapLink, location, cost, currency));
+                    }
+                }
+            }
+            // special currency vendor
+            else if (itemDetails.item.tradeShops != null)
+            {
+                List<GarlandToolsWrapper.Models.TradeShop> tradeShops = itemDetails.item.tradeShops;
+
+                foreach (GarlandToolsWrapper.Models.TradeShop tradeShop in tradeShops)
+                {
+                    foreach (ulong npcId in tradeShop.npcs)
+                    {
+                        GarlandToolsWrapper.Models.Partial? tradeShopNpc = itemDetails.partials.Find(i => i.obj.i == npcId);
+                        if (tradeShopNpc != null)
+                        {
+                            string name = tradeShopNpc.obj.n;
+                            string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[tradeShopNpc.obj.l.ToString()].name;
+                            uint[] internalLocationIndex = CommonLocationNameToInternalCoords[location];
+                            MapLinkPayload? mapLink = null;
+                            if (tradeShopNpc.obj.CIsValid())
+                            {
+                                mapLink = new(internalLocationIndex[0], internalLocationIndex[1], (float)tradeShopNpc.obj.c[0], (float)tradeShopNpc.obj.c[1]);
+                            }
+                            else
+                            {
+                                // For now, we'll just set 0,0 as the coords for those vendors that Garland Tools doesn't have actual coords for
+                                mapLink = new(internalLocationIndex[0], internalLocationIndex[1], 0f, 0f);
+                            }
+                            ulong cost = tradeShop.listings[0].currency[0].amount;
+                            string currency = itemDetails.partials.Find(i => i.id == tradeShop.listings[0].currency[0].id)!.obj.n;
+
+                            vendorResults.Add(new Models.Vendor(name, mapLink, location, cost, currency));
+                        }
+                    }
+                }
+            }
+
+            return vendorResults;
+        }
+
+        private static void DisplayOneVendor(Lumina.Excel.GeneratedSheets.Item item, Models.Vendor vendor)
+        {
+            //_ = new TextPayload($"{item.Name} can be bought from {vendor.name}");
+            //string firstVendorLocationName = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
+            //uint[] internalLocationIndex = CommonLocationNameToInternalCoords[firstVendorLocationName];
+            if (vendor.mapLink != null)
+            {
+                _ = GameGui.OpenMapWithMapLink(vendor.mapLink);
+            }
             SeString payload = new();
             _ = payload.Append(SeString.CreateItemLink(item, false));
             List<Payload> payloadList = new()
             {
-                new TextPayload($" can be bought from {firstVendor.obj.n} at ")
+                new TextPayload($" can be bought from {vendor.name} at ")
             };
             _ = payload.Append(new SeString(payloadList));
-            _ = payload.Append(SeString.CreateMapLink(internalLocationIndex[0], internalLocationIndex[1], (float)firstVendor.obj.c[0], (float)firstVendor.obj.c[1]));
+            if (vendor.mapLink != null)
+            {
+                _ = payload.Append(SeString.CreateMapLink(vendor.mapLink.TerritoryType.RowId, vendor.mapLink.Map.RowId, vendor.mapLink.XCoord, vendor.mapLink.YCoord));
+            }
             Chat.PrintChat(new XivChatEntry
             {
                 Message = payload
             });
         }
 
-        private void DisplayAllVendors(ulong garlondToolsId)
+        private void DisplayAllVendors(Lumina.Excel.GeneratedSheets.Item item, List<Models.Vendor> vendors)
         {
-            PluginUi.GarlondToolsItemId = garlondToolsId;
+            PluginUi.Vendors = vendors;
+            PluginUi.ItemName = item.Name;
             PluginUi.VendorResultsVisible = true;
         }
 
@@ -284,13 +380,16 @@ namespace ItemVendorLocation
             try
             {
                 ulong garlondToolsId = FindGarlondToolsItemId(item);
+                List<Models.Vendor> vendors = GetVendors(garlondToolsId);
                 if (Configuration.ShowAllVendorsBool)
                 {
-                    DisplayOneVendor(garlondToolsId, item);
+                    DisplayOneVendor(item, vendors.Last());
+                    //DisplayOneVendor(garlondToolsId, item);
                 }
                 else
                 {
-                    DisplayAllVendors(garlondToolsId);
+                    DisplayAllVendors(item, vendors);
+                    //DisplayAllVendors(garlondToolsId);
                 }
             }
             catch (Exception e)
@@ -301,19 +400,19 @@ namespace ItemVendorLocation
 
         public void Dispose()
         {
-            this.PluginUi.Dispose();
-            this.XivCommon.Functions.ContextMenu.OpenInventoryContextMenu -= this.OnOpenInventoryContextMenu;
-            this.XivCommon.Functions.ContextMenu.OpenContextMenu -= this.OnOpenContextMenu;
+            PluginUi.Dispose();
+            XivCommon.Functions.ContextMenu.OpenInventoryContextMenu -= OnOpenInventoryContextMenu;
+            XivCommon.Functions.ContextMenu.OpenContextMenu -= OnOpenContextMenu;
         }
 
         private void DrawUI()
         {
-            this.PluginUi.Draw();
+            PluginUi.Draw();
         }
 
         private void DrawConfigUI()
         {
-            this.PluginUi.SettingsVisible = true;
+            PluginUi.SettingsVisible = true;
         }
     }
 }

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace GarlandToolsWrapper
 {
@@ -44,7 +39,7 @@ namespace GarlandToolsWrapper
             public int p;
             public dynamic f;
 
-            public bool cIsValid()
+            public bool CIsValid()
             {
                 return c?.GetType()?.Name == "JArray";
             }

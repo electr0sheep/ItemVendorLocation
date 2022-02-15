@@ -26,7 +26,8 @@ namespace GarlandToolsWrapper
         }
         public class Obj
         {
-            public ulong i;
+            // i can either be an int, or a string
+            public dynamic i;
             public string n;
             // l can either be an int, or a string
             public dynamic l;
@@ -98,7 +99,6 @@ namespace GarlandToolsWrapper
             public int stackSize;
             public AttrNq attr;
             public AttrHq attr_hq;
-            public int icon;
             public List<ulong> vendors;
             public List<TradeShop> tradeShops;
             public List<Craft> craft;

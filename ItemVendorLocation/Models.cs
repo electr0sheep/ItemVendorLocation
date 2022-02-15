@@ -24,24 +24,5 @@ namespace ItemVendorLocation
                 this.currency = currency;
             }
         }
-
-        /// <summary>
-        /// Models vendor information displayed in the UITest project
-        /// </summary>
-        public class TestVendor
-        {
-            public string? name = null;
-            public string? location = null;
-            public ulong? cost = null;
-            public string? currency = null;
-
-            public TestVendor(string name, string location, ulong cost, string currency)
-            {
-                this.name = name;
-                this.location = location;
-                this.cost = cost;
-                this.currency = currency;
-            }
-        }
     }
 }

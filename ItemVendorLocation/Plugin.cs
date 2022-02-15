@@ -161,6 +161,7 @@ namespace ItemVendorLocation
             { "Upper La Noscea", new uint[] { 139, 19 } },
             { "Western La Noscea", new uint[] { 138, 18 } },
             { "Western Thanalan", new uint[] { 140, 20 } },
+            { "Wolves' Den Pier", new uint[] { 250, 51 } },
             { "Yanxia", new uint[] { 614, 354 } },
             { "Zadnor", new uint[] { 975, 665 } }
         };
@@ -189,6 +190,10 @@ namespace ItemVendorLocation
 
         private void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemId)
         {
+            if (IsItemSoldByGilVendor((uint)itemId))
+            {
+                return;
+            }
             List<Lumina.Excel.GeneratedSheets.GCScripShopItem> items = new(DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GCScripShopItem>()!.Where(i => i.Item.Row == itemId));
             // This code assumes all GC shops sell items for the same seal cost, which should be a safe assumption
             if (items.Count > 0)
@@ -211,7 +216,12 @@ namespace ItemVendorLocation
 
         private static bool IsItemSoldByGilVendor(Lumina.Excel.GeneratedSheets.Item item)
         {
-            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GilShopItem>()!.Any(i => i.Item.Row == item.RowId);
+            return IsItemSoldByGilVendor(item.RowId);
+        }
+
+        private static bool IsItemSoldByGilVendor(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GilShopItem>()!.Any(i => i.Item.Row == itemId);
         }
 
         private static bool IsItemSoldByGCVendor(Lumina.Excel.GeneratedSheets.Item item)
@@ -328,7 +338,7 @@ namespace ItemVendorLocation
                 }));
             }
         }
-
+        
         private static ulong FindGarlondToolsItemId(Lumina.Excel.GeneratedSheets.Item item)
         {
             string itemName = item.Name;
@@ -347,10 +357,10 @@ namespace ItemVendorLocation
             {
                 exactMatch = results[0];
             }
-            return exactMatch!.obj.i;
+            return (ulong)exactMatch!.obj.i;
         }
 
-        private static List<Models.Vendor> GetVendors(ulong itemId)
+        public static List<Models.Vendor> GetVendors(ulong itemId)
         {
             //get preliminary data
             GarlandToolsWrapper.Models.ItemDetails itemDetails = GarlandToolsWrapper.WebRequests.GetItemDetails(itemId);
@@ -361,18 +371,20 @@ namespace ItemVendorLocation
             {
                 foreach (ulong vendorId in itemDetails.item.vendors)
                 {
-                    GarlandToolsWrapper.Models.Partial? vendor = itemDetails.partials.Find(i => i.obj.i == vendorId);
+                    GarlandToolsWrapper.Models.Partial? vendor = itemDetails.partials.Find(i => (ulong)i.obj.i == vendorId);
 
                     if (vendor != null)
                     {
-                        // get rid of any vendor that doesn't have a location
-                        // typically man/maid servants
+                        string name = vendor.obj.n;
+                        ulong cost = itemDetails.item.price;
+                        string currency = "Gil";
+
                         if (vendor.obj.l == null)
                         {
+                            vendorResults.Add(new Models.Vendor(name, null!, "No Location", cost, currency));
                             break;
                         }
 
-                        string name = vendor.obj.n;
                         string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
                         uint[] internalLocationIndex = CommonLocationNameToInternalCoords[location];
                         MapLinkPayload? mapLink = null;
@@ -385,8 +397,6 @@ namespace ItemVendorLocation
                             // For now, we'll just set 0,0 as the coords for those vendors that Garland Tools doesn't have actual coords for
                             mapLink = new(internalLocationIndex[0], internalLocationIndex[1], 0f, 0f);
                         }
-                        ulong cost = itemDetails.item.price;
-                        string currency = "Gil";
 
                         vendorResults.Add(new Models.Vendor(name, mapLink, location, cost, currency));
                     }
@@ -399,36 +409,47 @@ namespace ItemVendorLocation
 
                 foreach (GarlandToolsWrapper.Models.TradeShop tradeShop in tradeShops)
                 {
-                    foreach (ulong npcId in tradeShop.npcs)
+                    if (tradeShop.npcs.Count > 0)
                     {
-                        GarlandToolsWrapper.Models.Partial? tradeShopNpc = itemDetails.partials.Find(i => i.obj.i == npcId);
-                        if (tradeShopNpc != null)
+                        foreach (ulong npcId in tradeShop.npcs)
                         {
-                            string name = tradeShopNpc.obj.n;
-                            ulong cost = tradeShop.listings[0].currency[0].amount;
-                            string currency = itemDetails.partials.Find(i => i.id == tradeShop.listings[0].currency[0].id)!.obj.n;
-
-                            if (tradeShopNpc.obj.l == null)
+                            GarlandToolsWrapper.Models.Partial? tradeShopNpc = itemDetails.partials.Find(i => (ulong)i.obj.i == npcId);
+                            if (tradeShopNpc != null)
                             {
-                                vendorResults.Add(new Models.Vendor(name, null, "No Location", cost, currency));
-                                break;
-                            }
+                                string name = tradeShopNpc.obj.n;
+                                ulong cost = tradeShop.listings[0].currency[0].amount;
+                                string currency = itemDetails.partials.Find(i => i.id == tradeShop.listings[0].currency[0].id && i.type == "item")!.obj.n;
 
-                            string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[tradeShopNpc.obj.l.ToString()].name;
-                            uint[] internalLocationIndex = CommonLocationNameToInternalCoords[location];
-                            MapLinkPayload? mapLink = null;
-                            if (tradeShopNpc.obj.CIsValid())
-                            {
-                                mapLink = new(internalLocationIndex[0], internalLocationIndex[1], (float)tradeShopNpc.obj.c[0], (float)tradeShopNpc.obj.c[1]);
-                            }
-                            else
-                            {
-                                // For now, we'll just set 0,0 as the coords for those vendors that Garland Tools doesn't have actual coords for
-                                mapLink = new(internalLocationIndex[0], internalLocationIndex[1], 0f, 0f);
-                            }
+                                if (tradeShopNpc.obj.l == null)
+                                {
+                                    vendorResults.Add(new Models.Vendor(name, null, "No Location", cost, currency));
+                                    break;
+                                }
 
-                            vendorResults.Add(new Models.Vendor(name, mapLink, location, cost, currency));
+                                string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[tradeShopNpc.obj.l.ToString()].name;
+                                uint[] internalLocationIndex = CommonLocationNameToInternalCoords[location];
+                                MapLinkPayload? mapLink = null;
+                                if (tradeShopNpc.obj.CIsValid())
+                                {
+                                    mapLink = new(internalLocationIndex[0], internalLocationIndex[1], (float)tradeShopNpc.obj.c[0], (float)tradeShopNpc.obj.c[1]);
+                                }
+                                else
+                                {
+                                    // For now, we'll just set 0,0 as the coords for those vendors that Garland Tools doesn't have actual coords for
+                                    mapLink = new(internalLocationIndex[0], internalLocationIndex[1], 0f, 0f);
+                                }
+
+                                vendorResults.Add(new Models.Vendor(name, mapLink, location, cost, currency));
+                            }
                         }
+                    }
+                    else
+                    {
+                        string name = tradeShop.shop;
+                        ulong cost = tradeShop.listings[0].currency[0].amount;
+                        string currency = itemDetails.partials.Find(i => i.id == tradeShop.listings[0].currency[0].id && i.type == "item")!.obj.n;
+
+                        vendorResults.Add(new Models.Vendor(name, null!, "Unknown", cost, currency));
                     }
                 }
             }

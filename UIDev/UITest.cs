@@ -53,8 +53,8 @@ namespace UIDev
         #region Nearly a copy/paste of PluginUI
         private bool mainWindowVisible = false;
         private bool resultsWindowVisible = false;
-        private string itemName = "Dust Bunny";
-        private List<ItemVendorLocation.Models.TestVendor>? vendorResults = null;
+        private string itemName = "Versatile Lure";
+        private List<ItemVendorLocation.Models.Vendor>? vendorResults = null;
         public bool MainWindowVisible
         {
             get => mainWindowVisible;
@@ -83,65 +83,13 @@ namespace UIDev
                 _ = ImGui.InputText("Item Name", ref itemName, 50);
                 if (ImGui.Button("Search for Item"))
                 {
-                    vendorResults = new List<ItemVendorLocation.Models.TestVendor>();
                     List<GarlandToolsWrapper.Models.ItemSearchResult> items = GarlandToolsWrapper.WebRequests.ItemSearch(itemName);
 
                     GarlandToolsWrapper.Models.ItemSearchResult item = items.Find(i => string.Equals(i.obj.n, itemName, StringComparison.OrdinalIgnoreCase))!;
 
-                    GarlandToolsWrapper.Models.ItemDetails itemDetails = GarlandToolsWrapper.WebRequests.GetItemDetails(item.obj.i);
-                    // gil vendor
-                    if (itemDetails.item.vendors != null)
-                    {
-                        foreach (ulong vendorId in itemDetails.item.vendors)
-                        {
-                            GarlandToolsWrapper.Models.Partial? vendor = itemDetails.partials.Find(i => i.obj.i == vendorId);
-
-                            if (vendor != null)
-                            {
-                                // get rid of any vendor that doesn't have a location
-                                // typically man/maid servants
-                                if (vendor.obj.l == null)
-                                {
-                                    break;
-                                }
-
-                                string name = vendor.obj.n;
-                                string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
-                                ulong cost = itemDetails.item.price;
-                                string currency = "Gil";
-
-                                vendorResults.Add(new ItemVendorLocation.Models.TestVendor(name, location, cost, currency));
-                            }
-                        }
-                    }
-                    // special currency vendor
-                    else if (itemDetails.item.tradeShops != null)
-                    {
-                        List<GarlandToolsWrapper.Models.TradeShop> tradeShops = itemDetails.item.tradeShops;
-
-                        foreach (GarlandToolsWrapper.Models.TradeShop tradeShop in tradeShops)
-                        {
-                            foreach (ulong npcId in tradeShop.npcs)
-                            {
-                                GarlandToolsWrapper.Models.Partial? tradeShopNpc = itemDetails.partials.Find(i => i.obj.i == npcId);
-                                if (tradeShopNpc != null)
-                                {
-                                    if (tradeShopNpc.obj.l != null)
-                                    {
-                                    }
-                                    string vendorLocationName = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[tradeShopNpc.obj.l.ToString()].name;
-                                    uint[] internalLocationIndex = ItemVendorLocation.VendorPlugin.CommonLocationNameToInternalCoords[vendorLocationName];
-
-                                    string name = tradeShopNpc.obj.n;
-                                    string location = vendorLocationName;
-                                    ulong cost = tradeShop.listings[0].currency[0].amount;
-                                    string currency = itemDetails.partials.Find(i => i.id == tradeShop.listings[0].currency[0].id)!.obj.n;
-
-                                    vendorResults.Add(new ItemVendorLocation.Models.TestVendor(name, location, cost, currency));
-                                }
-                            }
-                        }
-                    }
+                    vendorResults = new();
+                    vendorResults = GetVendors((ulong)item.obj.i);
+                    
                     ResultsWindowVisible = true;
                 }
 
@@ -167,7 +115,7 @@ namespace UIDev
                     ImGui.TableSetupColumn("Cost");
                     ImGui.TableSetupColumn("Currency/Item");
                     ImGui.TableHeadersRow();
-                    foreach (ItemVendorLocation.Models.TestVendor vendor in vendorResults)
+                    foreach (ItemVendorLocation.Models.Vendor vendor in vendorResults)
                     {
                         ImGui.TableNextRow();
                         _ = ImGui.TableNextColumn();
@@ -184,6 +132,86 @@ namespace UIDev
             }
             ImGui.End();
         }
+
+        public static List<ItemVendorLocation.Models.Vendor> GetVendors(ulong itemId)
+        {
+            //get preliminary data
+            GarlandToolsWrapper.Models.ItemDetails itemDetails = GarlandToolsWrapper.WebRequests.GetItemDetails(itemId);
+            List<ItemVendorLocation.Models.Vendor> vendorResults = new();
+
+            // gil vendor
+            if (itemDetails.item.vendors != null)
+            {
+                foreach (ulong vendorId in itemDetails.item.vendors)
+                {
+                    GarlandToolsWrapper.Models.Partial? vendor = itemDetails.partials.Find(i => (ulong)i.obj.i == vendorId);
+
+                    if (vendor != null)
+                    {
+                        // get rid of any vendor that doesn't have a location
+                        // typically man/maid servants
+                        string name = vendor.obj.n;
+                        ulong cost = itemDetails.item.price;
+                        string currency = "Gil";
+                        if (vendor.obj.l == null)
+                        {
+                            vendorResults.Add(new ItemVendorLocation.Models.Vendor(name, null!, "No Location", cost, currency));
+                            break;
+                        }
+
+                        string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
+                        uint[] internalLocationIndex = ItemVendorLocation.VendorPlugin.CommonLocationNameToInternalCoords[location];
+
+                        vendorResults.Add(new ItemVendorLocation.Models.Vendor(name, null!, location, cost, currency));
+                    }
+                }
+            }
+            // special currency vendor
+            else if (itemDetails.item.tradeShops != null)
+            {
+                List<GarlandToolsWrapper.Models.TradeShop> tradeShops = itemDetails.item.tradeShops;
+
+                foreach (GarlandToolsWrapper.Models.TradeShop tradeShop in tradeShops)
+                {
+                    if (tradeShop.npcs.Count > 0)
+                    {
+                        foreach (ulong npcId in tradeShop.npcs)
+                        {
+                            GarlandToolsWrapper.Models.Partial? tradeShopNpc = itemDetails.partials.Find(i => (ulong)i.obj.i == npcId);
+                            if (tradeShopNpc != null)
+                            {
+                                string name = tradeShopNpc.obj.n;
+                                ulong cost = tradeShop.listings[0].currency[0].amount;
+                                string currency = itemDetails.partials.Find(i => i.id == tradeShop.listings[0].currency[0].id && i.type == "item")!.obj.n;
+
+                                if (tradeShopNpc.obj.l == null)
+                                {
+                                    vendorResults.Add(new ItemVendorLocation.Models.Vendor(name, null!, "No Location", cost, currency));
+                                    break;
+                                }
+
+                                string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[tradeShopNpc.obj.l.ToString()].name;
+                                uint[] internalLocationIndex = ItemVendorLocation.VendorPlugin.CommonLocationNameToInternalCoords[location];
+
+                                vendorResults.Add(new ItemVendorLocation.Models.Vendor(name, null!, location, cost, currency));
+                            }
+                        }
+                    }
+                    else
+                    {
+                        string name = tradeShop.shop;
+                        ulong cost = tradeShop.listings[0].currency[0].amount;
+                        string currency = itemDetails.partials.Find(i => i.id == tradeShop.listings[0].currency[0].id && i.type == "item")!.obj.n;
+
+                        vendorResults.Add(new ItemVendorLocation.Models.Vendor(name, null!, "Unknown", cost, currency));
+                    }
+                }
+            }
+
+            return vendorResults;
+        }
+
+
 
         #endregion
     }

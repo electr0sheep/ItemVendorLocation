@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using System;
 using System.Linq;
+using XivCommon.Functions.Tooltips;
 
 namespace ItemVendorLocation
 {
@@ -181,9 +182,19 @@ namespace ItemVendorLocation
 
             PluginInterface.UiBuilder.Draw += DrawUI;
             PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
-            XivCommon = new XivCommonBase(Hooks.ContextMenu);
-            XivCommon.Functions.ContextMenu.OpenInventoryContextMenu += OnOpenInventoryContextMenu;
-            XivCommon.Functions.ContextMenu.OpenContextMenu += OnOpenContextMenu;
+            XivCommon = new XivCommonBase(Hooks.ContextMenu | Hooks.Tooltips);
+            XivCommon.Functions.Tooltips.OnItemTooltip += OnItemTooltipOverride;
+            XivCommon.Functions.ContextMenu.OpenInventoryContextMenu += OpenInventoryContextMenuOverride;
+            XivCommon.Functions.ContextMenu.OpenContextMenu += OpenContextMenuOverride;
+        }
+
+        private void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemId)
+        {
+            List<Lumina.Excel.GeneratedSheets.GCScripShopItem> items = new(DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GCScripShopItem>()!.Where(i => i.Item.Row == itemId));
+            if (items.Count > 0)
+            {
+                itemTooltip[ItemTooltipString.ShopSellingPrice] = $"Shop Selling Price: {items[0].CostGCSeals} GC Seals";
+            }
         }
 
         private static bool IsItemSoldByAnyVendor(Lumina.Excel.GeneratedSheets.Item item)
@@ -201,13 +212,18 @@ namespace ItemVendorLocation
             return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GCScripShopItem>()!.Any(i => i.Item.Row == item.RowId);
         }
 
+        private static bool IsItemSoldByGCVendor(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GCScripShopItem>()!.Any(i => i.Item.Row == itemId);
+        }
+
         // Have to figure this one out
         //private static bool IsItemSoldBySpecialVendor(Lumina.Excel.GeneratedSheets.Item item)
         //{
         //    return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.SpecialShop>()!.Any(i => i.I)
         //}
 
-        private void OnOpenContextMenu(XivCommon.Functions.ContextMenu.ContextMenuOpenArgs args)
+        private void OpenContextMenuOverride(XivCommon.Functions.ContextMenu.ContextMenuOpenArgs args)
         {
             switch (args.ParentAddonName)
             {
@@ -230,7 +246,7 @@ namespace ItemVendorLocation
             }
         }
 
-        private void OnOpenInventoryContextMenu(XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuOpenArgs args)
+        private void OpenInventoryContextMenuOverride(XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuOpenArgs args)
         {
             selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(args.ItemId)!;
             if (IsItemSoldByAnyVendor(selectedItem))
@@ -401,8 +417,9 @@ namespace ItemVendorLocation
         public void Dispose()
         {
             PluginUi.Dispose();
-            XivCommon.Functions.ContextMenu.OpenInventoryContextMenu -= OnOpenInventoryContextMenu;
-            XivCommon.Functions.ContextMenu.OpenContextMenu -= OnOpenContextMenu;
+            XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
+            XivCommon.Functions.ContextMenu.OpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
+            XivCommon.Functions.ContextMenu.OpenContextMenu -= OpenContextMenuOverride;
         }
 
         private void DrawUI()

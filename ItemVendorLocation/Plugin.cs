@@ -3,7 +3,6 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using System.Reflection;
 using XivCommon;
-using Dalamud.DrunkenToad;
 using Dalamud.Game.Gui;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
@@ -191,15 +190,23 @@ namespace ItemVendorLocation
         private void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemId)
         {
             List<Lumina.Excel.GeneratedSheets.GCScripShopItem> items = new(DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GCScripShopItem>()!.Where(i => i.Item.Row == itemId));
+            // This code assumes all GC shops sell items for the same seal cost, which should be a safe assumption
             if (items.Count > 0)
             {
                 itemTooltip[ItemTooltipString.ShopSellingPrice] = $"Shop Selling Price: {items[0].CostGCSeals} GC Seals";
+                return;
+            }
+
+            if (IsItemSoldBySpecialVendor((uint)itemId))
+            {
+                itemTooltip[ItemTooltipString.ShopSellingPrice] = "Shop Selling Price: Special Vendor";
+                return;
             }
         }
 
         private static bool IsItemSoldByAnyVendor(Lumina.Excel.GeneratedSheets.Item item)
         {
-            return IsItemSoldByGilVendor(item) || IsItemSoldByGCVendor(item);
+            return IsItemSoldByGilVendor(item) || IsItemSoldByGCVendor(item) || IsItemSoldBySpecialVendor(item);
         }
 
         private static bool IsItemSoldByGilVendor(Lumina.Excel.GeneratedSheets.Item item)
@@ -209,7 +216,7 @@ namespace ItemVendorLocation
 
         private static bool IsItemSoldByGCVendor(Lumina.Excel.GeneratedSheets.Item item)
         {
-            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GCScripShopItem>()!.Any(i => i.Item.Row == item.RowId);
+            return IsItemSoldByGCVendor(item.RowId);
         }
 
         private static bool IsItemSoldByGCVendor(uint itemId)
@@ -217,11 +224,75 @@ namespace ItemVendorLocation
             return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GCScripShopItem>()!.Any(i => i.Item.Row == itemId);
         }
 
-        // Have to figure this one out
-        //private static bool IsItemSoldBySpecialVendor(Lumina.Excel.GeneratedSheets.Item item)
-        //{
-        //    return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.SpecialShop>()!.Any(i => i.I)
-        //}
+        private static bool IsItemSoldBySpecialVendor(Lumina.Excel.GeneratedSheets.Item item)
+        {
+            return IsItemSoldBySpecialVendor(item.RowId);
+        }
+
+        private static bool IsItemSoldBySpecialVendor(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.SpecialShop>()!.Any(i =>
+            i.UnkData1[0].ItemReceive == itemId ||
+            i.UnkData1[0].CountReceive == itemId ||
+            i.UnkData1[0].SpecialShopItemCategory == itemId ||
+            i.UnkData1[0].HQReceive == itemId ||
+            i.UnkData1[1].ItemReceive == itemId ||
+            i.UnkData1[1].CountReceive == itemId ||
+            i.UnkData1[1].SpecialShopItemCategory == itemId ||
+            i.UnkData1[1].HQReceive == itemId ||
+            i.Unknown9 == itemId ||
+            i.Unknown10 == itemId ||
+            i.Unknown11 == itemId ||
+            i.Unknown12 == itemId ||
+            i.Unknown13 == itemId ||
+            i.Unknown14 == itemId ||
+            i.Unknown15 == itemId ||
+            i.Unknown16 == itemId ||
+            i.Unknown17 == itemId ||
+            i.Unknown18 == itemId ||
+            i.Unknown19 == itemId ||
+            i.Unknown20 == itemId ||
+            i.Unknown21 == itemId ||
+            i.Unknown22 == itemId ||
+            i.Unknown23 == itemId ||
+            i.Unknown24 == itemId ||
+            i.Unknown25 == itemId ||
+            i.Unknown26 == itemId ||
+            i.Unknown27 == itemId ||
+            i.Unknown28 == itemId ||
+            i.Unknown29 == itemId ||
+            i.Unknown30 == itemId ||
+            i.Unknown31 == itemId ||
+            i.Unknown32 == itemId ||
+            i.Unknown33 == itemId ||
+            i.Unknown34 == itemId ||
+            i.Unknown35 == itemId ||
+            i.Unknown36 == itemId ||
+            i.Unknown37 == itemId ||
+            i.Unknown38 == itemId ||
+            i.Unknown39 == itemId ||
+            i.Unknown40 == itemId ||
+            i.Unknown41 == itemId ||
+            i.Unknown42 == itemId ||
+            i.Unknown43 == itemId ||
+            i.Unknown44 == itemId ||
+            i.Unknown45 == itemId ||
+            i.Unknown46 == itemId ||
+            i.Unknown47 == itemId ||
+            i.Unknown48 == itemId ||
+            i.Unknown49 == itemId ||
+            i.Unknown50 == itemId ||
+            i.Unknown51 == itemId ||
+            i.Unknown52 == itemId ||
+            i.Unknown53 == itemId ||
+            i.Unknown54 == itemId ||
+            i.Unknown55 == itemId ||
+            i.Unknown56 == itemId ||
+            i.Unknown57 == itemId ||
+            i.Unknown58 == itemId ||
+            i.Unknown59 == itemId ||
+            i.Unknown60 == itemId);
+        }
 
         private void OpenContextMenuOverride(XivCommon.Functions.ContextMenu.ContextMenuOpenArgs args)
         {
@@ -334,6 +405,15 @@ namespace ItemVendorLocation
                         if (tradeShopNpc != null)
                         {
                             string name = tradeShopNpc.obj.n;
+                            ulong cost = tradeShop.listings[0].currency[0].amount;
+                            string currency = itemDetails.partials.Find(i => i.id == tradeShop.listings[0].currency[0].id)!.obj.n;
+
+                            if (tradeShopNpc.obj.l == null)
+                            {
+                                vendorResults.Add(new Models.Vendor(name, null, "No Location", cost, currency));
+                                break;
+                            }
+
                             string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[tradeShopNpc.obj.l.ToString()].name;
                             uint[] internalLocationIndex = CommonLocationNameToInternalCoords[location];
                             MapLinkPayload? mapLink = null;
@@ -346,8 +426,6 @@ namespace ItemVendorLocation
                                 // For now, we'll just set 0,0 as the coords for those vendors that Garland Tools doesn't have actual coords for
                                 mapLink = new(internalLocationIndex[0], internalLocationIndex[1], 0f, 0f);
                             }
-                            ulong cost = tradeShop.listings[0].currency[0].amount;
-                            string currency = itemDetails.partials.Find(i => i.id == tradeShop.listings[0].currency[0].id)!.obj.n;
 
                             vendorResults.Add(new Models.Vendor(name, mapLink, location, cost, currency));
                         }
@@ -393,24 +471,15 @@ namespace ItemVendorLocation
 
         private void HandleItem(Lumina.Excel.GeneratedSheets.Item item)
         {
-            try
+            ulong garlondToolsId = FindGarlondToolsItemId(item);
+            List<Models.Vendor> vendors = GetVendors(garlondToolsId);
+            if (Configuration.ShowAllVendorsBool)
             {
-                ulong garlondToolsId = FindGarlondToolsItemId(item);
-                List<Models.Vendor> vendors = GetVendors(garlondToolsId);
-                if (Configuration.ShowAllVendorsBool)
-                {
-                    DisplayOneVendor(item, vendors.Last());
-                    //DisplayOneVendor(garlondToolsId, item);
-                }
-                else
-                {
-                    DisplayAllVendors(item, vendors);
-                    //DisplayAllVendors(garlondToolsId);
-                }
+                DisplayOneVendor(item, vendors.Last());
             }
-            catch (Exception e)
+            else
             {
-                Logger.LogError(e.Message);
+                DisplayAllVendors(item, vendors);
             }
         }
 

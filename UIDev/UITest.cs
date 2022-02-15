@@ -53,7 +53,7 @@ namespace UIDev
         #region Nearly a copy/paste of PluginUI
         private bool mainWindowVisible = false;
         private bool resultsWindowVisible = false;
-        private string itemName = "Moonstone";
+        private string itemName = "Dust Bunny";
         private List<ItemVendorLocation.Models.TestVendor>? vendorResults = null;
         public bool MainWindowVisible
         {
@@ -126,6 +126,9 @@ namespace UIDev
                                 GarlandToolsWrapper.Models.Partial? tradeShopNpc = itemDetails.partials.Find(i => i.obj.i == npcId);
                                 if (tradeShopNpc != null)
                                 {
+                                    if (tradeShopNpc.obj.l != null)
+                                    {
+                                    }
                                     string vendorLocationName = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[tradeShopNpc.obj.l.ToString()].name;
                                     uint[] internalLocationIndex = ItemVendorLocation.VendorPlugin.CommonLocationNameToInternalCoords[vendorLocationName];
 

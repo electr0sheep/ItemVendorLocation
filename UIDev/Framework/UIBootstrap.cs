@@ -6,14 +6,14 @@ using static SDL2.SDL;
 
 namespace UIDev
 {
-    class UIBootstrap
+    internal class UIBootstrap
     {
         public static unsafe void Inititalize(IPluginUIMock pluginUI)
         {
             // you can edit this if you want more control over things
             // mainly if you want a regular window instead of transparent overlay
             // Typically you don't want to change any colors here if you keep the fullscreen overlay
-            using var scene = new SimpleImGuiScene(RendererFactory.RendererBackend.DirectX11, new WindowCreateInfo
+            using SimpleImGuiScene? scene = new(RendererFactory.RendererBackend.DirectX11, new WindowCreateInfo
             {
                 Title = "UI Test",
                 Fullscreen = true,
@@ -38,14 +38,14 @@ namespace UIDev
             fontConfig.MergeMode = true;
             fontConfig.PixelSnapH = true;
 
-            var fontPathJp = "NotoSansCJKjp-Medium.otf";
-            ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPathJp, 17.0f, null, ImGui.GetIO().Fonts.GetGlyphRangesJapanese());
+            string? fontPathJp = "NotoSansCJKjp-Medium.otf";
+            _ = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPathJp, 17.0f, null, ImGui.GetIO().Fonts.GetGlyphRangesJapanese());
 
-            var fontPathGame = "gamesym.ttf";
-            var rangeHandle = GCHandle.Alloc(new ushort[] { 0xE020, 0xE0DB, 0 }, GCHandleType.Pinned);
-            ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPathGame, 17.0f, fontConfig, rangeHandle.AddrOfPinnedObject());
+            string? fontPathGame = "gamesym.ttf";
+            GCHandle rangeHandle = GCHandle.Alloc(new ushort[] { 0xE020, 0xE0DB, 0 }, GCHandleType.Pinned);
+            _ = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontPathGame, 17.0f, fontConfig, rangeHandle.AddrOfPinnedObject());
 
-            ImGui.GetIO().Fonts.Build();
+            _ = ImGui.GetIO().Fonts.Build();
 
             fontConfig.Destroy();
             rangeHandle.Free();

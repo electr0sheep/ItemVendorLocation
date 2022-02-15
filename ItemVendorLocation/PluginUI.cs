@@ -119,7 +119,7 @@ namespace ItemVendorLocation
                         }
                         else if (vendor.mapLink != null)
                         {
-                            if (ImGui.Button(vendor.location))
+                            if (ImGui.Button($"{vendor.location} (No Coords from Garland Tools)"))
                             {
                                 _ = VendorPlugin.GameGui.OpenMapWithMapLink(vendor.mapLink);
                             }

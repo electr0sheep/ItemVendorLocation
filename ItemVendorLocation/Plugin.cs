@@ -122,6 +122,7 @@ namespace ItemVendorLocation
             { "Mor Dhona", new uint[] { 156, 25 } },
             { "New Gridania", new uint[] { 132, 2 } },
             { "North Shroud", new uint[] { 154, 7 } },
+            { "Northern Thanalan", new uint[] { 147, 24 } },
             { "Old Gridania", new uint[] { 133, 3 } },
             { "Old Sharlayan", new uint[] { 962, 693 } },
             { "Outer La Noscea", new uint[] { 180, 30 } },

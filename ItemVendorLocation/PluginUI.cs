@@ -95,7 +95,7 @@ namespace ItemVendorLocation
 
             ImGui.SetNextWindowSize(new Vector2(375, 200), ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowSizeConstraints(new Vector2(375, 200), new Vector2(float.MaxValue, float.MaxValue));
-            if (ImGui.Begin($"{ItemName} Vendors", ref vendorLocationsVisable))
+            if (ImGui.Begin($"{ItemName} Vendors###Item Vendor Location", ref vendorLocationsVisable))
             {
                 if (ImGui.BeginTable("Vendors", 4, ImGuiTableFlags.Resizable))
                 {

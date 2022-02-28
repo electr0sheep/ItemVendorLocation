@@ -11,6 +11,7 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 using System;
 using System.Linq;
 using XivCommon.Functions.Tooltips;
+using System.Threading.Tasks;
 
 namespace ItemVendorLocation
 {
@@ -493,16 +494,18 @@ namespace ItemVendorLocation
 
         private void HandleItem(Lumina.Excel.GeneratedSheets.Item item)
         {
-            ulong garlondToolsId = FindGarlondToolsItemId(item);
-            List<Models.Vendor> vendors = GetVendors(garlondToolsId);
-            if (Configuration.ShowAllVendorsBool)
-            {
-                DisplayOneVendor(item, vendors.Last());
-            }
-            else
-            {
-                DisplayAllVendors(item, vendors);
-            }
+            Task.Run(() => {
+                ulong garlondToolsId = FindGarlondToolsItemId(item);
+                List<Models.Vendor> vendors = GetVendors(garlondToolsId);
+                if (Configuration.ShowAllVendorsBool)
+                {
+                    DisplayOneVendor(item, vendors.Last());
+                }
+                else
+                {
+                    DisplayAllVendors(item, vendors);
+                }
+            });
         }
 
         public void Dispose()

@@ -34,7 +34,6 @@ namespace GarlandToolsWrapper
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                System.IO.Stream resultStream = response.GetResponseStream();
                 System.IO.StreamReader reader = new(response.GetResponseStream());
                 string result = reader.ReadToEnd();
                 Models.Data serializedResult = JsonConvert.DeserializeObject<Models.Data>(result)!;
@@ -57,11 +56,21 @@ namespace GarlandToolsWrapper
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                System.IO.Stream resultStream = response.GetResponseStream();
                 System.IO.StreamReader reader = new(response.GetResponseStream());
                 string result = reader.ReadToEnd();
-                List<Models.ItemSearchResult> serializedResult = JsonConvert.DeserializeObject<List<Models.ItemSearchResult>>(result)!;
-                return serializedResult;
+                // Some item names have "-" in them, which errors out Garland Tools
+                // As far as I can tell, if you type something that is already contained in the list,
+                // it will filter out results client side without making a new request. We'll do something
+                // similar here
+                if (result.Contains("error") && itemName.Contains("-"))
+                {
+                    return ItemSearch(itemName.Split("-")[0]);
+                }
+                else
+                {
+                    List<Models.ItemSearchResult> serializedResult = JsonConvert.DeserializeObject<List<Models.ItemSearchResult>>(result)!;
+                    return serializedResult;
+                }
             }
             else
             {
@@ -76,7 +85,6 @@ namespace GarlandToolsWrapper
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                System.IO.Stream resultStream = response.GetResponseStream();
                 System.IO.StreamReader reader = new (response.GetResponseStream());
                 string result = reader.ReadToEnd();
                 Models.ItemDetails serializedResult = JsonConvert.DeserializeObject<Models.ItemDetails>(result)!;

@@ -12,6 +12,7 @@ using System;
 using System.Linq;
 using XivCommon.Functions.Tooltips;
 using System.Threading.Tasks;
+using Dalamud.DrunkenToad;
 
 namespace ItemVendorLocation
 {
@@ -192,6 +193,67 @@ namespace ItemVendorLocation
 
         private void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemId)
         {
+            // HQ items don't have recipes, only NQ items
+            if (itemId > 1000000)
+            {
+                itemId -= 1000000;
+            }
+            if (IsItemCraftable((uint)itemId))
+            {
+                itemTooltip[ItemTooltipString.Description] += "\n\nCrafting Acquisitions:";
+                if (IsItemMadeByCarpenter((uint)itemId))
+                {
+                    itemTooltip[ItemTooltipString.Description] += "\nCarpenter";
+                }
+                if (IsItemMadeByBlacksmith((uint)itemId))
+                {
+                    itemTooltip[ItemTooltipString.Description] += "\nBlacksmith";
+                }
+                if (IsItemMadeByArmorer((uint)itemId))
+                {
+                    itemTooltip[ItemTooltipString.Description] += "\nArmorer";
+                }
+                if (IsItemMadeByGoldsmith((uint)itemId))
+                {
+                    itemTooltip[ItemTooltipString.Description] += "\nGoldsmith";
+                }
+                if (IsItemMadeByLeatherworker((uint)itemId))
+                {
+                    itemTooltip[ItemTooltipString.Description] += "\nLeatherworker";
+                }
+                if (IsItemMadeByWeaver((uint)itemId))
+                {
+                    itemTooltip[ItemTooltipString.Description] += "\nWeaver";
+                }
+                if (IsItemMadeByAlchemist((uint)itemId))
+                {
+                    itemTooltip[ItemTooltipString.Description] += "\nAlchemist";
+                }
+                if (IsItemMadeByCulinarian((uint)itemId))
+                {
+                    itemTooltip[ItemTooltipString.Description] += "\nCulinarian";
+                }
+            }
+
+            if (IsItemGatherable((uint)itemId))
+            {
+                itemTooltip[ItemTooltipString.Description] += "\n\nGathering Acquisitions:";
+                if (IsItemMinable((uint)itemId)){
+                    itemTooltip[ItemTooltipString.Description] += "\nMining";
+                }
+                if (IsItemHarvestable((uint)itemId))
+                {
+                    itemTooltip[ItemTooltipString.Description] += "\nBotany";
+                }
+                if (IsItemFishable((uint)itemId)){
+                    itemTooltip[ItemTooltipString.Description] += "\nFishing";
+                }
+                if (IsItemSpearFishable((uint)itemId))
+                {
+                    itemTooltip[ItemTooltipString.Description] += "\nSpearfishing";
+                }
+            }
+
             if (IsItemSoldByGilVendor((uint)itemId))
             {
                 return;
@@ -211,9 +273,88 @@ namespace ItemVendorLocation
             }
         }
 
+        private static bool IsItemCraftable(uint itemId)
+        {
+            return IsItemMadeByCarpenter(itemId) || IsItemMadeByBlacksmith(itemId) || IsItemMadeByArmorer(itemId) || IsItemMadeByGoldsmith(itemId) || IsItemMadeByLeatherworker(itemId) || IsItemMadeByWeaver(itemId) || IsItemMadeByAlchemist(itemId) || IsItemMadeByCulinarian(itemId);
+        }
+
+        private static bool IsItemMadeByCarpenter(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.RecipeLookup>()!.Any(i => i.RowId == itemId && i.CRP.Row != 0);
+        }
+
+        private static bool IsItemMadeByBlacksmith(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.RecipeLookup>()!.Any(i => i.RowId == itemId && i.BSM.Row != 0);
+        }
+
+        private static bool IsItemMadeByArmorer(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.RecipeLookup>()!.Any(i => i.RowId == itemId && i.ARM.Row != 0);
+        }
+
+        private static bool IsItemMadeByGoldsmith(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.RecipeLookup>()!.Any(i => i.RowId == itemId && i.GSM.Row != 0);
+        }
+
+        private static bool IsItemMadeByLeatherworker(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.RecipeLookup>()!.Any(i => i.RowId == itemId && i.LTW.Row != 0);
+        }
+
+        private static bool IsItemMadeByWeaver(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.RecipeLookup>()!.Any(i => i.RowId == itemId && i.WVR.Row != 0);
+        }
+
+        private static bool IsItemMadeByAlchemist(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.RecipeLookup>()!.Any(i => i.RowId == itemId && i.ALC.Row != 0);
+        }
+
+        private static bool IsItemMadeByCulinarian(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.RecipeLookup>()!.Any(i => i.RowId == itemId && i.CUL.Row != 0);
+        }
+
+        private static bool IsItemGatherable(uint itemId)
+        {
+            return IsItemFishable(itemId) || IsItemSpearFishable(itemId) || IsItemMinable(itemId) || IsItemHarvestable(itemId);
+        }
+
         private static bool IsItemSoldByAnyVendor(Lumina.Excel.GeneratedSheets.Item item)
         {
             return IsItemSoldByGilVendor(item) || IsItemSoldByGCVendor(item) || IsItemSoldBySpecialVendor(item);
+        }
+
+        private static bool IsItemSpearFishable(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.SpearfishingItem>()!.Any(i => i.Item.Row == itemId);
+        }
+
+        private static bool IsItemFishable(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.FishParameter>()!.Any(i => i.Item == itemId);
+        }
+
+        private static bool IsItemMinable(uint itemId)
+        {
+            //foreach(var gatheringPoint in DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GatheringPointBase>()!)
+            //{
+            //    string output = $"{gatheringPoint.RowId}: ";
+            //    foreach(var item in gatheringPoint.Item)
+            //    {
+            //        output += $"{item}, ";
+            //    }
+            //    Logger.LogDebug(output);
+            //}
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GatheringPointBase>()!.Any(i => (i.GatheringType.Row == 0 || i.GatheringType.Row == 1) && i.Item.Contains((int)itemId));
+        }
+
+        private static bool IsItemHarvestable(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GatheringPointBase>()!.Any(i => (i.GatheringType.Row == 2 || i.GatheringType.Row == 3) && i.Item.Contains((int)itemId));
         }
 
         private static bool IsItemSoldByGilVendor(Lumina.Excel.GeneratedSheets.Item item)
@@ -494,7 +635,8 @@ namespace ItemVendorLocation
 
         private void HandleItem(Lumina.Excel.GeneratedSheets.Item item)
         {
-            Task.Run(() => {
+            _ = Task.Run(() =>
+            {
                 ulong garlondToolsId = FindGarlondToolsItemId(item);
                 List<Models.Vendor> vendors = GetVendors(garlondToolsId);
                 if (Configuration.ShowAllVendorsBool)

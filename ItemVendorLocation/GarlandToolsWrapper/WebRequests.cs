@@ -37,7 +37,6 @@ namespace GarlandToolsWrapper
                 System.IO.StreamReader reader = new(response.GetResponseStream());
                 string result = reader.ReadToEnd();
                 Models.Data serializedResult = JsonConvert.DeserializeObject<Models.Data>(result)!;
-                //Models.Data serializedResult = serializer.Deserialize<Models.Data>(result);
                 return serializedResult;
             }
             else

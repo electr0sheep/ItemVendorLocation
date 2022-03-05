@@ -53,7 +53,7 @@ namespace UIDev
         #region Nearly a copy/paste of PluginUI
         private bool mainWindowVisible = false;
         private bool resultsWindowVisible = false;
-        private string itemName = "Versatile Lure";
+        private string itemName = "Button Mushroom Saute";
         private List<ItemVendorLocation.Models.Vendor>? vendorResults = null;
         public bool MainWindowVisible
         {

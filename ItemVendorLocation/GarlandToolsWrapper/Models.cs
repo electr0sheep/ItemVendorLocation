@@ -153,7 +153,7 @@ namespace GarlandToolsWrapper
         public class Action
         {
             public Tenacity tenacity;
-            public int vitality;
+            //public int vitality;
             public int directHitRate;
         }
 

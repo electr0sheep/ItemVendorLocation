@@ -192,6 +192,12 @@ namespace ItemVendorLocation
 
         private void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemId)
         {
+            //HQ items don't have recipes, only NQ items
+            if (itemId > 1000000)
+            {
+                itemId -= 1000000;
+            }
+
             if (IsItemSoldByGilVendor((uint)itemId))
             {
                 return;
@@ -308,12 +314,20 @@ namespace ItemVendorLocation
 
         private void OpenContextMenuOverride(XivCommon.Functions.ContextMenu.ContextMenuOpenArgs args)
         {
+            // I think players have a world and items never will??
+            // Hopefully this removes the vendor menu for players in the chat log
+            if (args.ObjectWorld != 0)
+            {
+                return;
+            }
+
             switch (args.ParentAddonName)
             {
                 case "ChatLog":
                 case "DailyQuestSupply":
                 case "ItemSearch":
                 case "RecipeNote":
+                case "ShopExchangeItem":
                     uint item_id = (uint)GameGui.HoveredItem;
                     selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(item_id)!;
                     if (IsItemSoldByAnyVendor(selectedItem))

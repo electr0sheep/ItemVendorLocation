@@ -219,7 +219,7 @@ namespace ItemVendorLocation
 
         private static bool IsItemSoldByAnyVendor(Lumina.Excel.GeneratedSheets.Item item)
         {
-            return IsItemSoldByGilVendor(item) || IsItemSoldByGCVendor(item) || IsItemSoldBySpecialVendor(item);
+            return item.Name != null && item.Name != "" && (IsItemSoldByGilVendor(item) || IsItemSoldByGCVendor(item) || IsItemSoldBySpecialVendor(item));
         }
 
         private static bool IsItemSoldByGilVendor(Lumina.Excel.GeneratedSheets.Item item)
@@ -328,6 +328,8 @@ namespace ItemVendorLocation
                 case "ItemSearch":
                 case "RecipeNote":
                 case "ShopExchangeItem":
+                case "ShopExchangeItemDialog":
+                case "Journal":
                     uint item_id = (uint)GameGui.HoveredItem;
                     selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(item_id)!;
                     if (IsItemSoldByAnyVendor(selectedItem))

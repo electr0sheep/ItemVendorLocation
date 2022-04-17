@@ -1,6 +1,7 @@
 {
   "ApplicableVersion": "any",
   "Author": "electr0sheep",
+  "DalamudApiLevel": 6,
   "Description": "Adds a context menu option for items that will show you where to find items you can buy off a vendor",
   "InternalName": "itemVendorLocation",
   "Name": "Item Vendor Location",

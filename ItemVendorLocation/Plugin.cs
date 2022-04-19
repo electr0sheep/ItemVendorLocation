@@ -4,8 +4,6 @@ using Dalamud.Plugin;
 using System.Reflection;
 using XivCommon;
 using Dalamud.Game.Gui;
-using Dalamud.Game.Text;
-using Dalamud.Game.Text.SeStringHandling;
 using System.Collections.Generic;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using System;
@@ -183,7 +181,6 @@ namespace ItemVendorLocation
             PluginUi = new PluginUI(Configuration);
 
             PluginInterface.UiBuilder.Draw += DrawUI;
-            PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
             XivCommon = new XivCommonBase(Hooks.ContextMenu | Hooks.Tooltips);
             XivCommon.Functions.Tooltips.OnItemTooltip += OnItemTooltipOverride;
             XivCommon.Functions.ContextMenu.OpenInventoryContextMenu += OpenInventoryContextMenuOverride;

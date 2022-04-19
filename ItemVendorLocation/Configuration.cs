@@ -9,8 +9,6 @@ namespace ItemVendorLocation
     {
         public int Version { get; set; } = 0;
 
-        public bool ShowAllVendorsBool { get; set; } = true;
-
         // the below exist just to make saving less cumbersome
 
         [NonSerialized]

@@ -82,7 +82,6 @@ namespace ItemVendorLocation
             // There are other ways to do this, but it is generally best to keep the number of
             // draw delegates as low as possible.
 
-            DrawSettingsWindow();
             DrawVendorLocationWindow();
         }
 
@@ -135,37 +134,6 @@ namespace ItemVendorLocation
                     }
                 }
                 ImGui.EndTable();
-            }
-            ImGui.End();
-        }
-
-        public void DrawSettingsWindow()
-        {
-            if (!SettingsVisible)
-            {
-                return;
-            }
-
-            ImGui.SetNextWindowSize(new Vector2(232, 100), ImGuiCond.Always);
-            if (ImGui.Begin("Item Vendor Location Settings", ref settingsVisible,
-                ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
-            {
-                // can't ref a property, so use a local copy
-                bool configValue = configuration.ShowAllVendorsBool;
-                if (ImGui.Checkbox("Show only one vendor", ref configValue))
-                {
-                    configuration.ShowAllVendorsBool = configValue;
-                    // can save immediately on change, if you don't want to provide a "Save and Close" button
-                    configuration.Save();
-                }
-                if (ImGui.IsItemHovered())
-                {
-                    ImGui.BeginTooltip();
-                    ImGui.PushTextWrapPos(ImGui.GetFontSize() * 35.0f);
-                    ImGui.TextUnformatted("If this setting is enabled, only the first vendor will be displayed, eliminating the dalamud popup window.");
-                    ImGui.PopTextWrapPos();
-                    ImGui.EndTooltip();
-                }
             }
             ImGui.End();
         }

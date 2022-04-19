@@ -475,32 +475,6 @@ namespace ItemVendorLocation
             return vendorResults;
         }
 
-        private static void DisplayOneVendor(Lumina.Excel.GeneratedSheets.Item item, Models.Vendor vendor)
-        {
-            //_ = new TextPayload($"{item.Name} can be bought from {vendor.name}");
-            //string firstVendorLocationName = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
-            //uint[] internalLocationIndex = CommonLocationNameToInternalCoords[firstVendorLocationName];
-            if (vendor.mapLink != null)
-            {
-                _ = GameGui.OpenMapWithMapLink(vendor.mapLink);
-            }
-            SeString payload = new();
-            _ = payload.Append(SeString.CreateItemLink(item, false));
-            List<Payload> payloadList = new()
-            {
-                new TextPayload($" can be bought from {vendor.name} at ")
-            };
-            _ = payload.Append(new SeString(payloadList));
-            if (vendor.mapLink != null)
-            {
-                _ = payload.Append(SeString.CreateMapLink(vendor.mapLink.TerritoryType.RowId, vendor.mapLink.Map.RowId, vendor.mapLink.XCoord, vendor.mapLink.YCoord));
-            }
-            Chat.PrintChat(new XivChatEntry
-            {
-                Message = payload
-            });
-        }
-
         private void DisplayAllVendors(Lumina.Excel.GeneratedSheets.Item item, List<Models.Vendor> vendors)
         {
             PluginUi.Vendors = vendors;
@@ -513,14 +487,7 @@ namespace ItemVendorLocation
             Task.Run(() => {
                 ulong garlondToolsId = FindGarlondToolsItemId(item);
                 List<Models.Vendor> vendors = GetVendors(garlondToolsId);
-                if (Configuration.ShowAllVendorsBool)
-                {
-                    DisplayOneVendor(item, vendors.Last());
-                }
-                else
-                {
-                    DisplayAllVendors(item, vendors);
-                }
+                DisplayAllVendors(item, vendors);
             });
         }
 

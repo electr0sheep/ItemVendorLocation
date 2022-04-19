@@ -15,7 +15,7 @@ namespace ItemVendorLocation
             public ulong cost = 0;
             public string currency = "";
 
-            public Vendor(string name, MapLinkPayload mapLink, string location, ulong cost, string currency)
+            public Vendor(string name, MapLinkPayload? mapLink, string location, ulong cost, string currency)
             {
                 this.name = name;
                 this.mapLink = mapLink;

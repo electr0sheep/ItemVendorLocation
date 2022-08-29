@@ -366,7 +366,7 @@ namespace ItemVendorLocation
                 var cost = shop.UnkData11[i].Cost;
 
                 AddItem_Internal(item.RowId, item.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(cost, fccName.Text) },
-                    npcLocations.ContainsKey(npcBase.RowId) ? npcLocations[npcBase.RowId] : null, ItemType.FccShop);
+                    npcLocations.ContainsKey(npcBase.RowId) ? npcLocations[npcBase.RowId] : null, ItemType.GcShop);
             }
         }
 

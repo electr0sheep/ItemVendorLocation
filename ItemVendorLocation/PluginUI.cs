@@ -40,6 +40,35 @@ namespace ItemVendorLocation
             DrawVendorLocationWindow();
         }
 
+        private void DrawTable(string npcName, NpcLocation location, string costStr)
+        {
+            ImGui.TableNextRow();
+            ImGui.TableNextColumn();
+            ImGui.Text(npcName);
+            ImGui.TableNextColumn();
+            if (location != null)
+            {
+                if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.MapX:F1}, {location.MapY:F1})"))
+                {
+                    Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.MapX, location.MapY));
+                }
+            }
+            else
+            {
+                ImGui.Text("No location");
+            }
+
+            ImGui.TableNextColumn();
+
+            ImGui.Text(costStr);
+
+            if (ItemToDisplay.Type == ItemType.Achievement)
+            {
+                ImGui.TableNextColumn();
+                ImGui.Text(ItemToDisplay.AchievementDescription);
+            }
+        }
+
         public void DrawVendorLocationWindow()
         {
             if (!vendorLocationsVisable)
@@ -63,46 +92,30 @@ namespace ItemVendorLocation
                     }
 
                     ImGui.TableHeadersRow();
-                    
+
                     foreach (var npcInfo in ItemToDisplay.NpcInfos)
                     {
-                        var index = ItemToDisplay.NpcInfos.FindIndex(i => i == npcInfo);
-                        var costStr = $"{ItemToDisplay.Costs[index].Item2} x{ItemToDisplay.Costs[index].Item1}";
-                        
-                        if (ItemToDisplay.Type != ItemType.GcShop)
+                        var costStr = ItemToDisplay.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
+                        costStr = costStr[..^2];
+
+                        if (ItemToDisplay.Type == ItemType.GcShop)
                         {
-                            costStr = ItemToDisplay.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
-                            costStr = costStr[..^2];
-                        }
-
-                        ImGui.TableNextRow();
-                        ImGui.TableNextColumn();
-                        ImGui.Text(npcInfo.Name);
-                        ImGui.TableNextColumn();
-
-                        var location = npcInfo.Location;
-
-                        if (location != null)
-                        {
-                            if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.MapX:F1}, {location.MapY:F1})"))
+                            // handle this differently
+                            costStr = ItemToDisplay.Costs.Last().Item2 + " x" + ItemToDisplay.Costs.Last().Item1;
+                            foreach (var cost in ItemToDisplay.Costs)
                             {
-                                _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.MapX, location.MapY));
+                                var substring = npcInfo.Name.ToLower().Substring(0, 2);
+                                if (!cost.Item2.ToLower().StartsWith(substring))
+                                {
+                                    continue;
+                                }
+
+                                costStr = $"{cost.Item2} x{cost.Item1}";
+                                break;
                             }
                         }
-                        else
-                        {
-                            ImGui.Text("No Location");
-                        }
 
-                        ImGui.TableNextColumn();
-
-                        ImGui.Text(costStr);
-
-                        if (ItemToDisplay.Type == ItemType.Achievement)
-                        {
-                            ImGui.TableNextColumn();
-                            ImGui.Text(ItemToDisplay.AchievementDescription);
-                        }
+                        DrawTable(npcInfo.Name, npcInfo.Location, costStr);
                     }
                 }
 

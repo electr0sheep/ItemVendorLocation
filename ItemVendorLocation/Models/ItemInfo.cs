@@ -8,7 +8,6 @@ namespace ItemVendorLocation.Models
         GilShop,
         SpecialShop,
         GcShop,
-        FccShop,
         Achievement,
     }
 

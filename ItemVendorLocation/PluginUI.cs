@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Numerics;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using ImGuiNET;
@@ -67,6 +68,12 @@ namespace ItemVendorLocation
                     {
                         var index = ItemToDisplay.NpcInfos.FindIndex(i => i == npcInfo);
                         var costStr = $"{ItemToDisplay.Costs[index].Item2} x{ItemToDisplay.Costs[index].Item1}";
+                        
+                        if (ItemToDisplay.Type != ItemType.GcShop)
+                        {
+                            costStr = ItemToDisplay.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
+                            costStr = costStr[..^2];
+                        }
 
                         ImGui.TableNextRow();
                         ImGui.TableNextColumn();

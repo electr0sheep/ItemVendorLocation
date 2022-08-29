@@ -217,8 +217,12 @@ namespace ItemVendorLocation
                         continue;
                     }
 
-                    var costs = entry.Cost.TakeWhile(cost => cost.Item.Value.Name != string.Empty)
-                        .Select(cost => new Tuple<uint, string>(cost.Item.Value == gil ? result.Item.Value.PriceMid : cost.Count, cost.Item.Value.Name)).ToList();
+                    var costs = new List<Tuple<uint, string>>();
+
+                    foreach (var cost in entry.Cost)
+                    {
+                        costs.Add(new Tuple<uint, string>(cost.Count, cost.Item.Value.Name));
+                    }
 
                     var achievementDescription = "";
                     if (type == ItemType.Achievement)
@@ -368,14 +372,18 @@ namespace ItemVendorLocation
 
         private bool HackyFix_Npc(ENpcBase npcBase, ENpcResident resident)
         {
-            if (npcBase.RowId != 1018655)
+            switch (npcBase.RowId)
             {
-                return false;
+                case 1018655:
+                    AddSpecialItem(specialShops.GetRow(1769743), npcBase, resident);
+                    AddSpecialItem(specialShops.GetRow(1769744), npcBase, resident);
+                    return true;
+                case 1016289:
+                    AddSpecialItem(specialShops.GetRow(1769635), npcBase, resident);
+                    return true;
+                default:
+                    return false;
             }
-
-            AddSpecialItem(specialShops.GetRow(1769743), npcBase, resident);
-            AddSpecialItem(specialShops.GetRow(1769744), npcBase, resident);
-            return true;
         }
 
         private void HackyFix_AchievementItem()
@@ -423,15 +431,14 @@ namespace ItemVendorLocation
             }
 
             var npcs = itemInfo.NpcInfos;
-            var cost = itemInfo.Costs;
-            if (npcs.Find(j => j.Id == npcId) == null)
-            {
+            if (npcs.Find(j => j.Id == npcId) == null) 
                 npcs.Add(new NpcInfo { Id = npcId, Location = npcLocation, Name = npcName });
-                cost.AddRange(costs);
-            }
-
             itemInfo.NpcInfos = npcs;
-            itemInfo.Costs = cost;
+
+            foreach (var cost in costs.Where(cost => itemInfo.Costs.Find(i => Equals(i, cost)) == null))
+            {
+                itemInfo.Costs.Add(cost);
+            }
         }
 
         // https://github.com/ufx/GarlandTools/blob/3b3475bca6f95c800d2454f2c09a3f1eea0a8e4e/Garland.Data/Modules/Territories.cs
@@ -502,7 +509,7 @@ namespace ItemVendorLocation
                 npcLocations.Add(level.Object, new NpcLocation(level.X, level.Z, level.Territory.Value));
             }
 
-            // npcLocations.Add(level.Object, new NpcLocation(level.X, level.Z, level.Territory.Value));
+            // https://github.com/ufx/GarlandTools/blob/7b38def8cf0ab553a2c3679aec86480c0e4e9481/Garland.Data/Modules/NPCs.cs#L59-L66
             var corrected = territoryType.GetRow(698);
             npcLocations[1004418].TerritoryExcel = corrected;
             npcLocations[1006747].TerritoryExcel = corrected;

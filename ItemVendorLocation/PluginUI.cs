@@ -38,7 +38,12 @@ namespace ItemVendorLocation
                 string vendorLocationName = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
                 uint[] internalLocationIndex = VendorPlugin.CommonLocationNameToInternalCoords[vendorLocationName];
 
-                Vendors.Add(new Models.Vendor(vendor.obj.n, new MapLinkPayload(internalLocationIndex[0], internalLocationIndex[1], (float)vendor.obj.c[0], (float)vendor.obj.c[1]), vendorLocationName, itemDetails.item.price, "Gil"));
+                Vendors.Add(new Models.Vendor(
+                    vendor.obj.n,
+                    new MapLinkPayload(internalLocationIndex[0], internalLocationIndex[1], (float)vendor.obj.c[0], (float)vendor.obj.c[1]),
+                    vendorLocationName,
+                    new List<Models.Currency> { new Models.Currency("Gil", itemDetails.item.price) })
+                );
             }
         }
 
@@ -128,9 +133,9 @@ namespace ItemVendorLocation
                             ImGui.Text("No Location");
                         }
                         _ = ImGui.TableNextColumn();
-                        ImGui.Text(vendor.cost.ToString());
+                        ImGui.Text(string.Join("\n", vendor.currencies.Select(i => i.cost.ToString())));
                         _ = ImGui.TableNextColumn();
-                        ImGui.Text(vendor.currency);
+                        ImGui.Text(string.Join("\n", vendor.currencies.Select(i => i.name)));
                     }
                 }
                 ImGui.EndTable();

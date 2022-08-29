@@ -66,6 +66,10 @@ namespace GarlandToolsWrapper
                 {
                     return ItemSearch(itemName.Split("-")[0]);
                 }
+                else if (result.Contains("error") && itemName.Contains("+"))
+                {
+                    return ItemSearch(itemName.Split("+")[0]);
+                }
                 else
                 {
                     List<Models.ItemSearchResult> serializedResult = JsonConvert.DeserializeObject<List<Models.ItemSearchResult>>(result)!;

@@ -7,6 +7,9 @@ using Lumina.Excel.GeneratedSheets;
 
 namespace ItemVendorLocation.Models
 {
+    // https://github.com/Caraxi/ItemSearchPlugin/blob/3f28e10ea3cd54832af7c6650f44647e5034ba6f/ItemSearchPlugin/SpecialShopCustom.cs
+    // https://github.com/xivapi/SaintCoinach/blob/fabeedb29921358fe3025c65e72a3de14a3c3070/SaintCoinach/Xiv/SpecialShopListing.cs
+
     [Sheet("SpecialShop")]
     public class SpecialShopCustom : SpecialShop
     {

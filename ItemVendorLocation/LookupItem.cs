@@ -11,6 +11,7 @@ using Lumina.Excel.GeneratedSheets;
 
 namespace ItemVendorLocation
 {
+    // https://github.com/xivapi/SaintCoinach/blob/36e9d613f4bcc45b173959eed3f7b5549fd6f540/SaintCoinach/Xiv/Collections/ENpcCollection.cs
     internal class LookupItems
     {
         private readonly ExcelSheet<CustomTalk> customTalks;
@@ -69,6 +70,8 @@ namespace ItemVendorLocation
             });
         }
 
+        // https://discord.com/channels/581875019861328007/653504487352303619/860865002721247261
+        // https://github.com/SapphireServer/Sapphire/blob/a5c15f321f7e795ed7362ae15edaada99ca7d9be/src/world/Manager/EventMgr.cpp#L14
         private static bool MatchEventHandlerType(uint data, EventHandlerType type)
         {
             return ((data >> 16) & (uint)type) == (uint)type;
@@ -135,6 +138,7 @@ namespace ItemVendorLocation
 
                         foreach (var arg in customTalk.ScriptArg)
                         {
+                            // some script args contains have special shop stuff, we dont wanna miss that
                             if (arg < firstSpecialShopId || arg > lastSpecialShopId)
                             {
                                 continue;
@@ -228,18 +232,21 @@ namespace ItemVendorLocation
 
         private void AddGcShopItem(uint data, ENpcBase npcBase, ENpcResident resident)
         {
+            // Get GrandCompany id first
             var gcId = gcShops.GetRow(data);
             if (gcId == null)
             {
                 return;
             }
 
+            // Get shop category based on GrandCompany id
             var categories = gcScripShopCategories.Where(i => i.GrandCompany.Row == gcId.GrandCompany.Row).ToList();
             if (categories.Count == 0)
             {
                 return;
             }
 
+            // Get seal name
             var seal = gcSeal.Find(i => i.Name.RawString.Contains(gcId.GrandCompany.Value.Name));
             if (seal == null)
             {
@@ -263,6 +270,7 @@ namespace ItemVendorLocation
                             break;
                         }
 
+                        // Should nenver happen but just in case
                         if (!npcLocations.ContainsKey(npcBase.RowId))
                         {
                             continue;
@@ -315,6 +323,7 @@ namespace ItemVendorLocation
             itemInfo.NpcInfos = npcs;
         }
 
+        // https://github.com/ufx/GarlandTools/blob/3b3475bca6f95c800d2454f2c09a3f1eea0a8e4e/Garland.Data/Modules/Territories.cs
         private void BuildNpcLocation()
         {
             foreach (var sTerritoryType in territoryType)
@@ -381,6 +390,7 @@ namespace ItemVendorLocation
                 npcLocations.Add(level.Object, new NpcLocation(level.X, level.Z, level.Territory.Value));
             }
 
+            // https://github.com/ufx/GarlandTools/blob/7b38def8cf0ab553a2c3679aec86480c0e4e9481/Garland.Data/Modules/NPCs.cs#L59-L66
             var corrected = territoryType.GetRow(698);
             npcLocations[1004418].TerritoryExcel = corrected;
             npcLocations[1006747].TerritoryExcel = corrected;
@@ -390,7 +400,7 @@ namespace ItemVendorLocation
             npcLocations[1001945].TerritoryExcel = corrected;
             npcLocations[1001821].TerritoryExcel = corrected;
 
-            // some are missing, so we gotta hardcode them
+            // some are missing from my test, so im gotta hardcode them
             npcLocations.TryAdd(1006004, new NpcLocation(5.355835f, 155.22998f, territoryType.GetRow(128)));
             npcLocations.TryAdd(1017613, new NpcLocation(2.822865f, 153.521f, territoryType.GetRow(128)));
 
@@ -409,6 +419,7 @@ namespace ItemVendorLocation
             return itemDataMap.TryGetValue(itemId, out var itemInfo) ? itemInfo : null;
         }
 
+        // https://github.com/SapphireServer/Sapphire/blob/a5c15f321f7e795ed7362ae15edaada99ca7d9be/src/world/Event/EventHandler.h#L48-L83
         internal enum EventHandlerType : uint
         {
             GilShop = 0x0004,

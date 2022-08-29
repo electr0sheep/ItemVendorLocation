@@ -1,16 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31729.503
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32414.318
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ItemVendorLocation", "ItemVendorLocation\ItemVendorLocation.csproj", "{087565F1-A049-47C8-A870-AB79528EF82D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{06315471-8B7D-4EB8-931B-62CA71FE0C5E}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
+		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UIDev", "UIDev\UIDev.csproj", "{0C0CB73D-5844-418E-87E6-71A3ED95673A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DebugOnly", "UIDev\DebugOnly.csproj", "{0C0CB73D-5844-418E-87E6-71A3ED95673A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

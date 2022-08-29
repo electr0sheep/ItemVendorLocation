@@ -8,6 +8,8 @@ namespace ItemVendorLocation.Models
         GilShop,
         SpecialShop,
         GcShop,
+        FccShop,
+        Achievement,
     }
 
     public class ItemInfo
@@ -16,10 +18,7 @@ namespace ItemVendorLocation.Models
         public string Name;
         public List<NpcInfo> NpcInfos;
         public ItemType Type;
-
-        /*
-        public uint CostAmount;
-        public string CostItemName;*/
         public List<Tuple<uint, string>> Costs;
+        public string AchievementDescription;
     }
 }

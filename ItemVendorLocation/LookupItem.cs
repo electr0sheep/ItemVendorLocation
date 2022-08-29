@@ -11,24 +11,31 @@ using Lumina.Excel.GeneratedSheets;
 
 namespace ItemVendorLocation
 {
-    // https://github.com/xivapi/SaintCoinach/blob/36e9d613f4bcc45b173959eed3f7b5549fd6f540/SaintCoinach/Xiv/Collections/ENpcCollection.cs
     internal class LookupItems
     {
         private readonly ExcelSheet<CustomTalk> customTalks;
+        private readonly ExcelSheet<Achievement> achievements;
+
         private readonly ExcelSheet<ENpcBase> eNpcBases;
         private readonly ExcelSheet<ENpcResident> eNpcResidents;
+
         private readonly ExcelSheet<FateShopCustom> fateShops;
         private readonly ExcelSheet<GilShopItem> gilShopItems;
         private readonly ExcelSheet<GilShop> gilShops;
         private readonly ExcelSheet<SpecialShopCustom> specialShops;
-        private readonly ExcelSheet<TerritoryType> territoryType;
-
         private readonly ExcelSheet<GCShop> gcShops;
         private readonly ExcelSheet<GCScripShopItem> gcScripShopItems;
         private readonly ExcelSheet<GCScripShopCategory> gcScripShopCategories;
+        private readonly ExcelSheet<InclusionShop> inclusionShops;
+        private readonly ExcelSheet<InclusionShopSeriesCustom> inclusionShopSeries;
+        private readonly ExcelSheet<FccShop> fccShops;
+
+        private readonly ExcelSheet<TerritoryType> territoryType;
 
         private readonly Item gil;
+        private readonly ExcelSheet<Item> items;
         private readonly List<Item> gcSeal;
+        private readonly Addon fccName;
 
         private readonly Dictionary<uint, ItemInfo> itemDataMap = new();
         private readonly Dictionary<uint, NpcLocation> npcLocations = new();
@@ -50,8 +57,15 @@ namespace ItemVendorLocation
             gcShops = Service.DataManager.GetExcelSheet<GCShop>();
             gcScripShopCategories = Service.DataManager.GetExcelSheet<GCScripShopCategory>();
 
+            inclusionShops = Service.DataManager.GetExcelSheet<InclusionShop>();
+            inclusionShopSeries = Service.DataManager.GetExcelSheet<InclusionShopSeriesCustom>();
+            fccShops = Service.DataManager.GetExcelSheet<FccShop>();
 
-            var items = Service.DataManager.GetExcelSheet<Item>();
+            achievements = Service.DataManager.GetExcelSheet<Achievement>();
+
+            fccName = Service.DataManager.GetExcelSheet<Addon>().GetRow(102233);
+
+            items = Service.DataManager.GetExcelSheet<Item>();
             gil = items.GetRow(1);
 
             gcSeal = items.Where(i => i.RowId is >= 20 and <= 22).Select(i => i).ToList();
@@ -65,6 +79,7 @@ namespace ItemVendorLocation
 
                 BuildNpcLocation();
                 BuildVendorInfo();
+                HackyFix_AchievementItem();
                 isDataReady = true;
                 PluginLog.Debug("Data is ready");
             });
@@ -91,6 +106,11 @@ namespace ItemVendorLocation
 
                 var resident = eNpcResidents.GetRow(npcBase.RowId);
 
+                if (HackyFix_Npc(npcBase, resident))
+                {
+                    continue;
+                }
+
                 var fateShop = fateShops.GetRow(npcBase.RowId);
                 if (fateShop != null)
                 {
@@ -113,6 +133,14 @@ namespace ItemVendorLocation
                     if (npcData == 0)
                     {
                         continue;
+                    }
+
+                    AddInclusionItem(npcData, npcBase, resident);
+                    AddFccShop(npcData, npcBase, resident);
+
+                    if (MatchEventHandlerType(npcData, EventHandlerType.GcShop))
+                    {
+                        AddGcShopItem(npcData, npcBase, resident);
                     }
 
                     if (MatchEventHandlerType(npcData, EventHandlerType.SpecialShop))
@@ -145,7 +173,6 @@ namespace ItemVendorLocation
                                 continue;
                             }
 
-                            // some script args contains have special shop stuff, we dont wanna miss that
                             if (arg < firstSpecialShopId || arg > lastSpecialShopId)
                             {
                                 continue;
@@ -154,19 +181,12 @@ namespace ItemVendorLocation
                             var specialShop = specialShops.GetRow(arg);
                             AddSpecialItem(specialShop, npcBase, resident);
                         }
-
-                        continue;
-                    }
-
-                    if (MatchEventHandlerType(npcData, EventHandlerType.GcShop))
-                    {
-                        AddGcShopItem(npcData, npcBase, resident);
                     }
                 }
             }
         }
 
-        private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident)
+        private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop)
         {
             if (specialShop == null)
             {
@@ -197,9 +217,16 @@ namespace ItemVendorLocation
                         continue;
                     }
 
-                    var costs = entry.Cost.TakeWhile(cost => cost.Item.Value.Name != string.Empty).Select(cost => new Tuple<uint, string>(cost.Count, cost.Item.Value.Name)).ToList();
+                    var costs = entry.Cost.TakeWhile(cost => cost.Item.Value.Name != string.Empty)
+                        .Select(cost => new Tuple<uint, string>(cost.Item.Value == gil ? result.Item.Value.PriceMid : cost.Count, cost.Item.Value.Name)).ToList();
 
-                    AddItem(result.Item.Value.RowId, result.Item.Value.Name, npcBase.RowId, resident.Singular, costs, npcLocations[npcBase.RowId], ItemType.SpecialShop);
+                    var achievementDescription = "";
+                    if (type == ItemType.Achievement)
+                    {
+                        achievementDescription = achievements.Where(i => i.Item.Value == result.Item.Value).Select(i => i.Description).First();
+                    }
+
+                    AddItem_Internal(result.Item.Value.RowId, result.Item.Value.Name, npcBase.RowId, resident.Singular, costs, npcLocations[npcBase.RowId], type, achievementDescription);
                 }
             }
         }
@@ -222,13 +249,8 @@ namespace ItemVendorLocation
                         break;
                     }
 
-                    if (!npcLocations.ContainsKey(npcBase.RowId))
-                    {
-                        continue;
-                    }
-
-                    AddItem(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(item.Item.Value.PriceMid, gil.Name) },
-                        npcLocations[npcBase.RowId], ItemType.GilShop);
+                    AddItem_Internal(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(item.Item.Value.PriceMid, gil.Name) },
+                        npcLocations.ContainsKey(npcBase.RowId) ? npcLocations[npcBase.RowId] : null, ItemType.GilShop);
                 }
                 catch (Exception)
                 {
@@ -239,22 +261,19 @@ namespace ItemVendorLocation
 
         private void AddGcShopItem(uint data, ENpcBase npcBase, ENpcResident resident)
         {
-            // Get GrandCompany id first
             var gcId = gcShops.GetRow(data);
             if (gcId == null)
             {
                 return;
             }
 
-            // Get shop category based on GrandCompany id
             var categories = gcScripShopCategories.Where(i => i.GrandCompany.Row == gcId.GrandCompany.Row).ToList();
             if (categories.Count == 0)
             {
                 return;
             }
 
-            // Get seal name
-            var seal = gcSeal.Find(i => i.Name.RawString.Contains(gcId.GrandCompany.Value.Name));
+            var seal = gcSeal.Find(i => i.Name.RawString.StartsWith(gcId.GrandCompany.Value.Name));
             if (seal == null)
             {
                 return;
@@ -277,14 +296,8 @@ namespace ItemVendorLocation
                             break;
                         }
 
-                        // Should nenver happen but just in case
-                        if (!npcLocations.ContainsKey(npcBase.RowId))
-                        {
-                            continue;
-                        }
-
-                        AddItem(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(item.CostGCSeals, seal.Name) },
-                            npcLocations[npcBase.RowId], ItemType.GcShop);
+                        AddItem_Internal(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(item.CostGCSeals, seal.Name) },
+                            npcLocations.ContainsKey(npcBase.RowId) ? npcLocations[npcBase.RowId] : null, ItemType.GcShop);
                     }
                     catch (Exception)
                     {
@@ -294,7 +307,93 @@ namespace ItemVendorLocation
             }
         }
 
-        private void AddItem(uint itemId, string itemName, uint npcId, string npcName, List<Tuple<uint, string>> costs, NpcLocation npcLocation, ItemType type)
+        private void AddInclusionItem(uint data, ENpcBase npcBase, ENpcResident resident)
+        {
+            var inclusionShop = inclusionShops.GetRow(data);
+            if (inclusionShop == null)
+            {
+                return;
+            }
+
+            foreach (var category in inclusionShop.Category)
+            {
+                if (category.Value.RowId == 0)
+                {
+                    continue;
+                }
+
+                for (uint i = 0;; i++)
+                {
+                    try
+                    {
+                        var series = inclusionShopSeries.GetRow(category.Value.RowId, i);
+                        if (series == null)
+                        {
+                            break;
+                        }
+
+                        var specialShop = series.SpecialShopCustoms.Value;
+                        AddSpecialItem(specialShop, npcBase, resident);
+                    }
+                    catch (Exception)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void AddFccShop(uint data, ENpcBase npcBase, ENpcResident resident)
+        {
+            var shop = fccShops.GetRow(data);
+            if (shop == null)
+            {
+                return;
+            }
+
+            for (var i = 0; i < shop.UnkData1.Length; i++)
+            {
+                var item = items.GetRow(shop.UnkData1[i].Item);
+                if (item == null || item.Name == string.Empty)
+                {
+                    continue;
+                }
+
+                var cost = shop.UnkData11[i].Cost;
+
+                AddItem_Internal(item.RowId, item.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(cost, fccName.Text) },
+                    npcLocations.ContainsKey(npcBase.RowId) ? npcLocations[npcBase.RowId] : null, ItemType.FccShop);
+            }
+        }
+
+        private bool HackyFix_Npc(ENpcBase npcBase, ENpcResident resident)
+        {
+            if (npcBase.RowId != 1018655)
+            {
+                return false;
+            }
+
+            AddSpecialItem(specialShops.GetRow(1769743), npcBase, resident);
+            AddSpecialItem(specialShops.GetRow(1769744), npcBase, resident);
+            return true;
+        }
+
+        private void HackyFix_AchievementItem()
+        {
+            for (var i = 1006004u; i <= 1006006; i++)
+            {
+                var npcBase = eNpcBases.GetRow(i);
+                var resident = eNpcResidents.GetRow(i);
+
+                for (var j = 1769898u; j <= 1769906; j++)
+                {
+                    AddSpecialItem(specialShops.GetRow(j), npcBase, resident, ItemType.Achievement);
+                }
+            }
+        }
+
+        private void AddItem_Internal(uint itemId, string itemName, uint npcId, string npcName, List<Tuple<uint, string>> costs, NpcLocation npcLocation, ItemType type,
+            string achievementDesc = "")
         {
             if (!itemDataMap.ContainsKey(itemId))
             {
@@ -305,6 +404,7 @@ namespace ItemVendorLocation
                     Costs = costs,
                     NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Name = npcName } },
                     Type = type,
+                    AchievementDescription = achievementDesc,
                 });
                 return;
             }
@@ -318,19 +418,24 @@ namespace ItemVendorLocation
                     Costs = costs,
                     NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Name = npcName } },
                     Type = type,
+                    AchievementDescription = achievementDesc,
                 });
             }
 
             var npcs = itemInfo.NpcInfos;
+            var cost = itemInfo.Costs;
             if (npcs.Find(j => j.Id == npcId) == null)
             {
                 npcs.Add(new NpcInfo { Id = npcId, Location = npcLocation, Name = npcName });
+                cost.AddRange(costs);
             }
 
             itemInfo.NpcInfos = npcs;
+            itemInfo.Costs = cost;
         }
 
         // https://github.com/ufx/GarlandTools/blob/3b3475bca6f95c800d2454f2c09a3f1eea0a8e4e/Garland.Data/Modules/Territories.cs
+
         private void BuildNpcLocation()
         {
             foreach (var sTerritoryType in territoryType)
@@ -397,7 +502,7 @@ namespace ItemVendorLocation
                 npcLocations.Add(level.Object, new NpcLocation(level.X, level.Z, level.Territory.Value));
             }
 
-            // https://github.com/ufx/GarlandTools/blob/7b38def8cf0ab553a2c3679aec86480c0e4e9481/Garland.Data/Modules/NPCs.cs#L59-L66
+            // npcLocations.Add(level.Object, new NpcLocation(level.X, level.Z, level.Territory.Value));
             var corrected = territoryType.GetRow(698);
             npcLocations[1004418].TerritoryExcel = corrected;
             npcLocations[1006747].TerritoryExcel = corrected;
@@ -407,7 +512,7 @@ namespace ItemVendorLocation
             npcLocations[1001945].TerritoryExcel = corrected;
             npcLocations[1001821].TerritoryExcel = corrected;
 
-            // some are missing from my test, so im gotta hardcode them
+            // some are missing, so we gotta hardcode them
             npcLocations.TryAdd(1006004, new NpcLocation(5.355835f, 155.22998f, territoryType.GetRow(128)));
             npcLocations.TryAdd(1017613, new NpcLocation(2.822865f, 153.521f, territoryType.GetRow(128)));
 

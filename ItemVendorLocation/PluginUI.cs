@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using System.Numerics;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 using ImGuiNET;
@@ -47,25 +46,32 @@ namespace ItemVendorLocation
                 return;
             }
 
-            ImGui.SetNextWindowSize(new Vector2(375, 200), ImGuiCond.FirstUseEver);
-            ImGui.SetNextWindowSizeConstraints(new Vector2(375, 200), new Vector2(float.MaxValue, float.MaxValue));
-            if (ImGui.Begin($"{ItemToDisplay.Name} Vendors###Item Vendor Location", ref vendorLocationsVisable))
+            var windowSize = ImGui.GetWindowViewport().Size;
+
+            ImGui.SetNextWindowSizeConstraints(new Vector2(375, 200), windowSize with { Y = windowSize.Y * 0.5f });
+            if (ImGui.Begin($"{ItemToDisplay.Name} Vendors###Item Vendor Location", ref vendorLocationsVisable, ImGuiWindowFlags.AlwaysAutoResize))
             {
-                if (ImGui.BeginTable("Vendors", 3, ImGuiTableFlags.Resizable))
+                if (ImGui.BeginTable("Vendors", ItemToDisplay.Type == ItemType.Achievement ? 4 : 3, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp, new Vector2(-1, -1)))
                 {
                     ImGui.TableSetupColumn("Name");
                     ImGui.TableSetupColumn("Location");
                     ImGui.TableSetupColumn("Cost");
+                    if (ItemToDisplay.Type == ItemType.Achievement)
+                    {
+                        ImGui.TableSetupColumn("Obtain Requirement");
+                    }
+
                     ImGui.TableHeadersRow();
-
-                    var costInfo = ItemToDisplay.Costs;
-
+                    
                     foreach (var npcInfo in ItemToDisplay.NpcInfos)
                     {
+                        var index = ItemToDisplay.NpcInfos.FindIndex(i => i == npcInfo);
+                        var costStr = $"{ItemToDisplay.Costs[index].Item2} x{ItemToDisplay.Costs[index].Item1}";
+
                         ImGui.TableNextRow();
-                        _ = ImGui.TableNextColumn();
+                        ImGui.TableNextColumn();
                         ImGui.Text(npcInfo.Name);
-                        _ = ImGui.TableNextColumn();
+                        ImGui.TableNextColumn();
 
                         var location = npcInfo.Location;
 
@@ -81,12 +87,15 @@ namespace ItemVendorLocation
                             ImGui.Text("No Location");
                         }
 
-                        _ = ImGui.TableNextColumn();
+                        ImGui.TableNextColumn();
 
-                        var cost = costInfo.Aggregate("", (current, info) => current + $"{info.Item2} x{info.Item1} ,");
-                        cost = cost[..^2];
+                        ImGui.Text(costStr);
 
-                        ImGui.Text(cost);
+                        if (ItemToDisplay.Type == ItemType.Achievement)
+                        {
+                            ImGui.TableNextColumn();
+                            ImGui.Text(ItemToDisplay.AchievementDescription);
+                        }
                     }
                 }
 

@@ -138,6 +138,13 @@ namespace ItemVendorLocation
 
                         foreach (var arg in customTalk.ScriptArg)
                         {
+                            if (MatchEventHandlerType(arg, EventHandlerType.GilShop))
+                            {
+                                var gilShop = gilShops.GetRow(arg);
+                                AddGilShopItem(gilShop, npcBase, resident);
+                                continue;
+                            }
+
                             // some script args contains have special shop stuff, we dont wanna miss that
                             if (arg < firstSpecialShopId || arg > lastSpecialShopId)
                             {

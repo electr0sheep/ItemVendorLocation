@@ -113,14 +113,15 @@ namespace ItemVendorLocation
                 return;
             }
 
+            var origStr = itemTooltip[ItemTooltipString.ShopSellingPrice];
+
             switch (itemInfo.Type)
             {
                 case ItemType.GcShop:
+                    itemTooltip[ItemTooltipString.ShopSellingPrice] = origStr.TextValue.Substring(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })) + $"：{itemInfo.Costs[0].Item2}x{itemInfo.Costs[0].Item1}";
+                    return;
                 case ItemType.SpecialShop:
-                    var cost = itemInfo.Costs.Aggregate("", (current, info) => current + $"{info.Item2}x{info.Item1} ,");
-                    cost = cost[..^2];
-                    var origStr = itemTooltip[ItemTooltipString.ShopSellingPrice];
-                    itemTooltip[ItemTooltipString.ShopSellingPrice] = origStr.TextValue.Substring(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })) + "：" + cost;
+                    itemTooltip[ItemTooltipString.ShopSellingPrice] = origStr.TextValue.Substring(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })) + "：Special Vendor";
                     return;
             }
         }

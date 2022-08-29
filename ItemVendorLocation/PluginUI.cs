@@ -51,7 +51,7 @@ namespace ItemVendorLocation
             ImGui.SetNextWindowSizeConstraints(new Vector2(375, 200), new Vector2(float.MaxValue, float.MaxValue));
             if (ImGui.Begin($"{ItemToDisplay.Name} Vendors###Item Vendor Location", ref vendorLocationsVisable))
             {
-                if (ImGui.BeginTable("Vendors", 3, ImGuiTableFlags.Resizable))
+                if (ImGui.BeginTable("Vendors", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp, new Vector2(-1, -1)))
                 {
                     ImGui.TableSetupColumn("Name");
                     ImGui.TableSetupColumn("Location");
@@ -83,7 +83,7 @@ namespace ItemVendorLocation
 
                         _ = ImGui.TableNextColumn();
 
-                        var cost = costInfo.Aggregate("", (current, info) => current + $"{info.Item2} x{info.Item1} ,");
+                        var cost = costInfo.Aggregate("", (current, info) => current + $"{info.Item2} x{info.Item1}, ");
                         cost = cost[..^2];
 
                         ImGui.Text(cost);

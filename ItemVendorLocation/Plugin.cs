@@ -143,6 +143,8 @@ namespace ItemVendorLocation
                 case "ShopExchangeItem":
                 case "ShopExchangeItemDialog":
                 case "Journal":
+                case "SubmarinePartsMenu":
+                case "HousingGoods":
                     var itemId = (uint)Service.GameGui.HoveredItem;
                     selectedItem = Service.DataManager.GetExcelSheet<Item>()!.GetRow(itemId)!;
                     args.Items.Add(new NormalContextMenuItem("Vendor Location", _ => { HandleItem(selectedItem.RowId); }));

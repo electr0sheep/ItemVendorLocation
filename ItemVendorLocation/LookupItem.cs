@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dalamud.Data;
 using Dalamud.Logging;
 using ItemVendorLocation.Models;
 using Lumina.Data.Files;
@@ -10,218 +9,215 @@ using Lumina.Data.Parsing.Layer;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
-namespace ItemVendorLocation;
-
-internal class LookupItems
+namespace ItemVendorLocation
 {
-    private readonly ExcelSheet<CustomTalk> customTalks;
-    private readonly ExcelSheet<ENpcBase> eNpcBases;
-    private readonly ExcelSheet<ENpcResident> eNpcResidents;
-    private readonly ExcelSheet<FateShopCustom> fateShops;
-    private readonly ExcelSheet<GilShopItem> gilShopItems;
-    private readonly ExcelSheet<GilShop> gilShops;
-    private readonly ExcelSheet<SpecialShopCustom> specialShops;
-    private readonly ExcelSheet<TerritoryType> territoryType;
-
-    private readonly ExcelSheet<GCShop> gcShops;
-    private readonly ExcelSheet<GCScripShopItem> gcScripShopItems;
-    private readonly ExcelSheet<GCScripShopCategory> gcScripShopCategories;
-
-    private readonly Item gil;
-    private readonly List<Item> gcSeal;
-
-    private readonly Dictionary<uint, ItemInfo> itemDataMap = new();
-    private readonly Dictionary<uint, NpcLocation> npcLocations = new();
-
-    private bool isDataReady;
-
-    public LookupItems()
+    internal class LookupItems
     {
-        eNpcBases = Service.DataManager.GetExcelSheet<ENpcBase>();
-        eNpcResidents = Service.DataManager.GetExcelSheet<ENpcResident>();
-        gilShopItems = Service.DataManager.GetExcelSheet<GilShopItem>();
-        gilShops = Service.DataManager.GetExcelSheet<GilShop>();
-        specialShops = Service.DataManager.GetExcelSheet<SpecialShopCustom>();
-        customTalks = Service.DataManager.GetExcelSheet<CustomTalk>();
-        fateShops = Service.DataManager.GetExcelSheet<FateShopCustom>();
-        territoryType = Service.DataManager.GetExcelSheet<TerritoryType>();
+        private readonly ExcelSheet<CustomTalk> customTalks;
+        private readonly ExcelSheet<ENpcBase> eNpcBases;
+        private readonly ExcelSheet<ENpcResident> eNpcResidents;
+        private readonly ExcelSheet<FateShopCustom> fateShops;
+        private readonly ExcelSheet<GilShopItem> gilShopItems;
+        private readonly ExcelSheet<GilShop> gilShops;
+        private readonly ExcelSheet<SpecialShopCustom> specialShops;
+        private readonly ExcelSheet<TerritoryType> territoryType;
 
-        gcScripShopItems = Service.DataManager.GetExcelSheet<GCScripShopItem>();
-        gcShops = Service.DataManager.GetExcelSheet<GCShop>();
-        gcScripShopCategories = Service.DataManager.GetExcelSheet<GCScripShopCategory>();
+        private readonly ExcelSheet<GCShop> gcShops;
+        private readonly ExcelSheet<GCScripShopItem> gcScripShopItems;
+        private readonly ExcelSheet<GCScripShopCategory> gcScripShopCategories;
 
+        private readonly Item gil;
+        private readonly List<Item> gcSeal;
 
-        var items = Service.DataManager.GetExcelSheet<Item>();
-        gil = items.GetRow(1);
+        private readonly Dictionary<uint, ItemInfo> itemDataMap = new();
+        private readonly Dictionary<uint, NpcLocation> npcLocations = new();
 
-        gcSeal = items.Where(i => i.RowId is >= 20 and <= 22).Select(i => i).ToList();
+        private bool isDataReady;
 
-        Task.Run(async () =>
+        public LookupItems()
         {
-            while (!Service.DataManager.IsDataReady)
+            eNpcBases = Service.DataManager.GetExcelSheet<ENpcBase>();
+            eNpcResidents = Service.DataManager.GetExcelSheet<ENpcResident>();
+            gilShopItems = Service.DataManager.GetExcelSheet<GilShopItem>();
+            gilShops = Service.DataManager.GetExcelSheet<GilShop>();
+            specialShops = Service.DataManager.GetExcelSheet<SpecialShopCustom>();
+            customTalks = Service.DataManager.GetExcelSheet<CustomTalk>();
+            fateShops = Service.DataManager.GetExcelSheet<FateShopCustom>();
+            territoryType = Service.DataManager.GetExcelSheet<TerritoryType>();
+
+            gcScripShopItems = Service.DataManager.GetExcelSheet<GCScripShopItem>();
+            gcShops = Service.DataManager.GetExcelSheet<GCShop>();
+            gcScripShopCategories = Service.DataManager.GetExcelSheet<GCScripShopCategory>();
+
+
+            var items = Service.DataManager.GetExcelSheet<Item>();
+            gil = items.GetRow(1);
+
+            gcSeal = items.Where(i => i.RowId is >= 20 and <= 22).Select(i => i).ToList();
+
+            Task.Run(async () =>
             {
-                await Task.Delay(500);
-            }
-
-            BuildNpcLocation();
-            BuildVendorInfo();
-            isDataReady = true;
-            PluginLog.Debug("Data is ready");
-        });
-    }
-
-    private static bool MatchEventHandlerType(uint data, EventHandlerType type) => ((data >> 16) & (uint)type) == (uint)type;
-
-    private void BuildVendorInfo()
-    {
-        var firstSpecialShopId = specialShops.First().RowId;
-        var lastSpecialShopId = specialShops.Last().RowId;
-
-        foreach (var npcBase in eNpcBases)
-        {
-            if (npcBase == null)
-                continue;
-            var resident = eNpcResidents.GetRow(npcBase.RowId);
-
-            var fateShop = fateShops.GetRow(npcBase.RowId);
-            if (fateShop != null)
-            {
-                foreach (var specialShop in fateShop.SpecialShop)
+                while (!Service.DataManager.IsDataReady)
                 {
-                    if (specialShop.Value == null)
-                        continue;
-
-                    var specialShopCustom = specialShops.GetRow(specialShop.Row);
-                    AddSpecialItem(specialShopCustom, npcBase, resident);
+                    await Task.Delay(500);
                 }
 
-                continue;
-            }
+                BuildNpcLocation();
+                BuildVendorInfo();
+                isDataReady = true;
+                PluginLog.Debug("Data is ready");
+            });
+        }
 
-            foreach (var npcData in npcBase.ENpcData)
+        private static bool MatchEventHandlerType(uint data, EventHandlerType type)
+        {
+            return ((data >> 16) & (uint)type) == (uint)type;
+        }
+
+        private void BuildVendorInfo()
+        {
+            var firstSpecialShopId = specialShops.First().RowId;
+            var lastSpecialShopId = specialShops.Last().RowId;
+
+            foreach (var npcBase in eNpcBases)
             {
-                if (npcData == 0)
-                    continue;
-
-                if (MatchEventHandlerType(npcData, EventHandlerType.SpecialShop))
+                if (npcBase == null)
                 {
-                    var specialShop = specialShops.GetRow(npcData);
-                    AddSpecialItem(specialShop, npcBase, resident);
                     continue;
                 }
 
-                if (MatchEventHandlerType(npcData, EventHandlerType.GilShop))
-                {
-                    var gilShop = gilShops.GetRow(npcData);
-                    AddGilShopItem(gilShop, npcBase, resident);
-                }
+                var resident = eNpcResidents.GetRow(npcBase.RowId);
 
-                if (MatchEventHandlerType(npcData, EventHandlerType.CustomTalk))
+                var fateShop = fateShops.GetRow(npcBase.RowId);
+                if (fateShop != null)
                 {
-                    var customTalk = customTalks.GetRow(npcData);
-                    if (customTalk == null)
-                        continue;
-
-                    foreach (var arg in customTalk.ScriptArg)
+                    foreach (var specialShop in fateShop.SpecialShop)
                     {
-                        if (arg < firstSpecialShopId || arg > lastSpecialShopId)
+                        if (specialShop.Value == null)
+                        {
                             continue;
-                        var specialShop = specialShops.GetRow(arg);
-                        AddSpecialItem(specialShop, npcBase, resident);
+                        }
+
+                        var specialShopCustom = specialShops.GetRow(specialShop.Row);
+                        AddSpecialItem(specialShopCustom, npcBase, resident);
                     }
 
                     continue;
                 }
 
-                if (MatchEventHandlerType(npcData, EventHandlerType.GcShop))
-                    AddGcShopItem(npcData, npcBase, resident);
+                foreach (var npcData in npcBase.ENpcData)
+                {
+                    if (npcData == 0)
+                    {
+                        continue;
+                    }
+
+                    if (MatchEventHandlerType(npcData, EventHandlerType.SpecialShop))
+                    {
+                        var specialShop = specialShops.GetRow(npcData);
+                        AddSpecialItem(specialShop, npcBase, resident);
+                        continue;
+                    }
+
+                    if (MatchEventHandlerType(npcData, EventHandlerType.GilShop))
+                    {
+                        var gilShop = gilShops.GetRow(npcData);
+                        AddGilShopItem(gilShop, npcBase, resident);
+                    }
+
+                    if (MatchEventHandlerType(npcData, EventHandlerType.CustomTalk))
+                    {
+                        var customTalk = customTalks.GetRow(npcData);
+                        if (customTalk == null)
+                        {
+                            continue;
+                        }
+
+                        foreach (var arg in customTalk.ScriptArg)
+                        {
+                            if (arg < firstSpecialShopId || arg > lastSpecialShopId)
+                            {
+                                continue;
+                            }
+
+                            var specialShop = specialShops.GetRow(arg);
+                            AddSpecialItem(specialShop, npcBase, resident);
+                        }
+
+                        continue;
+                    }
+
+                    if (MatchEventHandlerType(npcData, EventHandlerType.GcShop))
+                    {
+                        AddGcShopItem(npcData, npcBase, resident);
+                    }
+                }
             }
         }
-    }
 
-    private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident)
-    {
-        if (specialShop == null) return;
-
-        foreach (var entry in specialShop.Entries)
+        private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident)
         {
-            if (entry.Result == null || entry.Cost == null) continue;
-
-            foreach (var result in entry.Result)
+            if (specialShop == null)
             {
-                if (result.Item.Value == null)
+                return;
+            }
+
+            foreach (var entry in specialShop.Entries)
+            {
+                if (entry.Result == null || entry.Cost == null)
+                {
                     continue;
+                }
 
-                if (result.Item.Value?.Name == string.Empty)
-                    continue;
+                foreach (var result in entry.Result)
+                {
+                    if (result.Item.Value == null)
+                    {
+                        continue;
+                    }
 
-                if (!npcLocations.ContainsKey(npcBase.RowId))
-                    continue;
+                    if (result.Item.Value?.Name == string.Empty)
+                    {
+                        continue;
+                    }
 
-                var costs = entry.Cost.TakeWhile(cost => cost.Item.Value.Name != string.Empty).Select(cost => new Tuple<uint, string>(cost.Count, cost.Item.Value.Name)).ToList();
+                    if (!npcLocations.ContainsKey(npcBase.RowId))
+                    {
+                        continue;
+                    }
 
-                AddItem(result.Item.Value.RowId, result.Item.Value.Name, npcBase.RowId, resident.Singular, costs, npcLocations[npcBase.RowId], ItemType.SpecialShop);
+                    var costs = entry.Cost.TakeWhile(cost => cost.Item.Value.Name != string.Empty).Select(cost => new Tuple<uint, string>(cost.Count, cost.Item.Value.Name)).ToList();
+
+                    AddItem(result.Item.Value.RowId, result.Item.Value.Name, npcBase.RowId, resident.Singular, costs, npcLocations[npcBase.RowId], ItemType.SpecialShop);
+                }
             }
         }
-    }
 
-    private void AddGilShopItem(GilShop shop, ENpcBase npcBase, ENpcResident resident)
-    {
-        if (shop == null)
-            return;
-
-        for (var i = 0u;; i++)
+        private void AddGilShopItem(GilShop shop, ENpcBase npcBase, ENpcResident resident)
         {
-            try
+            if (shop == null)
             {
-                var item = gilShopItems.GetRow(shop.RowId, i);
-
-                if (item?.Item.Value == null) break;
-                if (!npcLocations.ContainsKey(npcBase.RowId))
-                    continue;
-
-                AddItem(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(item.Item.Value.PriceMid, gil.Name) },
-                    npcLocations[npcBase.RowId], ItemType.GilShop);
+                return;
             }
-            catch (Exception)
-            {
-                break;
-            }
-        }
-    }
 
-    private void AddGcShopItem(uint data, ENpcBase npcBase, ENpcResident resident)
-    {
-        var gcId = gcShops.GetRow(data);
-        if (gcId == null)
-            return;
-
-        var categories = gcScripShopCategories.Where(i => i.GrandCompany.Row == gcId.GrandCompany.Row).ToList();
-        if (categories.Count == 0)
-            return;
-
-        var seal = gcSeal.Find(i => i.Name.RawString.Contains(gcId.GrandCompany.Value.Name));
-        if (seal == null)
-            return;
-
-        foreach (var category in categories)
-        {
             for (var i = 0u;; i++)
             {
                 try
                 {
-                    var item = gcScripShopItems.GetRow(category.RowId, i);
-                    if (item == null)
-                        break;
+                    var item = gilShopItems.GetRow(shop.RowId, i);
 
-                    if (item.SortKey == 0)
+                    if (item?.Item.Value == null)
+                    {
                         break;
+                    }
 
                     if (!npcLocations.ContainsKey(npcBase.RowId))
+                    {
                         continue;
+                    }
 
-                    AddItem(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(item.CostGCSeals, seal.Name) },
-                        npcLocations[npcBase.RowId], ItemType.GcShop);
+                    AddItem(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(item.Item.Value.PriceMid, gil.Name) },
+                        npcLocations[npcBase.RowId], ItemType.GilShop);
                 }
                 catch (Exception)
                 {
@@ -229,121 +225,196 @@ internal class LookupItems
                 }
             }
         }
-    }
 
-    private void AddItem(uint itemId, string itemName, uint npcId, string npcName, List<Tuple<uint, string>> costs, NpcLocation npcLocation, ItemType type)
-    {
-        if (!itemDataMap.ContainsKey(itemId))
+        private void AddGcShopItem(uint data, ENpcBase npcBase, ENpcResident resident)
         {
-            itemDataMap.Add(itemId, new ItemInfo
+            var gcId = gcShops.GetRow(data);
+            if (gcId == null)
             {
-                Id = npcId,
-                Name = itemName,
-                Costs = costs,
-                NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Name = npcName } },
-                Type = type,
-            });
-            return;
-        }
+                return;
+            }
 
-        if (!itemDataMap.TryGetValue(itemId, out var itemInfo))
-        {
-            itemDataMap.TryAdd(itemId, itemInfo = new ItemInfo
+            var categories = gcScripShopCategories.Where(i => i.GrandCompany.Row == gcId.GrandCompany.Row).ToList();
+            if (categories.Count == 0)
             {
-                Id = npcId,
-                Name = itemName,
-                Costs = costs,
-                NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Name = npcName } },
-                Type = type,
-            });
-        }
+                return;
+            }
 
-        var npcs = itemInfo.NpcInfos;
-        if (npcs.Find(j => j.Id == npcId) == null)
-            npcs.Add(new NpcInfo { Id = npcId, Location = npcLocation, Name = npcName });
-
-        itemInfo.NpcInfos = npcs;
-    }
-
-    private void BuildNpcLocation()
-    {
-        foreach (var sTerritoryType in territoryType)
-        {
-            var bg = sTerritoryType.Bg.ToString();
-            if (string.IsNullOrEmpty(bg))
-                continue;
-
-            var lgbFileName = "bg/" + bg[..(bg.IndexOf("/level/", StringComparison.Ordinal) + 1)] + "level/planevent.lgb";
-            var sLgbFile = Service.DataManager.GetFile<LgbFile>(lgbFileName);
-            if (sLgbFile == null) continue;
-
-            foreach (var sLgbGroup in sLgbFile.Layers)
+            var seal = gcSeal.Find(i => i.Name.RawString.Contains(gcId.GrandCompany.Value.Name));
+            if (seal == null)
             {
-                foreach (var instanceObject in sLgbGroup.InstanceObjects)
+                return;
+            }
+
+            foreach (var category in categories)
+            {
+                for (var i = 0u;; i++)
                 {
-                    if (instanceObject.AssetType != LayerEntryType.EventNPC)
-                        continue;
+                    try
+                    {
+                        var item = gcScripShopItems.GetRow(category.RowId, i);
+                        if (item == null)
+                        {
+                            break;
+                        }
 
-                    var eventNpc = (LayerCommon.ENPCInstanceObject)instanceObject.Object;
-                    var npcRowId = eventNpc.ParentData.ParentData.BaseId;
-                    if (npcRowId == 0)
-                        continue;
+                        if (item.SortKey == 0)
+                        {
+                            break;
+                        }
 
-                    if (npcLocations.ContainsKey(npcRowId))
-                        continue;
+                        if (!npcLocations.ContainsKey(npcBase.RowId))
+                        {
+                            continue;
+                        }
 
-                    npcLocations.Add(npcRowId, new NpcLocation(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType));
+                        AddItem(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(item.CostGCSeals, seal.Name) },
+                            npcLocations[npcBase.RowId], ItemType.GcShop);
+                    }
+                    catch (Exception)
+                    {
+                        break;
+                    }
                 }
             }
         }
 
-        var levels = Service.DataManager.GetExcelSheet<Level>();
-        foreach (var level in levels)
+        private void AddItem(uint itemId, string itemName, uint npcId, string npcName, List<Tuple<uint, string>> costs, NpcLocation npcLocation, ItemType type)
         {
-            // NPC
-            if (level.Type != 8)
-                continue;
+            if (!itemDataMap.ContainsKey(itemId))
+            {
+                itemDataMap.Add(itemId, new ItemInfo
+                {
+                    Id = npcId,
+                    Name = itemName,
+                    Costs = costs,
+                    NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Name = npcName } },
+                    Type = type,
+                });
+                return;
+            }
 
-            // NPC Id
-            if (npcLocations.ContainsKey(level.Object))
-                continue;
+            if (!itemDataMap.TryGetValue(itemId, out var itemInfo))
+            {
+                itemDataMap.TryAdd(itemId, itemInfo = new ItemInfo
+                {
+                    Id = npcId,
+                    Name = itemName,
+                    Costs = costs,
+                    NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Name = npcName } },
+                    Type = type,
+                });
+            }
 
-            if (level.Territory.Value == null)
-                continue;
+            var npcs = itemInfo.NpcInfos;
+            if (npcs.Find(j => j.Id == npcId) == null)
+            {
+                npcs.Add(new NpcInfo { Id = npcId, Location = npcLocation, Name = npcName });
+            }
 
-            npcLocations.Add(level.Object, new NpcLocation(level.X, level.Z, level.Territory.Value));
+            itemInfo.NpcInfos = npcs;
         }
 
-        var corrected = territoryType.GetRow(698);
-        npcLocations[1004418].TerritoryExcel = corrected;
-        npcLocations[1006747].TerritoryExcel = corrected;
-        npcLocations[1002299].TerritoryExcel = corrected;
-        npcLocations[1002281].TerritoryExcel = corrected;
-        npcLocations[1001766].TerritoryExcel = corrected;
-        npcLocations[1001945].TerritoryExcel = corrected;
-        npcLocations[1001821].TerritoryExcel = corrected;
+        private void BuildNpcLocation()
+        {
+            foreach (var sTerritoryType in territoryType)
+            {
+                var bg = sTerritoryType.Bg.ToString();
+                if (string.IsNullOrEmpty(bg))
+                {
+                    continue;
+                }
 
-        // some are missing, so we gotta hardcode them
-        npcLocations.TryAdd(1006004, new NpcLocation(5.355835f, 155.22998f, territoryType.GetRow(128)));
-        npcLocations.TryAdd(1017613, new NpcLocation(2.822865f, 153.521f, territoryType.GetRow(128)));
+                var lgbFileName = "bg/" + bg[..(bg.IndexOf("/level/", StringComparison.Ordinal) + 1)] + "level/planevent.lgb";
+                var sLgbFile = Service.DataManager.GetFile<LgbFile>(lgbFileName);
+                if (sLgbFile == null)
+                {
+                    continue;
+                }
 
-        npcLocations.TryAdd(1008145, new NpcLocation(-31.265808f, -245.38031f, territoryType.GetRow(133)));
-        npcLocations.TryAdd(1006005, new NpcLocation(-61.234497f, -141.31384f, territoryType.GetRow(133)));
-        npcLocations.TryAdd(1017614, new NpcLocation(-58.79309f, -142.1073f, territoryType.GetRow(133)));
-    }
+                foreach (var sLgbGroup in sLgbFile.Layers)
+                {
+                    foreach (var instanceObject in sLgbGroup.InstanceObjects)
+                    {
+                        if (instanceObject.AssetType != LayerEntryType.EventNPC)
+                        {
+                            continue;
+                        }
 
-    public ItemInfo? GetItemInfo(uint itemId)
-    {
-        if (!isDataReady) return null;
+                        var eventNpc = (LayerCommon.ENPCInstanceObject)instanceObject.Object;
+                        var npcRowId = eventNpc.ParentData.ParentData.BaseId;
+                        if (npcRowId == 0)
+                        {
+                            continue;
+                        }
 
-        return itemDataMap.TryGetValue(itemId, out var itemInfo) ? itemInfo : null;
-    }
+                        if (npcLocations.ContainsKey(npcRowId))
+                        {
+                            continue;
+                        }
 
-    internal enum EventHandlerType : uint
-    {
-        GilShop = 0x0004,
-        CustomTalk = 0x000B,
-        GcShop = 0x0016,
-        SpecialShop = 0x001B,
+                        npcLocations.Add(npcRowId, new NpcLocation(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType));
+                    }
+                }
+            }
+
+            var levels = Service.DataManager.GetExcelSheet<Level>();
+            foreach (var level in levels)
+            {
+                // NPC
+                if (level.Type != 8)
+                {
+                    continue;
+                }
+
+                // NPC Id
+                if (npcLocations.ContainsKey(level.Object))
+                {
+                    continue;
+                }
+
+                if (level.Territory.Value == null)
+                {
+                    continue;
+                }
+
+                npcLocations.Add(level.Object, new NpcLocation(level.X, level.Z, level.Territory.Value));
+            }
+
+            var corrected = territoryType.GetRow(698);
+            npcLocations[1004418].TerritoryExcel = corrected;
+            npcLocations[1006747].TerritoryExcel = corrected;
+            npcLocations[1002299].TerritoryExcel = corrected;
+            npcLocations[1002281].TerritoryExcel = corrected;
+            npcLocations[1001766].TerritoryExcel = corrected;
+            npcLocations[1001945].TerritoryExcel = corrected;
+            npcLocations[1001821].TerritoryExcel = corrected;
+
+            // some are missing, so we gotta hardcode them
+            npcLocations.TryAdd(1006004, new NpcLocation(5.355835f, 155.22998f, territoryType.GetRow(128)));
+            npcLocations.TryAdd(1017613, new NpcLocation(2.822865f, 153.521f, territoryType.GetRow(128)));
+
+            npcLocations.TryAdd(1008145, new NpcLocation(-31.265808f, -245.38031f, territoryType.GetRow(133)));
+            npcLocations.TryAdd(1006005, new NpcLocation(-61.234497f, -141.31384f, territoryType.GetRow(133)));
+            npcLocations.TryAdd(1017614, new NpcLocation(-58.79309f, -142.1073f, territoryType.GetRow(133)));
+        }
+
+        public ItemInfo? GetItemInfo(uint itemId)
+        {
+            if (!isDataReady)
+            {
+                return null;
+            }
+
+            return itemDataMap.TryGetValue(itemId, out var itemInfo) ? itemInfo : null;
+        }
+
+        internal enum EventHandlerType : uint
+        {
+            GilShop = 0x0004,
+            CustomTalk = 0x000B,
+            GcShop = 0x0016,
+            SpecialShop = 0x001B,
+        }
     }
 }

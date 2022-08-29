@@ -3,22 +3,23 @@ using Lumina.Data;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
-namespace ItemVendorLocation.Models;
-
-[Sheet("FateShop")]
-public class FateShopCustom : FateShop
+namespace ItemVendorLocation.Models
 {
-    public LazyRow<SpecialShopCustom>[] SpecialShopCustoms { get; set; }
-
-    public override void PopulateData(RowParser parser, GameData gameData, Language language)
+    [Sheet("FateShop")]
+    public class FateShopCustom : FateShop
     {
-        base.PopulateData(parser, gameData, language);
+        public LazyRow<SpecialShopCustom>[] SpecialShopCustoms { get; set; }
 
-        SpecialShopCustoms = new LazyRow<SpecialShopCustom>[2];
-
-        for (var i = 0; i < 2; i++)
+        public override void PopulateData(RowParser parser, GameData gameData, Language language)
         {
-            SpecialShopCustoms[i] = new LazyRow<SpecialShopCustom>(gameData, parser.ReadColumn<uint>(0 + i), language);
+            base.PopulateData(parser, gameData, language);
+
+            SpecialShopCustoms = new LazyRow<SpecialShopCustom>[2];
+
+            for (var i = 0; i < 2; i++)
+            {
+                SpecialShopCustoms[i] = new LazyRow<SpecialShopCustom>(gameData, parser.ReadColumn<uint>(0 + i), language);
+            }
         }
     }
 }

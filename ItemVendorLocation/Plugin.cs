@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.Linq;
+using System.Reflection;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -115,11 +116,11 @@ namespace ItemVendorLocation
             switch (itemInfo.Type)
             {
                 case ItemType.GcShop:
-                    itemTooltip[ItemTooltipString.ShopSellingPrice] = $"Shop Selling Price: {itemInfo.Costs[0].Item1} {itemInfo.Costs[0].Item2}";
-                    return;
-
                 case ItemType.SpecialShop:
-                    itemTooltip[ItemTooltipString.ShopSellingPrice] = "Shop Selling Price: Special vendor";
+                    var cost = itemInfo.Costs.Aggregate("", (current, info) => current + $"{info.Item2}x{info.Item1} ,");
+                    cost = cost[..^2];
+                    var origStr = itemTooltip[ItemTooltipString.ShopSellingPrice];
+                    itemTooltip[ItemTooltipString.ShopSellingPrice] = origStr.TextValue.Substring(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })) + "：" + cost;
                     return;
             }
         }

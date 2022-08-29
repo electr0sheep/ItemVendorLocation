@@ -16,6 +16,12 @@ namespace ItemVendorLocation
         // this extra bool exists for ImGui, since you can't ref a property
         private bool vendorLocationsVisable;
 
+        public ItemInfo ItemToDisplay;
+
+        public PluginUI(Configuration configuration)
+        {
+            this.configuration = configuration;
+        }
 
         public bool VendorResultsVisible
         {
@@ -24,13 +30,6 @@ namespace ItemVendorLocation
         }
 
         public bool SettingsVisible { get; set; } = false;
-
-        public ItemInfo ItemToDisplay;
-
-        public PluginUI(Configuration configuration)
-        {
-            this.configuration = configuration;
-        }
 
         public void Dispose()
         {
@@ -85,13 +84,15 @@ namespace ItemVendorLocation
                         _ = ImGui.TableNextColumn();
 
                         var cost = costInfo.Aggregate("", (current, info) => current + $"{info.Item2} x{info.Item1} ,");
-                        cost =cost[..^2];
+                        cost = cost[..^2];
 
                         ImGui.Text(cost);
                     }
                 }
+
                 ImGui.EndTable();
             }
+
             ImGui.End();
         }
     }

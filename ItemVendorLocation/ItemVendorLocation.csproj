@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Authors>electr0sheep</Authors>
     <Company></Company>
-    <Version>0.0.0.4</Version>
+    <Version>0.0.0.5</Version>
     <Description>XIV Launcher plugin for item vendors</Description>
     <Copyright></Copyright>
     <PackageProjectUrl></PackageProjectUrl>
@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <TargetFramework>net5.0-windows</TargetFramework>
+    <TargetFramework>net6.0-windows</TargetFramework>
     <Platforms>x64</Platforms>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
@@ -20,6 +20,7 @@
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>bin\Debug\</OutputPath>
+	<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -37,8 +38,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Dalamud.DrunkenToad" Version="1.1.8" />
-    <PackageReference Include="DalamudPackager" Version="2.1.7" />
+    <PackageReference Include="DalamudPackager" Version="2.1.8" />
     <PackageReference Include="ILRepack" Version="2.0.18" />
     <PackageReference Include="XivCommon" Version="4.0.0" />
     <Reference Include="FFXIVClientStructs">
@@ -82,7 +82,8 @@
   </Target>
 
   <Target Name="CopyToDevPlugins" AfterTargets="MergeDeps" Condition="'$(Configuration)' == 'Debug'">
-    <Exec Command="if not exist $(AppData)\XIVLauncher\devPlugins\$(TargetName) (mkdir $(AppData)\XIVLauncher\devPlugins\$(TargetName))" />
+	<Exec Command="if exist $(AppData)\XIVLauncher\devPlugins\$(TargetName) (rmdir /S /Q $(AppData)\XIVLauncher\devPlugins\$(TargetName))" />
+    <Exec Command="mkdir $(AppData)\XIVLauncher\devPlugins\$(TargetName)" />
     <Exec Command="copy $(TargetDir)$(TargetFileName) $(AppData)\XIVLauncher\devPlugins\$(TargetName)\$(TargetFileName)" />
     <Exec Command="copy $(TargetDir)*.pdb $(AppData)\XIVLauncher\devPlugins\$(TargetName)" />
   </Target>

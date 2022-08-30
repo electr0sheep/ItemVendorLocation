@@ -95,25 +95,8 @@ namespace ItemVendorLocation
 
                     foreach (var npcInfo in ItemToDisplay.NpcInfos)
                     {
-                        var costStr = ItemToDisplay.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
+                        var costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
                         costStr = costStr[..^2];
-
-                        if (ItemToDisplay.Type == ItemType.GcShop)
-                        {
-                            // handle this differently
-                            costStr = ItemToDisplay.Costs.Last().Item2 + " x" + ItemToDisplay.Costs.Last().Item1;
-                            foreach (var cost in ItemToDisplay.Costs)
-                            {
-                                var substring = npcInfo.Name.ToLower().Substring(0, 2);
-                                if (!cost.Item2.ToLower().StartsWith(substring))
-                                {
-                                    continue;
-                                }
-
-                                costStr = $"{cost.Item2} x{cost.Item1}";
-                                break;
-                            }
-                        }
 
                         DrawTable(npcInfo.Name, npcInfo.Location, costStr);
                     }

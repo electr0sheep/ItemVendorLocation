@@ -17,7 +17,6 @@ namespace ItemVendorLocation.Models
         public string Name;
         public List<NpcInfo> NpcInfos;
         public ItemType Type;
-        public List<Tuple<uint, string>> Costs;
         public string AchievementDescription;
     }
 }

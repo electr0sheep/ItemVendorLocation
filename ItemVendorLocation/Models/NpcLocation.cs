@@ -31,11 +31,4 @@ namespace ItemVendorLocation.Models
             return 41.0f / c * ((val + 1024.0f) / 2048.0f) + 1;
         }
     }
-
-    public class NpcInfo
-    {
-        public uint Id;
-        public string Name;
-        public NpcLocation Location;
-    }
 }

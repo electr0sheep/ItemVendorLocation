@@ -118,7 +118,10 @@ namespace ItemVendorLocation
             switch (itemInfo.Type)
             {
                 case ItemType.GcShop:
-                    itemTooltip[ItemTooltipString.ShopSellingPrice] = origStr.TextValue.Substring(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })) + $"：{itemInfo.Costs[0].Item2}x{itemInfo.Costs[0].Item1}";
+                    var costs = itemInfo.NpcInfos[0];
+                    var costStr = $"{costs.Costs[0].Item2} x{costs.Costs[0].Item1}";
+
+                    itemTooltip[ItemTooltipString.ShopSellingPrice] = origStr.TextValue.Substring(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })) + $"：{costStr}";
                     return;
                 case ItemType.SpecialShop:
                     itemTooltip[ItemTooltipString.ShopSellingPrice] = origStr.TextValue.Substring(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })) + "：Special Vendor";

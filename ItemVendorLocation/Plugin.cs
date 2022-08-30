@@ -2,7 +2,7 @@
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using System.Reflection;
-using XivCommon;
+using Dalamud.ContextMenu;
 using Dalamud.Game.Gui;
 using System.Collections.Generic;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
@@ -10,19 +10,28 @@ using System;
 using System.Linq;
 using XivCommon.Functions.Tooltips;
 using System.Threading.Tasks;
+using XivCommon;
+using Dalamud.DrunkenToad;
+using Dalamud.Game.Text.SeStringHandling;
 
 namespace ItemVendorLocation
 {
     public class VendorPlugin : IDalamudPlugin
     {
-        /// <summary>
-        /// XivCommon library instance.
-        /// </summary>
-        private readonly XivCommonBase XivCommon;
 
         public string Name => "Item Vendor Location";
 
         private Lumina.Excel.GeneratedSheets.Item? selectedItem;
+
+        private ulong lastHoveredItem;
+
+        private readonly XivCommonBase XivCommon;
+
+        private readonly DalamudContextMenu contextMenuBase;
+
+        private readonly InventoryContextMenuItem inventoryContextMenuItem;
+
+        private readonly GameObjectContextMenuItem gameObjectContextMenuItem;
 
         private DalamudPluginInterface PluginInterface { get; init; }
         private CommandManager CommandManager { get; init; }
@@ -181,10 +190,42 @@ namespace ItemVendorLocation
             PluginUi = new PluginUI(Configuration);
 
             PluginInterface.UiBuilder.Draw += DrawUI;
-            XivCommon = new XivCommonBase(Hooks.ContextMenu | Hooks.Tooltips);
+
+            contextMenuBase = new DalamudContextMenu();
+            inventoryContextMenuItem = new InventoryContextMenuItem(
+                new SeString(new TextPayload("Vendor Location")), OnSelectInventoryContextMenuItem, true);
+            gameObjectContextMenuItem = new GameObjectContextMenuItem(
+                new SeString(new TextPayload("Vendor Location")), OnSelectGameObjectContextMenuItem, true);
+            contextMenuBase.OnOpenGameObjectContextMenu += OpenContextMenuOverride;
+            contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
+            XivCommon = new XivCommonBase(Hooks.Tooltips);
             XivCommon.Functions.Tooltips.OnItemTooltip += OnItemTooltipOverride;
-            XivCommon.Functions.ContextMenu.OpenInventoryContextMenu += OpenInventoryContextMenuOverride;
-            XivCommon.Functions.ContextMenu.OpenContextMenu += OpenContextMenuOverride;
+            GameGui.HoveredItemChanged += UpdateHoveredItem;
+        }
+
+        private void UpdateHoveredItem(object? sender, ulong e)
+        {
+            if (e != 0)
+            {
+                lastHoveredItem = e;
+            }
+        }
+
+        private void OnSelectInventoryContextMenuItem(InventoryContextMenuItemSelectedArgs args)
+        {
+            selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(args.ItemId)!;
+            HandleItem(selectedItem);
+        }
+
+        private void OnSelectGameObjectContextMenuItem(GameObjectContextMenuItemSelectedArgs args)
+        {
+            if (args.ObjectWorld != 0)
+            {
+                return;
+            }
+
+            selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow((uint)lastHoveredItem)!;
+            HandleItem(selectedItem);
         }
 
         private void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemId)
@@ -309,7 +350,7 @@ namespace ItemVendorLocation
             i.Unknown60 == itemId);
         }
 
-        private void OpenContextMenuOverride(XivCommon.Functions.ContextMenu.ContextMenuOpenArgs args)
+        private void OpenContextMenuOverride(GameObjectContextMenuOpenArgs args)
         {
             // I think players have a world and items never will??
             // Hopefully this removes the vendor menu for players in the chat log
@@ -329,14 +370,10 @@ namespace ItemVendorLocation
                 case "Journal":
                 case "SubmarinePartsMenu":
                 case "HousingGoods":
-                    uint item_id = (uint)GameGui.HoveredItem;
-                    selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(item_id)!;
+                    selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow((uint)lastHoveredItem)!;
                     if (IsItemSoldByAnyVendor(selectedItem))
                     {
-                        args.Items.Add(new XivCommon.Functions.ContextMenu.NormalContextMenuItem("Vendor Location", selectedArgs =>
-                        {
-                            HandleItem(selectedItem);
-                        }));
+                        args.AddCustomItem(gameObjectContextMenuItem);
                     }
                     return;
                 default:
@@ -344,15 +381,12 @@ namespace ItemVendorLocation
             }
         }
 
-        private void OpenInventoryContextMenuOverride(XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuOpenArgs args)
+        private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
         {
             selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(args.ItemId)!;
             if (IsItemSoldByAnyVendor(selectedItem))
             {
-                args.Items.Add(new XivCommon.Functions.ContextMenu.Inventory.InventoryContextMenuItem("Vendor Location", selectedArgs =>
-                {
-                    HandleItem(selectedItem);
-                }));
+                args.AddCustomItem(inventoryContextMenuItem);
             }
         }
 
@@ -461,22 +495,22 @@ namespace ItemVendorLocation
                                     mapLink = new(internalLocationIndex[0], internalLocationIndex[1], 0f, 0f);
                                 }
 
-                                vendorResults.Add(new ItemVendorLocation.Models.Vendor(name, mapLink, location, currencies));
+                                vendorResults.Add(new Models.Vendor(name, mapLink, location, currencies));
                             }
                         }
                     }
                     else
                     {
-                        List<ItemVendorLocation.Models.Currency> currencies = new();
+                        List<Models.Currency> currencies = new();
                         string name = tradeShop.shop;
                         ulong cost = tradeShop.listings[0].currency[0].amount;
                         foreach (GarlandToolsWrapper.Models.Currency currency in tradeShop.listings[0].currency)
                         {
                             string currencyName = itemDetails.partials.Find(i => i.id == currency.id && i.type == "item")!.obj.n;
-                            currencies.Add(new ItemVendorLocation.Models.Currency(currencyName, currency.amount));
+                            currencies.Add(new Models.Currency(currencyName, currency.amount));
                         }
 
-                        vendorResults.Add(new ItemVendorLocation.Models.Vendor(name, null!, "Unknown", currencies));
+                        vendorResults.Add(new Models.Vendor(name, null!, "Unknown", currencies));
                     }
                 }
             }
@@ -492,20 +526,21 @@ namespace ItemVendorLocation
 
         private void HandleItem(Lumina.Excel.GeneratedSheets.Item item)
         {
-            Task.Run(() =>
-            {
-                ulong garlondToolsId = FindGarlondToolsItemId(item);
-                List<Models.Vendor> vendors = GetVendors(garlondToolsId);
-                DisplayAllVendors(item, vendors);
-            });
+            _ = Task.Run(() =>
+              {
+                  ulong garlondToolsId = FindGarlondToolsItemId(item);
+                  List<Models.Vendor> vendors = GetVendors(garlondToolsId);
+                  DisplayAllVendors(item, vendors);
+              });
         }
 
         public void Dispose()
         {
             PluginUi.Dispose();
             XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
-            XivCommon.Functions.ContextMenu.OpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
-            XivCommon.Functions.ContextMenu.OpenContextMenu -= OpenContextMenuOverride;
+            contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
+            contextMenuBase.Dispose();
+            GameGui.HoveredItemChanged -= UpdateHoveredItem;
         }
 
         private void DrawUI()

@@ -15,7 +15,6 @@ namespace ItemVendorLocation
 
         // this extra bool exists for ImGui, since you can't ref a property
         private bool vendorLocationsVisable = false;
-        private bool settingsVisible = false;
 
         private void RetrieveGarlondToolsInfo(ulong itemId)
         {
@@ -59,11 +58,7 @@ namespace ItemVendorLocation
             set => vendorLocationsVisable = value;
         }
 
-        public bool SettingsVisible
-        {
-            get => settingsVisible;
-            set => settingsVisible = value;
-        }
+        public bool SettingsVisible { get; set; } = false;
 
         public string ItemName { get; set; } = "";
 

@@ -1,11 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GarlandToolsWrapper
 {
@@ -17,12 +14,9 @@ namespace GarlandToolsWrapper
         /// <summary>
         /// Retrieves the data object from Garland Tools
         /// </summary>
-        public static Models.Data DataObject
-        {
-            get => retrieveDataObject();
-        }
+        public static Models.Data DataObject => RetrieveDataObject();
 
-        private static Models.Data retrieveDataObject()
+        private static Models.Data RetrieveDataObject()
         {
             return dataObject ??= GetData();
         }
@@ -62,11 +56,11 @@ namespace GarlandToolsWrapper
                 // As far as I can tell, if you type something that is already contained in the list,
                 // it will filter out results client side without making a new request. We'll do something
                 // similar here
-                if (result.Contains("error") && itemName.Contains("-"))
+                if (result.Contains("error") && itemName.Contains('-'))
                 {
                     return ItemSearch(itemName.Split("-")[0]);
                 }
-                else if (result.Contains("error") && itemName.Contains("+"))
+                else if (result.Contains("error") && itemName.Contains('+'))
                 {
                     return ItemSearch(itemName.Split("+")[0]);
                 }
@@ -89,7 +83,7 @@ namespace GarlandToolsWrapper
             HttpWebResponse response = (HttpWebResponse)request.GetResponse();
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                System.IO.StreamReader reader = new (response.GetResponseStream());
+                System.IO.StreamReader reader = new(response.GetResponseStream());
                 string result = reader.ReadToEnd();
                 Models.ItemDetails serializedResult = JsonConvert.DeserializeObject<Models.ItemDetails>(result)!;
                 return serializedResult;

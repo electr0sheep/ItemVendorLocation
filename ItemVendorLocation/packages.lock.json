@@ -2,6 +2,21 @@
   "version": 1,
   "dependencies": {
     "net6.0-windows7.0": {
+      "Dalamud.ContextMenu": {
+        "type": "Direct",
+        "requested": "[1.2.1, )",
+        "resolved": "1.2.1",
+        "contentHash": "RiBkn1OYRTnVbfUGYolLBE8MOeXjok+JiZaryb27oGa7YARCTu0XgUzkRiCglujknsHOn5kAaXsT3TUJmqMigg=="
+      },
+      "Dalamud.DrunkenToad": {
+        "type": "Direct",
+        "requested": "[1.2.1, )",
+        "resolved": "1.2.1",
+        "contentHash": "kwub5Fwbtp88S+/y5Ce7fXzHGOz7ARKiu8mWbtonjRKqegOGObowUJoGZKPFDE2iTeDta8lDtNl/L5xaB9JCDw==",
+        "dependencies": {
+          "LiteDB": "5.0.11"
+        }
+      },
       "DalamudPackager": {
         "type": "Direct",
         "requested": "[2.1.8, )",
@@ -16,9 +31,14 @@
       },
       "XivCommon": {
         "type": "Direct",
-        "requested": "[4.0.0, )",
-        "resolved": "4.0.0",
-        "contentHash": "gM8ahhUA3gniqb2TFdXtHwGKyctBuMb1SuiZ36OD9MEqOiQHTnJSlSP6jr+NkGSFaP5OCr21wu//nGOlXCSdqg=="
+        "requested": "[6.0.2, )",
+        "resolved": "6.0.2",
+        "contentHash": "C/GnQ61iO0yEpf8LPixU3tCThar1MWUiBkO8gdZHNtVskg8AvFeuIxk7Zmkf2yeAJ0drR/KOTdSS7GpbsgmoaQ=="
+      },
+      "LiteDB": {
+        "type": "Transitive",
+        "resolved": "5.0.11",
+        "contentHash": "6cL4bOmVCUB0gIK+6qIr68HeqjjHZicPDGQjvJ87mIOvkFsEsJWkIps3yoKNeLpHhJQur++yoQ9Q8gxsdos0xQ=="
       }
     }
   }

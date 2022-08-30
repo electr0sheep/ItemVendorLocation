@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<Authors>electr0sheep</Authors>
 		<Company></Company>
-		<Version>0.0.0.5</Version>
+		<Version>1.0.0.1</Version>
 		<Description>XIV Launcher plugin for item vendors</Description>
 		<Copyright></Copyright>
 		<PackageProjectUrl></PackageProjectUrl>

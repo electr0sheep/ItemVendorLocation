@@ -150,6 +150,9 @@ namespace ItemVendorLocation
                 case "SubmarinePartsMenu":
                 case "HousingGoods":
                     var itemId = (uint)Service.GameGui.HoveredItem;
+                    if (itemId > 1000000)
+                        itemId -= 1000000;
+
                     selectedItem = Service.DataManager.GetExcelSheet<Item>()!.GetRow(itemId)!;
                     args.Items.Add(new NormalContextMenuItem("Vendor Location", _ => { HandleItem(selectedItem.RowId); }));
                     return;
@@ -158,7 +161,11 @@ namespace ItemVendorLocation
 
         private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
         {
-            selectedItem = Service.DataManager.GetExcelSheet<Item>()!.GetRow(args.ItemId)!;
+            var itemId = args.ItemId;
+            if (args.ItemHq)
+                itemId -= 1000000;
+
+            selectedItem = Service.DataManager.GetExcelSheet<Item>()!.GetRow(itemId)!;
             args.Items.Add(new InventoryContextMenuItem("Vendor Location", _ => { HandleItem(selectedItem.RowId); }));
         }
 

@@ -135,9 +135,6 @@ internal class LookupItems
                 continue;
             }
 
-            if (HackyFix_SHBFateShop(npcBase.RowId, npcBase, resident))
-                continue;
-
             foreach (var npcData in npcBase.ENpcData)
             {
                 if (npcData == 0)
@@ -149,7 +146,10 @@ internal class LookupItems
                 AddItemsInTopicSelect(npcData, npcBase, resident);
 
                 if (MatchEventHandlerType(npcData, EventHandlerType.GcShop))
+                {
                     AddGcShopItem(npcData, npcBase, resident);
+                    continue;
+                }
 
                 if (MatchEventHandlerType(npcData, EventHandlerType.SpecialShop))
                 {
@@ -386,27 +386,49 @@ internal class LookupItems
     {
         switch (npcBase.RowId)
         {
-            case 1018655:
+            case 1018655: // disreputable priest
                 AddSpecialItem(specialShops.GetRow(1769743), npcBase, resident);
                 AddSpecialItem(specialShops.GetRow(1769744), npcBase, resident);
                 return true;
-            case 1016289:
+
+            case 1016289: // syndony
                 AddSpecialItem(specialShops.GetRow(1769635), npcBase, resident);
                 return true;
+
+            case 1025047: // gerolt but in eureka
+                for (uint i = 1769820; i <= 1769834; i++)
+                {
+                    var specialShop = specialShops.GetRow(i);
+                    AddSpecialItem(specialShop, npcBase, resident);
+                }
+                return true;
+
+            case 1025763: // doman junkmonger
+                var gilShop = gilShops.GetRow(262919);
+                AddGilShopItem(gilShop, npcBase, resident);
+                return true;
+
+            case 1033921: // faux
+                var sShop = specialShops.GetRow(1770282);
+                AddSpecialItem(sShop, npcBase, resident);
+                return true;
+
+            case 1034007: // bozja
+            case 1036895:
+                var specShop = specialShops.GetRow(1770087);
+                AddSpecialItem(specShop, npcBase, resident);
+                return true;
+
             default:
+                if (shbFateShopNpc.ContainsKey(npcBase.RowId))
+                {
+                    var specialShop = specialShops.GetRow(shbFateShopNpc[npcBase.RowId]);
+                    AddSpecialItem(specialShop, npcBase, resident);
+                    return true;
+                }
+
                 return false;
         }
-    }
-
-    private bool HackyFix_SHBFateShop(uint data, ENpcBase npcBase, ENpcResident resident)
-    {
-        if (!shbFateShopNpc.ContainsKey(data))
-            return false;
-
-        var specialShop = specialShops.GetRow(shbFateShopNpc[data]);
-        AddSpecialItem(specialShop, npcBase, resident);
-
-        return true;
     }
 
     private void AddAchievementItem()

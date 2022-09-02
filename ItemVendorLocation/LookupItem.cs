@@ -43,6 +43,18 @@ internal class LookupItems
 
     private bool isDataReady;
 
+    private readonly Dictionary<uint, uint> shbFateShopNpc = new()
+    {
+        { 1027998, 1769957 }, // 1027998, 1769957
+        { 1027538, 1769958 }, // 1027538, 1769958
+        { 1027385, 1769959 },
+        { 1027497, 1769960 },
+        { 1027892, 1769961 }, // 1027892, 1769961
+        { 1027665, 1769962 },// 1027665, 1769962
+        { 1027709, 1769963 }, //1027709 , 1769963
+        { 1027766, 1769964 }, //1027766 , 1769964
+    };
+
     public LookupItems()
     {
         eNpcBases = Service.DataManager.GetExcelSheet<ENpcBase>();
@@ -120,6 +132,9 @@ internal class LookupItems
 
                 continue;
             }
+
+            if (HackyFix_SHBFateShop(npcBase.RowId, npcBase, resident))
+                continue;
 
             foreach (var npcData in npcBase.ENpcData)
             {
@@ -326,7 +341,7 @@ internal class LookupItems
         else if (MatchEventHandlerType(target, EventHandlerType.SpecialShop))
         {
             var specialShop = specialShops.GetRow(target);
-            AddSpecialItem(specialShop, npcBase, resident, ItemType.SpecialShop);
+            AddSpecialItem(specialShop, npcBase, resident);
         }
     }
 
@@ -376,6 +391,17 @@ internal class LookupItems
         }
     }
 
+    private bool HackyFix_SHBFateShop(uint data, ENpcBase npcBase, ENpcResident resident)
+    {
+        if (!shbFateShopNpc.ContainsKey(data))
+            return false;
+
+        var specialShop = specialShops.GetRow(shbFateShopNpc[data]);
+        AddSpecialItem(specialShop, npcBase, resident);
+
+        return true;
+    }
+
     private void AddAchievementItem()
     {
         for (var i = 1006004u; i <= 1006006; i++)
@@ -393,6 +419,9 @@ internal class LookupItems
     private void AddItem_Internal(uint itemId, string itemName, uint npcId, string npcName, List<Tuple<uint, string>> cost, NpcLocation npcLocation, ItemType type,
         string achievementDesc = "")
     {
+        if (itemId == 0)
+            return;
+
         if (!itemDataMap.ContainsKey(itemId))
         {
             itemDataMap.Add(itemId, new ItemInfo
@@ -425,10 +454,7 @@ internal class LookupItems
         }
 
         var npcs = itemInfo.NpcInfos;
-        if (npcs.Find(j => j.Id == npcId) == null)
-        {
-            npcs.Add(new NpcInfo { Id = npcId, Location = npcLocation, Name = npcName, Costs = cost });
-        }
+        if (npcs.Find(j => j.Id == npcId) == null) npcs.Add(new NpcInfo { Id = npcId, Location = npcLocation, Name = npcName, Costs = cost });
 
         itemInfo.NpcInfos = npcs;
     }

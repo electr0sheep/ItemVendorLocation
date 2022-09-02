@@ -389,6 +389,7 @@ internal class LookupItems
             case 1018655: // disreputable priest
                 AddSpecialItem(specialShops.GetRow(1769743), npcBase, resident);
                 AddSpecialItem(specialShops.GetRow(1769744), npcBase, resident);
+                AddSpecialItem(specialShops.GetRow(1770537), npcBase, resident);
                 return true;
 
             case 1016289: // syndony

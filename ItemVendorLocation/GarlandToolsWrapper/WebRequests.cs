@@ -2,7 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Net.Http;
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace GarlandToolsWrapper
 {
@@ -23,15 +25,19 @@ namespace GarlandToolsWrapper
 
         private static Models.Data GetData()
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create($"{GARLAND_TOOLS_BASE_URL}db/doc/core/en/3/data.json");
-            request.Method = "GET";
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-            if (response.StatusCode == HttpStatusCode.OK)
+
+            HttpClient httpClient = new();
+            Task<HttpResponseMessage>? task = Task.Run(() => httpClient.GetAsync($"{GARLAND_TOOLS_BASE_URL}db/doc/core/en/3/data.json"));
+            task.Wait();
+            HttpResponseMessage? response = task.Result;
+            httpClient.Dispose();
+
+            if (response.IsSuccessStatusCode)
             {
-                System.IO.StreamReader reader = new(response.GetResponseStream());
+                System.IO.Stream? thing = response.Content.ReadAsStream();
+                System.IO.StreamReader reader = new(thing);
                 string result = reader.ReadToEnd();
                 Models.Data serializedResult = JsonConvert.DeserializeObject<Models.Data>(result)!;
-                //Models.Data serializedResult = serializer.Deserialize<Models.Data>(result);
                 return serializedResult;
             }
             else
@@ -45,12 +51,15 @@ namespace GarlandToolsWrapper
         /// </summary>
         public static List<Models.ItemSearchResult> ItemSearch(string itemName)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create($"{GARLAND_TOOLS_BASE_URL}api/search.php?text={itemName}&lang=en");
-            request.Method = "GET";
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            HttpClient httpClient = new();
+            Task<HttpResponseMessage>? task = Task.Run(() => httpClient.GetAsync($"{GARLAND_TOOLS_BASE_URL}api/search.php?text={itemName}&lang=en"));
+            task.Wait();
+            HttpResponseMessage? response = task.Result;
+            httpClient.Dispose();
+
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                System.IO.StreamReader reader = new(response.GetResponseStream());
+                System.IO.StreamReader reader = new(response.Content.ReadAsStream());
                 string result = reader.ReadToEnd();
                 // Some item names have "-" in them, which errors out Garland Tools
                 // As far as I can tell, if you type something that is already contained in the list,
@@ -78,12 +87,15 @@ namespace GarlandToolsWrapper
 
         public static Models.ItemDetails GetItemDetails(BigInteger itemId)
         {
-            HttpWebRequest request = (HttpWebRequest)WebRequest.Create($"{GARLAND_TOOLS_BASE_URL}db/doc/item/en/3/{itemId}.json");
-            request.Method = "GET";
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+            HttpClient httpClient = new();
+            Task<HttpResponseMessage>? task = Task.Run(() => httpClient.GetAsync($"{GARLAND_TOOLS_BASE_URL}db/doc/item/en/3/{itemId}.json"));
+            task.Wait();
+            HttpResponseMessage? response = task.Result;
+            httpClient.Dispose();
+
             if (response.StatusCode == HttpStatusCode.OK)
             {
-                System.IO.StreamReader reader = new(response.GetResponseStream());
+                System.IO.StreamReader reader = new(response.Content.ReadAsStream());
                 string result = reader.ReadToEnd();
                 Models.ItemDetails serializedResult = JsonConvert.DeserializeObject<Models.ItemDetails>(result)!;
                 return serializedResult;

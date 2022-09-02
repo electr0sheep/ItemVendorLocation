@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Reflection;
+﻿using System.Reflection;
 using Dalamud.Game.Command;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -99,15 +98,22 @@ namespace ItemVendorLocation
             XivCommon.Functions.ContextMenu.OpenContextMenu -= OpenContextMenuOverride;
         }
 
+        private static uint GetCorrectitemId(uint itemId)
+        {
+            return itemId switch
+            {
+                > 1000000 => itemId - 1000000, // hq
+                /*
+                > 500000 and < 1000000 => itemId - 500000, // collectible
+                */
+                _ => itemId,
+            };
+        }
+
         private void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemId)
         {
-            //HQ items don't have recipes, only NQ items
-            if (itemId > 1000000)
-            {
-                itemId -= 1000000;
-            }
+            var itemInfo = LookupItem.GetItemInfo(GetCorrectitemId((uint)itemId));
 
-            var itemInfo = LookupItem.GetItemInfo((uint)itemId);
             if (itemInfo == null)
             {
                 return;
@@ -138,23 +144,32 @@ namespace ItemVendorLocation
                 return;
             }
 
+            uint itemId;
             switch (args.ParentAddonName)
             {
+                case "RecipeNote":
+                    unsafe
+                    {
+                        // thank you ottermandias
+                        var recipeNoteAgen = Service.GameGui.FindAgentInterface(args.ParentAddonName);
+                        itemId = *(uint*)(recipeNoteAgen + 0x398);
+
+                        selectedItem = Service.DataManager.GetExcelSheet<Item>()!.GetRow(itemId)!;
+                        args.Items.Add(new NormalContextMenuItem("Vendor location", _ => { HandleItem(selectedItem.RowId); }));
+                        return;
+                    }
                 case "ChatLog":
                 case "DailyQuestSupply":
                 case "ItemSearch":
-                case "RecipeNote":
                 case "ShopExchangeItem":
                 case "ShopExchangeItemDialog":
                 case "Journal":
                 case "SubmarinePartsMenu":
                 case "HousingGoods":
-                    var itemId = (uint)Service.GameGui.HoveredItem;
-                    if (itemId > 1000000)
-                        itemId -= 1000000;
+                    itemId = GetCorrectitemId((uint)Service.GameGui.HoveredItem);
 
-                    selectedItem = Service.DataManager.GetExcelSheet<Item>()!.GetRow(itemId)!;
-                    args.Items.Add(new NormalContextMenuItem("Vendor Location", _ => { HandleItem(selectedItem.RowId); }));
+                    selectedItem = Service.DataManager.GetExcelSheet<Item>().GetRow(itemId);
+                    args.Items.Add(new NormalContextMenuItem("Vendor location", _ => { HandleItem(selectedItem.RowId); }));
                     return;
             }
         }
@@ -163,7 +178,9 @@ namespace ItemVendorLocation
         {
             var itemId = args.ItemId;
             if (args.ItemHq)
+            {
                 itemId -= 1000000;
+            }
 
             selectedItem = Service.DataManager.GetExcelSheet<Item>()!.GetRow(itemId)!;
             args.Items.Add(new InventoryContextMenuItem("Vendor Location", _ => { HandleItem(selectedItem.RowId); }));
@@ -171,7 +188,7 @@ namespace ItemVendorLocation
 
         private void HandleItem(uint itemId)
         {
-            var itemInfo = LookupItem.GetItemInfo(itemId);
+            var itemInfo = LookupItem.GetItemInfo(GetCorrectitemId(itemId));
             if (itemInfo == null)
             {
                 return;

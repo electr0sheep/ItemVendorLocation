@@ -27,6 +27,7 @@ internal class LookupItems
     private readonly ExcelSheet<GCScripShopItem> gcScripShopItems;
     private readonly ExcelSheet<GCScripShopCategory> gcScripShopCategories;
     private readonly ExcelSheet<InclusionShop> inclusionShops;
+    private readonly ExcelSheet<InclusionShopSeriesCustom> inclusionShopSeries;
     private readonly ExcelSheet<FccShop> fccShops;
     private readonly ExcelSheet<PreHandler> preHandlers;
     private readonly ExcelSheet<TopicSelect> topicSelects;
@@ -45,14 +46,14 @@ internal class LookupItems
 
     private readonly Dictionary<uint, uint> shbFateShopNpc = new()
     {
-        { 1027998, 1769957 }, // 1027998, 1769957
-        { 1027538, 1769958 }, // 1027538, 1769958
+        { 1027998, 1769957 },
+        { 1027538, 1769958 },
         { 1027385, 1769959 },
         { 1027497, 1769960 },
-        { 1027892, 1769961 }, // 1027892, 1769961
-        { 1027665, 1769962 },// 1027665, 1769962
-        { 1027709, 1769963 }, //1027709 , 1769963
-        { 1027766, 1769964 }, //1027766 , 1769964
+        { 1027892, 1769961 },
+        { 1027665, 1769962 },
+        { 1027709, 1769963 },
+        { 1027766, 1769964 },
     };
 
     public LookupItems()
@@ -71,6 +72,7 @@ internal class LookupItems
         gcScripShopCategories = Service.DataManager.GetExcelSheet<GCScripShopCategory>();
 
         inclusionShops = Service.DataManager.GetExcelSheet<InclusionShop>();
+        inclusionShopSeries = Service.DataManager.GetExcelSheet<InclusionShopSeriesCustom>();
         fccShops = Service.DataManager.GetExcelSheet<FccShop>();
         preHandlers = Service.DataManager.GetExcelSheet<PreHandler>();
         topicSelects = Service.DataManager.GetExcelSheet<TopicSelect>();
@@ -290,12 +292,12 @@ internal class LookupItems
             {
                 try
                 {
-                    var series = specialShops.GetRow(category.Value.InclusionShopSeries.Value.SpecialShop.Row);
+                    var series = inclusionShopSeries.GetRow(category.Value.InclusionShopSeries.Row, i);
                     if (series == null)
                         break;
 
-                    // var specialShop = series.SpecialShopCustoms.Value;
-                    AddSpecialItem(series, npcBase, resident);
+                    var specialShop = series.SpecialShopCustoms.Value;
+                    AddSpecialItem(specialShop, npcBase, resident);
                 }
                 catch (Exception)
                 {
@@ -337,12 +339,17 @@ internal class LookupItems
         {
             var gilShop = gilShops.GetRow(target);
             AddGilShopItem(gilShop, npcBase, resident);
+            return;
         }
-        else if (MatchEventHandlerType(target, EventHandlerType.SpecialShop))
+
+        if (MatchEventHandlerType(target, EventHandlerType.SpecialShop))
         {
             var specialShop = specialShops.GetRow(target);
             AddSpecialItem(specialShop, npcBase, resident);
+            return;
         }
+
+        AddInclusionShopItem(target, npcBase, resident);
     }
 
     private void AddItemsInTopicSelect(uint npcData, ENpcBase npcBase, ENpcResident resident)
@@ -522,10 +529,12 @@ internal class LookupItems
         // some are missing from my test, so we gotta hardcode them
         npcLocations.TryAdd(1006004, new NpcLocation(5.355835f, 155.22998f, territoryType.GetRow(128)));
         npcLocations.TryAdd(1017613, new NpcLocation(2.822865f, 153.521f, territoryType.GetRow(128)));
+        npcLocations.TryAdd(1003077, new NpcLocation(-259.32715f, 37.491333f, territoryType.GetRow(129)));
 
         npcLocations.TryAdd(1008145, new NpcLocation(-31.265808f, -245.38031f, territoryType.GetRow(133)));
         npcLocations.TryAdd(1006005, new NpcLocation(-61.234497f, -141.31384f, territoryType.GetRow(133)));
         npcLocations.TryAdd(1017614, new NpcLocation(-58.79309f, -142.1073f, territoryType.GetRow(133)));
+        npcLocations.TryAdd(1003633, new NpcLocation(145.83044f, -106.767456f, territoryType.GetRow(133)));
     }
 
     public ItemInfo? GetItemInfo(uint itemId)

@@ -402,6 +402,7 @@ internal class LookupItems
                     var specialShop = specialShops.GetRow(i);
                     AddSpecialItem(specialShop, npcBase, resident);
                 }
+
                 return true;
 
             case 1025763: // doman junkmonger
@@ -548,6 +549,17 @@ internal class LookupItems
         npcLocations[1001766].TerritoryExcel = corrected;
         npcLocations[1001945].TerritoryExcel = corrected;
         npcLocations[1001821].TerritoryExcel = corrected;
+
+        // Fix Kugane npcs location
+        var kugane = territoryType.GetRow(641);
+        npcLocations[1019100] = new NpcLocation(-85.03851f, 117.05188f, kugane);
+        npcLocations[1022846] = new NpcLocation(-83.93994f, 115.31238f, kugane);
+        npcLocations[1019106] = new NpcLocation(-99.22949f, 105.6687f, kugane);
+        npcLocations[1019107] = new NpcLocation(-100.26703f, 107.43872f, kugane);
+        npcLocations[1019104] = new NpcLocation(-67.582275f, 59.739014f, kugane);
+        npcLocations[1019102] = new NpcLocation(-59.617065f, 33.524048f, kugane);
+        npcLocations[1019103] = new NpcLocation(-52.35376f, 76.58496f, kugane);
+        npcLocations[1019101] = new NpcLocation(-36.484375f, 49.240845f, kugane);
 
         // some are missing from my test, so we gotta hardcode them
         npcLocations.TryAdd(1006004, new NpcLocation(5.355835f, 155.22998f, territoryType.GetRow(128)));

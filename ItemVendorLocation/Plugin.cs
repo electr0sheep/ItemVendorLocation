@@ -76,10 +76,42 @@ namespace ItemVendorLocation
             LookupItem = new LookupItems();
 
             PluginInterface.UiBuilder.Draw += DrawUI;
-            XivCommon = new XivCommonBase(Hooks.ContextMenu | Hooks.Tooltips);
+
+            contextMenuBase = new DalamudContextMenu();
+            inventoryContextMenuItem = new InventoryContextMenuItem(
+                new SeString(new TextPayload("Vendor Location")), OnSelectInventoryContextMenuItem, true);
+            gameObjectContextMenuItem = new GameObjectContextMenuItem(
+                new SeString(new TextPayload("Vendor Location")), OnSelectGameObjectContextMenuItem, true);
+            contextMenuBase.OnOpenGameObjectContextMenu += OpenContextMenuOverride;
+            contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
+            XivCommon = new XivCommonBase(Hooks.Tooltips);
             XivCommon.Functions.Tooltips.OnItemTooltip += OnItemTooltipOverride;
-            XivCommon.Functions.ContextMenu.OpenInventoryContextMenu += OpenInventoryContextMenuOverride;
-            XivCommon.Functions.ContextMenu.OpenContextMenu += OpenContextMenuOverride;
+            GameGui.HoveredItemChanged += UpdateHoveredItem;
+        }
+
+        private void UpdateHoveredItem(object? sender, ulong e)
+        {
+            if (e != 0)
+            {
+                lastHoveredItem = e;
+            }
+        }
+
+        private void OnSelectInventoryContextMenuItem(InventoryContextMenuItemSelectedArgs args)
+        {
+            selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(args.ItemId)!;
+            HandleItem(selectedItem);
+        }
+
+        private void OnSelectGameObjectContextMenuItem(GameObjectContextMenuItemSelectedArgs args)
+        {
+            if (args.ObjectWorld != 0)
+            {
+                return;
+            }
+
+            selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow((uint)lastHoveredItem)!;
+            HandleItem(selectedItem);
         }
 
         private DalamudPluginInterface PluginInterface { get; init; }
@@ -94,8 +126,9 @@ namespace ItemVendorLocation
         {
             PluginUi.Dispose();
             XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
-            XivCommon.Functions.ContextMenu.OpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
-            XivCommon.Functions.ContextMenu.OpenContextMenu -= OpenContextMenuOverride;
+            contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
+            contextMenuBase.Dispose();
+            GameGui.HoveredItemChanged -= UpdateHoveredItem;
         }
 
         private static uint GetCorrectitemId(uint itemId)

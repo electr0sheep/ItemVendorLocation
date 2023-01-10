@@ -32,7 +32,7 @@ namespace ItemVendorLocation.Models
 
             Entries = new Entry[60];
 
-            var tomestonesItems = Service.DataManager.GetExcelSheet<TomestonesItem>().Where(i => i.Tomestones.Row > 0).OrderBy(i => i.Tomestones.Row).ToArray();
+            var tomestonesItems = DalamudApi.DataManager.GetExcelSheet<TomestonesItem>().Where(i => i.Tomestones.Row > 0).OrderBy(i => i.Tomestones.Row).ToArray();
 
             for (var i = 0; i < tomestonesItems.Length; i++)
             {

@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Numerics;
 
-namespace UIDev
+namespace DebugOnly
 {
     internal class main
     {

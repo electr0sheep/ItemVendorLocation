@@ -11,8 +11,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DebugOnly", "UIDev\DebugOnly.csproj", "{0C0CB73D-5844-418E-87E6-71A3ED95673A}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,13 +27,6 @@ Global
 		{087565F1-A049-47C8-A870-AB79528EF82D}.Release|Any CPU.Build.0 = Release|x64
 		{087565F1-A049-47C8-A870-AB79528EF82D}.Release|x64.ActiveCfg = Release|x64
 		{087565F1-A049-47C8-A870-AB79528EF82D}.Release|x64.Build.0 = Release|x64
-		{0C0CB73D-5844-418E-87E6-71A3ED95673A}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{0C0CB73D-5844-418E-87E6-71A3ED95673A}.Debug|Any CPU.Build.0 = Debug|x64
-		{0C0CB73D-5844-418E-87E6-71A3ED95673A}.Debug|x64.ActiveCfg = Debug|x64
-		{0C0CB73D-5844-418E-87E6-71A3ED95673A}.Debug|x64.Build.0 = Debug|x64
-		{0C0CB73D-5844-418E-87E6-71A3ED95673A}.Release|Any CPU.ActiveCfg = Release|x64
-		{0C0CB73D-5844-418E-87E6-71A3ED95673A}.Release|x64.ActiveCfg = Release|x64
-		{0C0CB73D-5844-418E-87E6-71A3ED95673A}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<Authors>electr0sheep</Authors>
 		<Company></Company>
-		<Version>1.0.0.2</Version>
+		<Version>1.0.0.3</Version>
 		<Description>XIV Launcher plugin for item vendors</Description>
 		<Copyright></Copyright>
 		<PackageProjectUrl></PackageProjectUrl>
@@ -12,18 +12,18 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFramework>net6.0-windows</TargetFramework>
+		<TargetFramework>net7.0-windows</TargetFramework>
 		<Platforms>x64</Platforms>
 		<Nullable>enable</Nullable>
 		<LangVersion>latest</LangVersion>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<OutputPath>bin\Debug\</OutputPath>
+		<OutputPath>bin\$(Configuration)\</OutputPath>
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 	</PropertyGroup>
 
-	<ItemGroup>
+		<ItemGroup>
 		<Content Include="..\ItemVendorLocation\ItemVendorLocation.json">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 		</Content>
@@ -38,11 +38,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Dalamud.ContextMenu" Version="1.2.1" />
-		<PackageReference Include="Dalamud.DrunkenToad" Version="1.2.1" />
-		<PackageReference Include="DalamudPackager" Version="2.1.8" />
-		<PackageReference Include="ILRepack" Version="2.0.18" />
-		<PackageReference Include="XivCommon" Version="6.0.2" />
+	  <PackageReference Include="Dalamud.ContextMenu" Version="1.2.1" />
+	  <PackageReference Include="Dalamud.DrunkenToad" Version="1.5.6" />
+	  <PackageReference Include="DalamudPackager" Version="2.1.10" />
+	  <PackageReference Include="ILRepack" Version="2.0.18" />
+		<PackageReference Include="XivCommon" Version="7.0.0-alpha.1" />
 		<Reference Include="FFXIVClientStructs">
 			<HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
 			<Private>false</Private>

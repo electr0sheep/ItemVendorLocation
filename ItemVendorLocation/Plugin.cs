@@ -363,13 +363,14 @@ namespace ItemVendorLocation
             {
                 case "ChatLog":
                 case "DailyQuestSupply":
+                case "HousingGoods":
                 case "ItemSearch":
+                case "Journal":
+                case "RecipeMaterialList":
                 case "RecipeNote":
                 case "ShopExchangeItem":
                 case "ShopExchangeItemDialog":
-                case "Journal":
                 case "SubmarinePartsMenu":
-                case "HousingGoods":
                     selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow((uint)lastHoveredItem)!;
                     if (IsItemSoldByAnyVendor(selectedItem))
                     {

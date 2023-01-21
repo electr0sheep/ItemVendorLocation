@@ -257,7 +257,7 @@ namespace ItemVendorLocation
 
         private static bool IsItemSoldByAnyVendor(Lumina.Excel.GeneratedSheets.Item item)
         {
-            return item.Name != null && item.Name != "" && (IsItemSoldByGilVendor(item) || IsItemSoldByGCVendor(item) || IsItemSoldBySpecialVendor(item));
+            return item.Name != null && item.Name != "" && (IsItemSoldByGilVendor(item) || IsItemSoldByGCVendor(item) || IsItemSoldBySpecialVendor(item)) || IsItemSoldByFcVendor(item);
         }
 
         private static bool IsItemSoldByGilVendor(Lumina.Excel.GeneratedSheets.Item item)
@@ -348,6 +348,16 @@ namespace ItemVendorLocation
             i.Unknown58 == itemId ||
             i.Unknown59 == itemId ||
             i.Unknown60 == itemId);
+        }
+
+        private static bool IsItemSoldByFcVendor(Lumina.Excel.GeneratedSheets.Item item)
+        {
+            return IsItemSoldByFcVendor(item.RowId);
+        }
+
+        private static bool IsItemSoldByFcVendor(uint itemId)
+        {
+            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.FccShop>()!.Any(i => i.Item.Any(i => i == itemId));
         }
 
         private void OpenContextMenuOverride(GameObjectContextMenuOpenArgs args)

@@ -16,7 +16,7 @@ namespace ItemVendorLocation
         // this extra bool exists for ImGui, since you can't ref a property
         private bool vendorLocationsVisable = false;
 
-        private void RetrieveGarlondToolsInfo(ulong itemId)
+        private void RetrieveGarlandToolsInfo(ulong itemId)
         {
             //get preliminary data
             GarlandToolsWrapper.Models.ItemDetails itemDetails = GarlandToolsWrapper.WebRequests.GetItemDetails(itemId);
@@ -47,9 +47,9 @@ namespace ItemVendorLocation
         }
 
 
-        public ulong GarlondToolsItemId
+        public ulong GarlandToolsItemId
         {
-            set => RetrieveGarlondToolsInfo(value);
+            set => RetrieveGarlandToolsInfo(value);
         }
 
         public bool VendorResultsVisible

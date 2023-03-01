@@ -372,6 +372,7 @@ namespace ItemVendorLocation
             switch (args.ParentAddonName)
             {
                 case "ChatLog":
+                case "ContentsInfoDetail":
                 case "DailyQuestSupply":
                 case "HousingGoods":
                 case "ItemSearch":

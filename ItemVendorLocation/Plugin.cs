@@ -401,27 +401,6 @@ namespace ItemVendorLocation
             }
         }
 
-        private static ulong FindGarlondToolsItemId(Lumina.Excel.GeneratedSheets.Item item)
-        {
-            string itemName = item.Name;
-            List<GarlandToolsWrapper.Models.ItemSearchResult> results = GarlandToolsWrapper.WebRequests.ItemSearch(itemName);
-            GarlandToolsWrapper.Models.ItemSearchResult exactMatch = null!;
-            if (results.Count > 1)
-            {
-                // search for exact match
-                exactMatch = results.Find(i => string.Equals(i.obj.n, itemName, StringComparison.OrdinalIgnoreCase))!;
-                if (exactMatch == null)
-                {
-                    throw new Exception("Could not find an exact match with garlond tools");
-                }
-            }
-            else
-            {
-                exactMatch = results[0];
-            }
-            return (ulong)exactMatch!.obj.i;
-        }
-
         public static List<Models.Vendor> GetVendors(ulong itemId)
         {
             //get preliminary data
@@ -539,8 +518,7 @@ namespace ItemVendorLocation
         {
             _ = Task.Run(() =>
               {
-                  ulong garlondToolsId = FindGarlondToolsItemId(item);
-                  List<Models.Vendor> vendors = GetVendors(garlondToolsId);
+                  List<Models.Vendor> vendors = GetVendors(item.RowId);
                   DisplayAllVendors(item, vendors);
               });
         }

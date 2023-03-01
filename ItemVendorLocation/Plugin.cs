@@ -379,6 +379,7 @@ namespace ItemVendorLocation
                 case "Journal":
                 case "RecipeMaterialList":
                 case "RecipeNote":
+                case "RecipeTree":
                 case "ShopExchangeItem":
                 case "ShopExchangeItemDialog":
                 case "SubmarinePartsMenu":

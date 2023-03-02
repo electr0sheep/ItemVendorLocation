@@ -38,6 +38,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <PackageReference Include="CheapLoc" Version="1.1.8" />
 	  <PackageReference Include="Dalamud.ContextMenu" Version="1.2.1" />
 	  <PackageReference Include="Dalamud.DrunkenToad" Version="1.5.6" />
 	  <PackageReference Include="DalamudPackager" Version="2.1.10" />

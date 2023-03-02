@@ -6,13 +6,18 @@ using Dalamud.ContextMenu;
 using Dalamud.Game.Gui;
 using System.Collections.Generic;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
-using System;
 using System.Linq;
 using XivCommon.Functions.Tooltips;
 using System.Threading.Tasks;
 using XivCommon;
 using Dalamud.DrunkenToad;
 using Dalamud.Game.Text.SeStringHandling;
+using Dalamud;
+using Dalamud.Game.ClientState;
+using System.Globalization;
+using CheapLoc;
+using System;
+using Newtonsoft.Json;
 
 namespace ItemVendorLocation
 {
@@ -40,6 +45,7 @@ namespace ItemVendorLocation
 
         [PluginService] public static ChatGui Chat { get; private set; } = null!;
         [PluginService] public static GameGui GameGui { get; private set; } = null!;
+        [PluginService] public static ClientState ClientState { get; private set; } = null!;
         [PluginService] public static Dalamud.Data.DataManager DataManager { get; private set; } = null!;
 
         public class VendorInformation
@@ -53,42 +59,21 @@ namespace ItemVendorLocation
             public MapLinkPayload location;
         }
 
-        //// key is our mock gc name
-        //// value is what the data looks like in Garland Tools
-        //public static Dictionary<string, string> GcName = new()
-        //{
-        //    { "Maelstrom", "Maelstrom" },
-        //    { "Adder", "Order of the Twin Adder" },
-        //    { "Flames", "Immortal Flames" },
-        //};
-
-        // mock for the player's gc
-        //public static string TestGcName = "Maelstrom";
-
-
-        // frustratingly, it seems like there are multiple entries for the same thing in the placename table
-        // for example, there are at least 2 Kuganes, one that has an entry in the territorytype table, one that
-        // does not. I could potentially just catch InvalidOperationException s, but I don't know enough about
-        // the tables to want to continue to go down this path for now.
-        //public static uint[] LookupInternalCoordsByPlaceName(string name)
-        //{
-        //    string[] subName = name.Split(" - ");
-        //    if (subName.Length > 2)
-        //    {
-        //        string filteredName = $"{subName[0]} - {subName[1]}";
-        //        var test = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.TerritoryType>()!.GetRow(573);
-        //        Lumina.Excel.GeneratedSheets.PlaceName placeName = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.PlaceName>()!.First(i => i.Name == filteredName);
-        //        Lumina.Excel.GeneratedSheets.TerritoryType territoryType = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.TerritoryType>()!.First(i => i.PlaceName.Row == placeName.RowId);
-        //        return new uint[] { territoryType.RowId, territoryType.Map.Row };
-        //    }
-        //    else
-        //    {
-        //        var test = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.TerritoryType>()!.GetRow(573);
-        //        Lumina.Excel.GeneratedSheets.PlaceName placeName = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.PlaceName>()!.First(i => i.Name == name);
-        //        Lumina.Excel.GeneratedSheets.TerritoryType territoryType = dataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.TerritoryType>()!.First(i => i.PlaceName.Row == placeName.RowId);
-        //        return new uint[] { territoryType.RowId, territoryType.Map.Row };
-        //    }
-        //}
+        public static readonly List<string> GameAddonWhitelist = new()
+        {
+             "ChatLog",
+             "ContentsInfoDetail",
+             "DailyQuestSupply",
+             "HousingGoods",
+             "ItemSearch",
+             "Journal",
+             "RecipeMaterialList",
+             "RecipeNote",
+             "RecipeTree",
+             "ShopExchangeItem",
+             "ShopExchangeItemDialog",
+             "SubmarinePartsMenu",
+        };
 
         public static readonly Dictionary<string, uint[]> CommonLocationNameToInternalCoords = new()
         {
@@ -179,6 +164,8 @@ namespace ItemVendorLocation
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
+            Localization.SetupLocalization(ClientState.ClientLanguage);
+
             PluginInterface = pluginInterface;
             CommandManager = commandManager;
 
@@ -190,12 +177,13 @@ namespace ItemVendorLocation
             PluginUi = new PluginUI(Configuration);
 
             PluginInterface.UiBuilder.Draw += DrawUI;
+            Loc.ExportLocalizable();
 
             contextMenuBase = new DalamudContextMenu();
             inventoryContextMenuItem = new InventoryContextMenuItem(
-                new SeString(new TextPayload("Vendor Location")), OnSelectInventoryContextMenuItem, true);
+                new SeString(new TextPayload(Loc.Localize("ContextMenuItem", "Vendor Location"))), OnSelectInventoryContextMenuItem, true);
             gameObjectContextMenuItem = new GameObjectContextMenuItem(
-                new SeString(new TextPayload("Vendor Location")), OnSelectGameObjectContextMenuItem, true);
+                new SeString(new TextPayload(Loc.Localize("ContextMenuItem", "Vendor Location"))), OnSelectGameObjectContextMenuItem, true);
             contextMenuBase.OnOpenGameObjectContextMenu += OpenContextMenuOverride;
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
             XivCommon = new XivCommonBase(Hooks.Tooltips);
@@ -257,7 +245,7 @@ namespace ItemVendorLocation
 
         private static bool IsItemSoldByAnyVendor(Lumina.Excel.GeneratedSheets.Item item)
         {
-            return item.Name != null && item.Name != "" && (IsItemSoldByGilVendor(item) || IsItemSoldByGCVendor(item) || IsItemSoldBySpecialVendor(item)) || IsItemSoldByFcVendor(item);
+            return (item.Name != null && item.Name != "" && (IsItemSoldByGilVendor(item) || IsItemSoldByGCVendor(item) || IsItemSoldBySpecialVendor(item))) || IsItemSoldByFcVendor(item);
         }
 
         private static bool IsItemSoldByGilVendor(Lumina.Excel.GeneratedSheets.Item item)
@@ -364,33 +352,18 @@ namespace ItemVendorLocation
         {
             // I think players have a world and items never will??
             // Hopefully this removes the vendor menu for players in the chat log
-            if (args.ObjectWorld != 0)
+            if (args.ObjectWorld != 0 || args.ParentAddonName == null)
             {
                 return;
             }
 
-            switch (args.ParentAddonName)
+            if (GameAddonWhitelist.Contains(args.ParentAddonName))
             {
-                case "ChatLog":
-                case "ContentsInfoDetail":
-                case "DailyQuestSupply":
-                case "HousingGoods":
-                case "ItemSearch":
-                case "Journal":
-                case "RecipeMaterialList":
-                case "RecipeNote":
-                case "RecipeTree":
-                case "ShopExchangeItem":
-                case "ShopExchangeItemDialog":
-                case "SubmarinePartsMenu":
-                    selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow((uint)lastHoveredItem)!;
-                    if (IsItemSoldByAnyVendor(selectedItem))
-                    {
-                        args.AddCustomItem(gameObjectContextMenuItem);
-                    }
-                    return;
-                default:
-                    break;
+                selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow((uint)lastHoveredItem)!;
+                if (IsItemSoldByAnyVendor(selectedItem))
+                {
+                    args.AddCustomItem(gameObjectContextMenuItem);
+                }
             }
         }
 
@@ -527,6 +500,7 @@ namespace ItemVendorLocation
 
         public void Dispose()
         {
+            GC.SuppressFinalize(this);
             PluginUi.Dispose();
             XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
             contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;

@@ -164,7 +164,7 @@ namespace ItemVendorLocation
             { "The Waking Sands", new uint[] { 212, 80 } },
             { "Topmast Apartment Lobby", new uint[] { 573, 320 } },
             { "Ul'dah - Steps of Nald", new uint[] { 130, 13 } },
-            { "Ul'dah - Steps of Thal - Hustings Strip", new uint[] { 131, 14 } },
+            { "Ul'dah - Steps of Thal - Hustings Strip", new uint[] { 131, 73 } },
             { "Ul'dah - Steps of Thal - Merchant Strip", new uint[] { 131, 14 } },
             { "Ultima Thule", new uint[] { 960, 699 } },
             { "Upper La Noscea", new uint[] { 139, 19 } },

@@ -14,7 +14,7 @@ using Dalamud.DrunkenToad;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud;
 using Dalamud.Game.ClientState;
-//using CheapLoc;
+using CheapLoc;
 using System;
 
 namespace ItemVendorLocation
@@ -162,7 +162,7 @@ namespace ItemVendorLocation
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
-            //Localization.SetupLocalization(ClientState.ClientLanguage);
+            Localization.SetupLocalization(ClientState.ClientLanguage);
 
             PluginInterface = pluginInterface;
             CommandManager = commandManager;
@@ -170,18 +170,16 @@ namespace ItemVendorLocation
             Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             Configuration.Initialize(PluginInterface);
 
-            // you might normally want to embed resources and load them from the manifest stream
             string? assemblyLocation = Assembly.GetExecutingAssembly().Location;
             PluginUi = new PluginUI(Configuration);
 
             PluginInterface.UiBuilder.Draw += DrawUI;
-            //Loc.ExportLocalizable();
 
             contextMenuBase = new DalamudContextMenu();
             inventoryContextMenuItem = new InventoryContextMenuItem(
-                new SeString(new TextPayload("Vendor Location")), OnSelectInventoryContextMenuItem, true);
+                new SeString(new TextPayload(Loc.Localize("ContextMenuItem", "Vendor Location"))), OnSelectInventoryContextMenuItem, true);
             gameObjectContextMenuItem = new GameObjectContextMenuItem(
-                new SeString(new TextPayload("Vendor Location")), OnSelectGameObjectContextMenuItem, true);
+                new SeString(new TextPayload(Loc.Localize("ContextMenuItem", "Vendor Location"))), OnSelectGameObjectContextMenuItem, true);
             contextMenuBase.OnOpenGameObjectContextMenu += OpenContextMenuOverride;
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
             XivCommon = new XivCommonBase(Hooks.Tooltips);

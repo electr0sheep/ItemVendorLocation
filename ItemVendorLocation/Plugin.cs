@@ -14,10 +14,8 @@ using Dalamud.DrunkenToad;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud;
 using Dalamud.Game.ClientState;
-using System.Globalization;
-using CheapLoc;
+//using CheapLoc;
 using System;
-using Newtonsoft.Json;
 
 namespace ItemVendorLocation
 {
@@ -164,7 +162,7 @@ namespace ItemVendorLocation
             [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
             [RequiredVersion("1.0")] CommandManager commandManager)
         {
-            Localization.SetupLocalization(ClientState.ClientLanguage);
+            //Localization.SetupLocalization(ClientState.ClientLanguage);
 
             PluginInterface = pluginInterface;
             CommandManager = commandManager;
@@ -177,13 +175,13 @@ namespace ItemVendorLocation
             PluginUi = new PluginUI(Configuration);
 
             PluginInterface.UiBuilder.Draw += DrawUI;
-            Loc.ExportLocalizable();
+            //Loc.ExportLocalizable();
 
             contextMenuBase = new DalamudContextMenu();
             inventoryContextMenuItem = new InventoryContextMenuItem(
-                new SeString(new TextPayload(Loc.Localize("ContextMenuItem", "Vendor Location"))), OnSelectInventoryContextMenuItem, true);
+                new SeString(new TextPayload("Vendor Location")), OnSelectInventoryContextMenuItem, true);
             gameObjectContextMenuItem = new GameObjectContextMenuItem(
-                new SeString(new TextPayload(Loc.Localize("ContextMenuItem", "Vendor Location"))), OnSelectGameObjectContextMenuItem, true);
+                new SeString(new TextPayload("Vendor Location")), OnSelectGameObjectContextMenuItem, true);
             contextMenuBase.OnOpenGameObjectContextMenu += OpenContextMenuOverride;
             contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
             XivCommon = new XivCommonBase(Hooks.Tooltips);

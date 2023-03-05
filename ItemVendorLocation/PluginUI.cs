@@ -103,22 +103,23 @@ namespace ItemVendorLocation
                     ImGui.TableSetupColumn("Cost");
                     ImGui.TableSetupColumn("Currency/Item");
                     ImGui.TableHeadersRow();
-                    foreach (Models.Vendor vendor in Vendors)
+                    for (int i = 0; i < Vendors.Count; i++) // need i for unique maplink button ids, though I life foreach more
                     {
+                        Models.Vendor vendor = Vendors[i];
                         ImGui.TableNextRow();
                         _ = ImGui.TableNextColumn();
                         ImGui.Text(vendor.name);
                         _ = ImGui.TableNextColumn();
                         if (vendor.mapLink != null && vendor.mapLink.CoordinateString != "( 0.0  , 0.0 )")
                         {
-                            if (ImGui.Button($"{vendor.location} {vendor.mapLink.CoordinateString}"))
+                            if (ImGui.Button($"{vendor.location} {vendor.mapLink.CoordinateString}###{vendor.name}--{i}"))
                             {
                                 _ = VendorPlugin.GameGui.OpenMapWithMapLink(vendor.mapLink);
                             }
                         }
                         else if (vendor.mapLink != null)
                         {
-                            if (ImGui.Button($"{vendor.location} (No Coords from Garland Tools)"))
+                            if (ImGui.Button($"{vendor.location} (No Coords from Garland Tools)###{vendor.name}--{i}"))
                             {
                                 _ = VendorPlugin.GameGui.OpenMapWithMapLink(vendor.mapLink);
                             }

@@ -458,7 +458,7 @@ internal class ItemLookup
         {
             _itemDataMap.Add(itemId, new ItemInfo
             {
-                Id = npcId,
+                Id = itemId,
                 Name = itemName,
                 NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Costs = cost, Name = npcName } },
                 Type = type,
@@ -471,7 +471,7 @@ internal class ItemLookup
         {
             _itemDataMap.TryAdd(itemId, itemInfo = new ItemInfo
             {
-                Id = npcId,
+                Id = itemId,
                 Name = itemName,
                 NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Costs = cost, Name = npcName } },
                 Type = type,

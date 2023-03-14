@@ -36,7 +36,7 @@ namespace ItemVendorLocation
 GarlandTools is the original data source. If you leave it as this the plugin will function as it did before
 with no changes.
 
-Internal means the plugin will not make network requests, which means results should appear faster.
+Internal means the plugin will not make network requests, which means results appear MUCH faster.
 
 NOTE: If you are using the Internal option and notice that an item doesn't have results, but there are
 results using GarlandTools as the data source, please let me know by either leaving feedback, or

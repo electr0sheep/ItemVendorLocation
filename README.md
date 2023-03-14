@@ -31,3 +31,10 @@ The plugin will show a list of all possible vendors in a plugin GUI window
 2. It can simply find the first vendor and link the coordinates in the in-game chat
 
 ![Alt text](/Images/ChatVendorLocation.png?raw=true "Vendor Location")
+
+# Contributors
+I appreciate everyone who has contributed, visible over there to the right.
+
+It would be remiss of me to not give special mention to [Nuko](https://github.com/NukoOoOoOoO) for a near complete rewrite.
+They added the capability to potentially completely deprecate GarlandTools using internal data sheets. This must have taken
+a ton of work, and is much appreciated!

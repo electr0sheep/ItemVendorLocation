@@ -5,6 +5,7 @@
   "Name": "Item Vendor Location",
   "Punchline": "Shows you where to buy vendor items",
   "RepoUrl": "https://github.com/electr0sheep/ItemVendorLocation",
+  "IconUrl": "https://raw.githubusercontent.com/electr0sheep/ItemVendorLocation/main/Images/icon.png",
   "Tags": [
     "vendor",
     "plugin",

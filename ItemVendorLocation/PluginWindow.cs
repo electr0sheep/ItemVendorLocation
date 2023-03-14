@@ -19,14 +19,14 @@ namespace ItemVendorLocation
         private void DrawTable(string npcName, NpcLocation location, string costStr)
         {
             ImGui.TableNextRow();
-            ImGui.TableNextColumn();
+            _ = ImGui.TableNextColumn();
             ImGui.Text(npcName);
-            ImGui.TableNextColumn();
+            _ = ImGui.TableNextColumn();
             if (location != null)
             {
                 if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.MapX:F1}, {location.MapY:F1})"))
                 {
-                    DalamudApi.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.MapX, location.MapY));
+                    _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.MapX, location.MapY));
                 }
             }
             else
@@ -34,21 +34,24 @@ namespace ItemVendorLocation
                 ImGui.Text("No location");
             }
 
-            ImGui.TableNextColumn();
+            _ = ImGui.TableNextColumn();
 
             ImGui.Text(costStr);
 
             if (_itemToDisplay.Type == ItemType.Achievement)
             {
-                ImGui.TableNextColumn();
+                _ = ImGui.TableNextColumn();
                 ImGui.Text(_itemToDisplay.AchievementDescription);
             }
         }
 
         public override void PreOpenCheck()
         {
-            if (_itemToDisplay != null) 
+            if (_itemToDisplay != null)
+            {
                 return;
+            }
+
             IsOpen = false;
         }
 
@@ -67,9 +70,9 @@ namespace ItemVendorLocation
 
                 ImGui.TableHeadersRow();
 
-                foreach (var npcInfo in _itemToDisplay.NpcInfos)
+                foreach (NpcInfo npcInfo in _itemToDisplay.NpcInfos)
                 {
-                    var costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
+                    string costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
                     costStr = costStr[..^2];
 
                     DrawTable(npcInfo.Name, npcInfo.Location, costStr);

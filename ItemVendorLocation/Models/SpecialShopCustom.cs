@@ -32,14 +32,14 @@ namespace ItemVendorLocation.Models
 
             Entries = new Entry[60];
 
-            var tomestonesItems = DalamudApi.DataManager.GetExcelSheet<TomestonesItem>().Where(i => i.Tomestones.Row > 0).OrderBy(i => i.Tomestones.Row).ToArray();
+            TomestonesItem[] tomestonesItems = Service.DataManager.GetExcelSheet<TomestonesItem>().Where(i => i.Tomestones.Row > 0).OrderBy(i => i.Tomestones.Row).ToArray();
 
-            for (var i = 0; i < tomestonesItems.Length; i++)
+            for (int i = 0; i < tomestonesItems.Length; i++)
             {
                 Tomestones[i + 1] = (int)tomestonesItems[i].Item.Row;
             }
 
-            for (var i = 0; i < Entries.Length; i++)
+            for (int i = 0; i < Entries.Length; i++)
             {
                 Entries[i] = new Entry
                 {
@@ -90,18 +90,15 @@ namespace ItemVendorLocation.Models
 
         private int ConvertCurrency(int itemId, ushort useCurrecntType)
         {
-            if (itemId is >= 8 or 0)
-            {
-                return itemId;
-            }
-
-            return useCurrecntType switch
-            {
-                16 => (int)currencies[itemId],
-                8 => 1,
-                4 => Tomestones[itemId],
-                _ => itemId,
-            };
+            return itemId is >= 8 or 0
+                ? itemId
+                : useCurrecntType switch
+                {
+                    16 => (int)currencies[itemId],
+                    8 => 1,
+                    4 => Tomestones[itemId],
+                    _ => itemId,
+                };
         }
 
         public struct Entry

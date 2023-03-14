@@ -16,7 +16,7 @@ namespace ItemVendorLocation.Models
 
             SpecialShopCustoms = new LazyRow<SpecialShopCustom>[2];
 
-            for (var i = 0; i < 2; i++)
+            for (int i = 0; i < 2; i++)
             {
                 SpecialShopCustoms[i] = new LazyRow<SpecialShopCustom>(gameData, parser.ReadColumn<uint>(0 + i), language);
             }

@@ -22,9 +22,15 @@ namespace ItemVendorLocation.Models
         public uint TerritoryType => TerritoryExcel.RowId;
         public uint MapId => TerritoryExcel.Map.Row;
 
+        /// <summary>
+        /// Looks like what <see href="https://github.com/goatcorp/Dalamud/blob/master/Dalamud/Game/Text/SeStringHandling/Payloads/MapLinkPayload.cs#L218">Dalamud</see> does with maplinks, but missing the offset
+        /// </summary>
+        /// <remarks>
+        /// TODO: I would like to remove this and just use native dalamud functionality
+        /// </remarks>
         private static float ToMapCoordinate(float val, float scale)
         {
-            var c = scale / 100.0f;
+            float c = scale / 100.0f;
 
             val *= c;
 

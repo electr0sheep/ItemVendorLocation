@@ -3,17 +3,18 @@ using Lumina.Data;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 
-namespace ItemVendorLocation.Models;
-
-[Sheet("InclusionShopSeries")]
-public class InclusionShopSeriesCustom : InclusionShop
+namespace ItemVendorLocation.Models
 {
-    public LazyRow<SpecialShopCustom> SpecialShopCustoms { get; set; }
-
-    public override void PopulateData(RowParser parser, GameData gameData, Language language)
+    [Sheet("InclusionShopSeries")]
+    public class InclusionShopSeriesCustom : InclusionShop
     {
-        base.PopulateData(parser, gameData, language);
+        public LazyRow<SpecialShopCustom> SpecialShopCustoms { get; set; }
 
-        SpecialShopCustoms = new LazyRow<SpecialShopCustom>(gameData, parser.ReadColumn<uint>(0), language);
+        public override void PopulateData(RowParser parser, GameData gameData, Language language)
+        {
+            base.PopulateData(parser, gameData, language);
+
+            SpecialShopCustoms = new LazyRow<SpecialShopCustom>(gameData, parser.ReadColumn<uint>(0), language);
+        }
     }
 }

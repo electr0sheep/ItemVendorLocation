@@ -24,10 +24,7 @@ If the item is sold by a vendor, a new option will be added to the item's contex
 
 ![Alt text](/Images/ContextMenu.png?raw=true "Item Context Menu")
 
-
-The plugin shows results in two possible modes
-
-1. It can show a list of all possible vendors in a plugin GUI window
+The plugin will show a list of all possible vendors in a plugin GUI window
 
 ![Alt text](/Images/VendorLocations.png?raw=true "Vendor Locations")
 

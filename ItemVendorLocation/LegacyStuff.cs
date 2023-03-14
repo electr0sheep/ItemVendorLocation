@@ -1,79 +1,17 @@
-﻿using Dalamud.Game.Command;
-using Dalamud.IoC;
-using Dalamud.Plugin;
-using System.Reflection;
-using Dalamud.ContextMenu;
-using Dalamud.Game.Gui;
-using System.Collections.Generic;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
-using System.Linq;
-using XivCommon.Functions.Tooltips;
-using System.Threading.Tasks;
-using XivCommon;
-using Dalamud.DrunkenToad;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud;
-using Dalamud.Game.ClientState;
-using CheapLoc;
+﻿using Dalamud.Game.Text.SeStringHandling.Payloads;
+using ItemVendorLocation.Models;
+using Lumina.Excel;
+using Lumina.Excel.GeneratedSheets;
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+using System.Linq;
 
 namespace ItemVendorLocation
 {
-    public class VendorPlugin : IDalamudPlugin
+    internal class LegacyStuff
     {
-
-        public string Name => "Item Vendor Location";
-
-        private Lumina.Excel.GeneratedSheets.Item? selectedItem;
-
-        private ulong lastHoveredItem;
-
-        private readonly XivCommonBase XivCommon;
-
-        private readonly DalamudContextMenu contextMenuBase;
-
-        private readonly InventoryContextMenuItem inventoryContextMenuItem;
-
-        private readonly GameObjectContextMenuItem gameObjectContextMenuItem;
-
-        private DalamudPluginInterface PluginInterface { get; init; }
-        private CommandManager CommandManager { get; init; }
-        private Configuration Configuration { get; init; }
-        private PluginUI PluginUi { get; init; }
-
-        [PluginService] public static ChatGui Chat { get; private set; } = null!;
-        [PluginService] public static GameGui GameGui { get; private set; } = null!;
-        [PluginService] public static ClientState ClientState { get; private set; } = null!;
-        [PluginService] public static Dalamud.Data.DataManager DataManager { get; private set; } = null!;
-
-        public class VendorInformation
-        {
-            public VendorInformation(string name, MapLinkPayload location)
-            {
-                this.name = name;
-                this.location = location;
-            }
-            public string name;
-            public MapLinkPayload location;
-        }
-
-        public static readonly List<string> GameAddonWhitelist = new()
-        {
-             "ChatLog",
-             "ContentsInfoDetail",
-             "DailyQuestSupply",
-             "HousingGoods",
-             "ItemSearch",
-             "Journal",
-             "RecipeMaterialList",
-             "RecipeNote",
-             "RecipeTree",
-             "ShopExchangeItem",
-             "ShopExchangeItemDialog",
-             "SubmarinePartsMenu",
-        };
-
-        public static readonly Dictionary<string, uint[]> CommonLocationNameToInternalCoords = new()
+        private readonly Dictionary<string, uint[]> CommonLocationNameToInternalCoords = new()
         {
             { "Amh Araeng", new uint[] { 815, 493 } },
             { "Azys Lla", new uint[] { 402, 216 } },
@@ -158,120 +96,67 @@ namespace ItemVendorLocation
             { "Zadnor", new uint[] { 975, 665 } }
         };
 
-        public VendorPlugin(
-            [RequiredVersion("1.0")] DalamudPluginInterface pluginInterface,
-            [RequiredVersion("1.0")] CommandManager commandManager)
+        private class Currency
         {
-            Localization.SetupLocalization(ClientState.ClientLanguage);
+            public string name;
+            public ulong cost;
 
-            PluginInterface = pluginInterface;
-            CommandManager = commandManager;
-
-            Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-            Configuration.Initialize(PluginInterface);
-
-            string? assemblyLocation = Assembly.GetExecutingAssembly().Location;
-            PluginUi = new PluginUI(Configuration);
-
-            PluginInterface.UiBuilder.Draw += DrawUI;
-
-            contextMenuBase = new DalamudContextMenu();
-            inventoryContextMenuItem = new InventoryContextMenuItem(
-                new SeString(new TextPayload(Loc.Localize("ContextMenuItem", "Vendor Location"))), OnSelectInventoryContextMenuItem, true);
-            gameObjectContextMenuItem = new GameObjectContextMenuItem(
-                new SeString(new TextPayload(Loc.Localize("ContextMenuItem", "Vendor Location"))), OnSelectGameObjectContextMenuItem, true);
-            contextMenuBase.OnOpenGameObjectContextMenu += OpenContextMenuOverride;
-            contextMenuBase.OnOpenInventoryContextMenu += OpenInventoryContextMenuOverride;
-            XivCommon = new XivCommonBase(Hooks.Tooltips);
-            XivCommon.Functions.Tooltips.OnItemTooltip += OnItemTooltipOverride;
-            GameGui.HoveredItemChanged += UpdateHoveredItem;
-        }
-
-        private void UpdateHoveredItem(object? sender, ulong e)
-        {
-            if (e != 0)
+            public Currency(string name, ulong cost)
             {
-                lastHoveredItem = e;
+                this.name = name;
+                this.cost = cost;
             }
         }
 
-        private void OnSelectInventoryContextMenuItem(InventoryContextMenuItemSelectedArgs args)
+        private class Vendor
         {
-            selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(args.ItemId)!;
-            HandleItem(selectedItem);
-        }
+            public string name = "";
+            public MapLinkPayload mapLink = null;
+            public string location = "";
+            public List<Currency> currencies;
 
-        private void OnSelectGameObjectContextMenuItem(GameObjectContextMenuItemSelectedArgs args)
-        {
-            if (args.ObjectWorld != 0)
+            public Vendor(string name, MapLinkPayload? mapLink, string location, List<Currency> currencies)
             {
-                return;
-            }
-
-            selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow((uint)lastHoveredItem)!;
-            HandleItem(selectedItem);
-        }
-
-        private void OnItemTooltipOverride(ItemTooltip itemTooltip, ulong itemId)
-        {
-            //HQ items don't have recipes, only NQ items
-            if (itemId > 1000000)
-            {
-                itemId -= 1000000;
-            }
-
-            if (IsItemSoldByGilVendor((uint)itemId))
-            {
-                return;
-            }
-            List<Lumina.Excel.GeneratedSheets.GCScripShopItem> items = new(DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GCScripShopItem>()!.Where(i => i.Item.Row == itemId));
-            // This code assumes all GC shops sell items for the same seal cost, which should be a safe assumption
-            if (items.Count > 0)
-            {
-                itemTooltip[ItemTooltipString.ShopSellingPrice] = $"Shop Selling Price: {items[0].CostGCSeals} GC Seals";
-                return;
-            }
-
-            if (IsItemSoldBySpecialVendor((uint)itemId))
-            {
-                itemTooltip[ItemTooltipString.ShopSellingPrice] = "Shop Selling Price: Special Vendor";
-                return;
+                this.name = name;
+                this.mapLink = mapLink;
+                this.location = location;
+                this.currencies = currencies;
             }
         }
 
-        private static bool IsItemSoldByAnyVendor(Lumina.Excel.GeneratedSheets.Item item)
+        private readonly ExcelSheet<Item> _items;
+        private readonly ExcelSheet<GilShopItem> _gilShopItems;
+        private readonly ExcelSheet<GCScripShopItem> _gcScripShopItems;
+        private readonly ExcelSheet<SpecialShop> _specialShopItems;
+        private readonly ExcelSheet<FccShop> _fccShopItems;
+
+        public LegacyStuff()
         {
-            return (item.Name != null && item.Name != "" && (IsItemSoldByGilVendor(item) || IsItemSoldByGCVendor(item) || IsItemSoldBySpecialVendor(item))) || IsItemSoldByFcVendor(item);
+            _items = Service.DataManager.GetExcelSheet<Item>();
+            _gilShopItems = Service.DataManager.GetExcelSheet<GilShopItem>();
+            _gcScripShopItems = Service.DataManager.GetExcelSheet<GCScripShopItem>();
+            _specialShopItems = Service.DataManager.GetExcelSheet<SpecialShop>();
+            _fccShopItems = Service.DataManager.GetExcelSheet<FccShop>();
         }
 
-        private static bool IsItemSoldByGilVendor(Lumina.Excel.GeneratedSheets.Item item)
+        public bool IsItemSoldByGilVendor(uint itemId)
         {
-            return IsItemSoldByGilVendor(item.RowId);
+            return _gilShopItems.Any(i => i.Item.Row == itemId);
         }
 
-        private static bool IsItemSoldByGilVendor(uint itemId)
+        public bool IsItemSoldByGCVendor(uint itemId)
         {
-            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GilShopItem>()!.Any(i => i.Item.Row == itemId);
+            return _gcScripShopItems.Any(i => i.Item.Row == itemId);
         }
 
-        private static bool IsItemSoldByGCVendor(Lumina.Excel.GeneratedSheets.Item item)
+        public bool IsItemSoldByFcVendor(uint itemId)
         {
-            return IsItemSoldByGCVendor(item.RowId);
+            return _fccShopItems.Any(i => i.Item.Any(i => i == itemId));
         }
 
-        private static bool IsItemSoldByGCVendor(uint itemId)
+        public bool IsItemSoldBySpecialVendor(uint itemId)
         {
-            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.GCScripShopItem>()!.Any(i => i.Item.Row == itemId);
-        }
-
-        private static bool IsItemSoldBySpecialVendor(Lumina.Excel.GeneratedSheets.Item item)
-        {
-            return IsItemSoldBySpecialVendor(item.RowId);
-        }
-
-        private static bool IsItemSoldBySpecialVendor(uint itemId)
-        {
-            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.SpecialShop>()!.Any(i =>
+            return _specialShopItems.Any(i =>
             i.UnkData1[0].ItemReceive == itemId ||
             i.UnkData1[0].CountReceive == itemId ||
             i.UnkData1[0].SpecialShopItemCategory == itemId ||
@@ -334,73 +219,59 @@ namespace ItemVendorLocation
             i.Unknown60 == itemId);
         }
 
-        private static bool IsItemSoldByFcVendor(Lumina.Excel.GeneratedSheets.Item item)
+        public bool IsItemSoldByAnyVendor(uint itemId)
         {
-            return IsItemSoldByFcVendor(item.RowId);
+            return IsItemSoldByGilVendor(itemId) || IsItemSoldBySpecialVendor(itemId) || IsItemSoldByFcVendor(itemId) || IsItemSoldByGCVendor(itemId);
         }
 
-        private static bool IsItemSoldByFcVendor(uint itemId)
+        public ItemInfo GetItemInfo(uint itemId)
         {
-            return DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.FccShop>()!.Any(i => i.Item.Any(i => i == itemId));
-        }
-
-        private void OpenContextMenuOverride(GameObjectContextMenuOpenArgs args)
-        {
-            // I think players have a world and items never will??
-            // Hopefully this removes the vendor menu for players in the chat log
-            if (args.ObjectWorld != 0 || args.ParentAddonName == null)
+            Item item = _items.GetRow(itemId);
+            ItemInfo itemInfo = new()
             {
-                return;
-            }
-
-            if (GameAddonWhitelist.Contains(args.ParentAddonName))
-            {
-                selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow((uint)lastHoveredItem)!;
-                if (IsItemSoldByAnyVendor(selectedItem))
-                {
-                    args.AddCustomItem(gameObjectContextMenuItem);
-                }
-            }
-        }
-
-        private void OpenInventoryContextMenuOverride(InventoryContextMenuOpenArgs args)
-        {
-            selectedItem = DataManager.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()!.GetRow(args.ItemId)!;
-            if (IsItemSoldByAnyVendor(selectedItem))
-            {
-                args.AddCustomItem(inventoryContextMenuItem);
-            }
-        }
-
-        public static List<Models.Vendor> GetVendors(ulong itemId)
-        {
+                Id = itemId,
+                Name = item.Name,
+                Type = IsItemSoldByGilVendor(itemId) ? ItemType.GilShop :
+                IsItemSoldByFcVendor(itemId) ? ItemType.SpecialShop :
+                IsItemSoldByGCVendor(itemId) ? ItemType.GcShop :
+                IsItemSoldBySpecialVendor(itemId) ? ItemType.SpecialShop :
+                throw new Exception("Could not determine ItemType"),
+                NpcInfos = new(),
+            };
             //get preliminary data
             GarlandToolsWrapper.Models.ItemDetails itemDetails = GarlandToolsWrapper.WebRequests.GetItemDetails(itemId);
-            List<Models.Vendor> vendorResults = new();
 
             // gil vendor
             if (itemDetails.item.vendors != null)
             {
                 foreach (ulong vendorId in itemDetails.item.vendors)
                 {
-                    GarlandToolsWrapper.Models.Partial? vendor = itemDetails.partials.Find(i => (ulong)i.obj.i == vendorId);
-                    List<Models.Currency> currencies = new();
+                    GarlandToolsWrapper.Models.Partial vendor = itemDetails.partials.Find(i => (ulong)i.obj.i == vendorId);
+                    List<Currency> currencies = new();
 
                     if (vendor != null)
                     {
                         // get rid of any vendor that doesn't have a location
                         // typically man/maid servants
                         string name = vendor.obj.n;
-                        currencies.Add(new Models.Currency("Gil", itemDetails.item.price));
+                        currencies.Add(new Currency("Gil", itemDetails.item.price));
                         if (vendor.obj.l == null)
                         {
-                            vendorResults.Add(new Models.Vendor(name, null!, "No Location", currencies));
+                            itemInfo.NpcInfos.Add(new()
+                            {
+                                Name = name,
+                                Location = null,
+                                Costs = new()
+                                {
+                                    new((uint)itemDetails.item.price, "Gil")
+                                }
+                            });
                             break;
                         }
 
                         string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
                         uint[] internalLocationIndex = CommonLocationNameToInternalCoords[location];
-                        MapLinkPayload? mapLink = null;
+                        MapLinkPayload mapLink = null;
                         if (vendor.obj.CIsValid())
                         {
                             mapLink = new(internalLocationIndex[0], internalLocationIndex[1], (float)vendor.obj.c[0], (float)vendor.obj.c[1]);
@@ -411,7 +282,17 @@ namespace ItemVendorLocation
                             mapLink = new(internalLocationIndex[0], internalLocationIndex[1], 0f, 0f);
                         }
 
-                        vendorResults.Add(new Models.Vendor(name, mapLink, location, currencies));
+                        List<Tuple<uint, string>> costs = new();
+                        foreach (Currency currency in currencies)
+                        {
+                            costs.Add(new((uint)currency.cost, currency.name));
+                        }
+                        itemInfo.NpcInfos.Add(new()
+                        {
+                            Name = name,
+                            Location = new(mapLink.XCoord, mapLink.YCoord, mapLink.TerritoryType),
+                            Costs = costs,
+                        });
                     }
                 }
             }
@@ -426,7 +307,7 @@ namespace ItemVendorLocation
                     {
                         foreach (ulong npcId in tradeShop.npcs)
                         {
-                            List<Models.Currency> currencies = new();
+                            List<Currency> currencies = new();
                             GarlandToolsWrapper.Models.Partial? tradeShopNpc = itemDetails.partials.Find(i => (ulong)i.obj.i == npcId);
                             if (tradeShopNpc != null)
                             {
@@ -434,12 +315,23 @@ namespace ItemVendorLocation
                                 foreach (GarlandToolsWrapper.Models.Currency currency in tradeShop.listings[0].currency)
                                 {
                                     string currencyName = itemDetails.partials.Find(i => i.id == currency.id && i.type == "item")!.obj.n;
-                                    currencies.Add(new Models.Currency(currencyName, currency.amount));
+                                    currencies.Add(new Currency(currencyName, currency.amount));
+                                }
+
+                                List<Tuple<uint, string>> costs = new();
+                                foreach (Currency currency in currencies)
+                                {
+                                    costs.Add(new((uint)currency.cost, currency.name));
                                 }
 
                                 if (tradeShopNpc.obj.l == null)
                                 {
-                                    vendorResults.Add(new Models.Vendor(name, null!, "No Location", currencies));
+                                    itemInfo.NpcInfos.Add(new()
+                                    {
+                                        Name = name,
+                                        Location = null,
+                                        Costs = costs,
+                                    });
                                     break;
                                 }
 
@@ -456,62 +348,43 @@ namespace ItemVendorLocation
                                     mapLink = new(internalLocationIndex[0], internalLocationIndex[1], 0f, 0f);
                                 }
 
-                                vendorResults.Add(new Models.Vendor(name, mapLink, location, currencies));
+                                itemInfo.NpcInfos.Add(new()
+                                {
+                                    Name = name,
+                                    Location = new(mapLink.XCoord, mapLink.YCoord, mapLink.TerritoryType),
+                                    Costs = costs,
+                                });
                             }
                         }
                     }
                     else
                     {
-                        List<Models.Currency> currencies = new();
+                        List<Currency> currencies = new();
                         string name = tradeShop.shop;
                         ulong cost = tradeShop.listings[0].currency[0].amount;
                         foreach (GarlandToolsWrapper.Models.Currency currency in tradeShop.listings[0].currency)
                         {
                             string currencyName = itemDetails.partials.Find(i => i.id == currency.id && i.type == "item")!.obj.n;
-                            currencies.Add(new Models.Currency(currencyName, currency.amount));
+                            currencies.Add(new Currency(currencyName, currency.amount));
                         }
 
-                        vendorResults.Add(new Models.Vendor(name, null!, "Unknown", currencies));
+                        List<Tuple<uint, string>> costs = new();
+                        foreach (Currency currency in currencies)
+                        {
+                            costs.Add(new((uint)currency.cost, currency.name));
+                        }
+
+                        itemInfo.NpcInfos.Add(new()
+                        {
+                            Name = name,
+                            Location = null,
+                            Costs = costs,
+                        });
                     }
                 }
             }
 
-            return vendorResults;
-        }
-        private void DisplayAllVendors(Lumina.Excel.GeneratedSheets.Item item, List<Models.Vendor> vendors)
-        {
-            PluginUi.Vendors = vendors;
-            PluginUi.ItemName = item.Name;
-            PluginUi.VendorResultsVisible = true;
-        }
-
-        private void HandleItem(Lumina.Excel.GeneratedSheets.Item item)
-        {
-            _ = Task.Run(() =>
-              {
-                  List<Models.Vendor> vendors = GetVendors(item.RowId);
-                  DisplayAllVendors(item, vendors);
-              });
-        }
-
-        public void Dispose()
-        {
-            GC.SuppressFinalize(this);
-            PluginUi.Dispose();
-            XivCommon.Functions.Tooltips.OnItemTooltip -= OnItemTooltipOverride;
-            contextMenuBase.OnOpenInventoryContextMenu -= OpenInventoryContextMenuOverride;
-            contextMenuBase.Dispose();
-            GameGui.HoveredItemChanged -= UpdateHoveredItem;
-        }
-
-        private void DrawUI()
-        {
-            PluginUi.Draw();
-        }
-
-        private void DrawConfigUI()
-        {
-            PluginUi.SettingsVisible = true;
+            return itemInfo;
         }
     }
 }

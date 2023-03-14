@@ -1,76 +1,61 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
 	<PropertyGroup>
 		<Authors>electr0sheep</Authors>
-		<Company></Company>
-		<Version>1.1.0.2</Version>
+		<TargetFramework>net7.0-windows</TargetFramework>
+		<LangVersion>latest</LangVersion>
 		<Description>XIV Launcher plugin for item vendors</Description>
-		<Copyright></Copyright>
-		<PackageProjectUrl></PackageProjectUrl>
-		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-		<Configurations>Debug;Release;DebugUI</Configurations>
+		<Version>2.0.0.0</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<TargetFramework>net7.0-windows</TargetFramework>
-		<Platforms>x64</Platforms>
-		<Nullable>enable</Nullable>
-		<LangVersion>latest</LangVersion>
-		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-		<OutputPath>bin\$(Configuration)\</OutputPath>
-		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+		<PlatformTarget>x64</PlatformTarget>
 	</PropertyGroup>
 
-		<ItemGroup>
-		<Content Include="..\ItemVendorLocation\ItemVendorLocation.json">
-			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-		</Content>
+	<ItemGroup>
+		<PackageReference Include="CheapLoc" Version="1.1.8" />
+		<PackageReference Include="Dalamud.ContextMenu" Version="1.2.2" />
+		<PackageReference Include="Dalamud.DrunkenToad" Version="1.5.6" />
+		<PackageReference Include="DalamudPackager" Version="2.1.11" />
+		<PackageReference Include="XivCommon" Version="7.0.0-alpha.1" />
 	</ItemGroup>
 
 	<PropertyGroup>
 		<DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
+		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 	</PropertyGroup>
 
 	<ItemGroup>
-		<None Include="..\.editorconfig" Link=".editorconfig" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <PackageReference Include="CheapLoc" Version="1.1.8" />
-	  <PackageReference Include="Dalamud.ContextMenu" Version="1.2.2" />
-	  <PackageReference Include="Dalamud.DrunkenToad" Version="1.5.6" />
-	  <PackageReference Include="DalamudPackager" Version="2.1.10" />
-	  <PackageReference Include="ILRepack" Version="2.0.18" />
-		<PackageReference Include="XivCommon" Version="7.0.0-alpha.1" />
-		<Reference Include="FFXIVClientStructs">
-			<HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Newtonsoft.Json">
-			<HintPath>$(DalamudLibPath)Newtonsoft.Json.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
 		<Reference Include="Dalamud">
-			<HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>
+			<HintPath>$(DalamudLibPath)\Dalamud.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="ImGui.NET">
-			<HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>
+			<HintPath>$(DalamudLibPath)\ImGui.NET.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="ImGuiScene">
-			<HintPath>$(DalamudLibPath)ImGuiScene.dll</HintPath>
+			<HintPath>$(DalamudLibPath)\ImGuiScene.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Lumina">
-			<HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
+			<HintPath>$(DalamudLibPath)\Lumina.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Lumina.Excel">
-			<HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
+			<HintPath>$(DalamudLibPath)\Lumina.Excel.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
+		<Reference Include="FFXIVClientStructs">
+			<HintPath>$(DalamudLibPath)\FFXIVClientStructs.dll</HintPath>
+			<Private>false</Private>
+		</Reference>
+		<Reference Include="Newtonsoft.Json">
+		  <HintPath>$(DalamudLibPath)\Newtonsoft.Json.dll</HintPath>
+		</Reference>
 	</ItemGroup>
+
 </Project>

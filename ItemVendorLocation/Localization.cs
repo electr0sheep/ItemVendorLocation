@@ -1,6 +1,5 @@
 ﻿using CheapLoc;
 using Dalamud;
-using Newtonsoft.Json;
 
 namespace ItemVendorLocation
 {

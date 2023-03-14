@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CheapLoc;
 using Dalamud.ContextMenu;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
@@ -34,7 +35,7 @@ namespace ItemVendorLocation
              "SubmarinePartsMenu",
         };
 
-        private const string ButtonName = "Vendor location";
+        private readonly string ButtonName = "";
         private readonly ItemLookup _itemLookup;
         private readonly LegacyStuff _legacyStuff;
         private readonly WindowSystem _windowSystem;
@@ -45,6 +46,8 @@ namespace ItemVendorLocation
         {
             _ = pi.Create<Service>();
 
+            Localization.SetupLocalization(Service.ClientState.ClientLanguage);
+            ButtonName = Loc.Localize("ContextMenuItem", "Vendor location");
             Service.Plugin = this;
             Service.Configuration = pi.GetPluginConfig() as PluginConfiguration ?? new PluginConfiguration();
             Service.ContextMenu = new DalamudContextMenu();

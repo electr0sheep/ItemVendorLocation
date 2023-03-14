@@ -301,6 +301,8 @@ namespace ItemVendorLocation
 
         private void NewContextMenuCallback(ItemInfo itemInfo)
         {
+            // this is my attempt to dedupe things like "junkmonger" appearing many times
+            itemInfo.NpcInfos = itemInfo.NpcInfos.DistinctBy(i => i.Name).ToList();
             switch (Service.Configuration.ResultsViewType)
             {
                 case ResultsViewType.Multiple:

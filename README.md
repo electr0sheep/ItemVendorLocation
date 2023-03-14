@@ -31,6 +31,6 @@ The plugin shows results in two possible modes
 
 ![Alt text](/Images/VendorLocations.png?raw=true "Vendor Locations")
 
-2. It can simply find the first vendor and link the coordinates in the in-game chat (I will most likely be deprecating this)
+2. It can simply find the first vendor and link the coordinates in the in-game chat
 
 ![Alt text](/Images/ChatVendorLocation.png?raw=true "Vendor Location")

@@ -7,6 +7,7 @@ namespace ItemVendorLocation.Models
     {
         public uint Id;
         public string Name;
+        public string ShopName;
         public List<Tuple<uint, string>> Costs;
         public NpcLocation Location;
     }

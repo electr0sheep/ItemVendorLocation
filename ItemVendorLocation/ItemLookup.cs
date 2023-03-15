@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Dalamud.DrunkenToad;
 using Dalamud.Logging;
 using ItemVendorLocation.Models;
 using Lumina.Data.Files;
@@ -207,7 +207,7 @@ namespace ItemVendorLocation
             }
         }
 
-        private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop)
+        private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, TopicSelect topic = null)
         {
             if (specialShop == null)
             {
@@ -241,13 +241,13 @@ namespace ItemVendorLocation
                         achievementDescription = _achievements.Where(i => i.Item.Value == result.Item.Value).Select(i => i.Description).First();
                     }
 
-                    AddItem_Internal(result.Item.Value.RowId, result.Item.Value.Name, npcBase.RowId, resident.Singular, costs,
-                        _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null, type, achievementDescription);
+                    AddItem_Internal(result.Item.Value.RowId, result.Item.Value.Name, npcBase.RowId, resident.Singular, topic?.Name?.RawString,
+                        costs, _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null, type, achievementDescription);
                 }
             }
         }
 
-        private void AddGilShopItem(GilShop shop, ENpcBase npcBase, ENpcResident resident)
+        private void AddGilShopItem(GilShop shop, ENpcBase npcBase, ENpcResident resident, TopicSelect topic = null)
         {
             if (shop == null)
             {
@@ -265,7 +265,10 @@ namespace ItemVendorLocation
                         break;
                     }
 
-                    AddItem_Internal(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(item.Item.Value.PriceMid, _gil.Name) },
+
+                    AddItem_Internal(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular,
+                        topic != null ? $"{topic.Name} - {shop.Name}" : shop.Name,
+                        new List<Tuple<uint, string>> { new(item.Item.Value.PriceMid, _gil.Name) },
                         _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null, ItemType.GilShop);
                 }
                 catch (Exception)
@@ -312,7 +315,7 @@ namespace ItemVendorLocation
                             break;
                         }
 
-                        AddItem_Internal(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(item.CostGCSeals, seal.Name) },
+                        AddItem_Internal(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular, null, new List<Tuple<uint, string>> { new(item.CostGCSeals, seal.Name) },
                             _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null, ItemType.GcShop);
                     }
                     catch (Exception)
@@ -377,7 +380,7 @@ namespace ItemVendorLocation
 
                 uint cost = shop.Cost[i];
 
-                AddItem_Internal(item.RowId, item.Name, npcBase.RowId, resident.Singular, new List<Tuple<uint, string>> { new(cost, _fccName.Text) },
+                AddItem_Internal(item.RowId, item.Name, npcBase.RowId, resident.Singular, null, new List<Tuple<uint, string>> { new(cost, _fccName.Text) },
                     _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null, ItemType.GcShop);
             }
         }
@@ -431,7 +434,7 @@ namespace ItemVendorLocation
                 if (MatchEventHandlerType(data, EventHandlerType.SpecialShop))
                 {
                     SpecialShopCustom specialShop = _specialShops.GetRow(data);
-                    AddSpecialItem(specialShop, npcBase, resident);
+                    AddSpecialItem(specialShop, npcBase, resident, topic: topicSelect);
 
                     continue;
                 }
@@ -439,7 +442,7 @@ namespace ItemVendorLocation
                 if (MatchEventHandlerType(data, EventHandlerType.GilShop))
                 {
                     GilShop gilShop = _gilShops.GetRow(data);
-                    AddGilShopItem(gilShop, npcBase, resident);
+                    AddGilShopItem(gilShop, npcBase, resident, topic: topicSelect);
                     continue;
                 }
 
@@ -473,6 +476,11 @@ namespace ItemVendorLocation
                 case 1025763: // doman junkmonger
                     GilShop gilShop = _gilShops.GetRow(262919);
                     AddGilShopItem(gilShop, npcBase, resident);
+                    return true;
+
+                case 1027123: // eureka
+                    AddSpecialItem(_specialShops.GetRow(1769934), npcBase, resident);
+                    AddSpecialItem(_specialShops.GetRow(1769935), npcBase, resident);
                     return true;
 
                 case 1033921: // faux
@@ -512,7 +520,7 @@ namespace ItemVendorLocation
             }
         }
 
-        private void AddItem_Internal(uint itemId, string itemName, uint npcId, string npcName, List<Tuple<uint, string>> cost, NpcLocation npcLocation, ItemType type,
+        private void AddItem_Internal(uint itemId, string itemName, uint npcId, string npcName, string shopName, List<Tuple<uint, string>> cost, NpcLocation npcLocation, ItemType type,
             string achievementDesc = "")
         {
             if (itemId == 0)
@@ -526,7 +534,7 @@ namespace ItemVendorLocation
                 {
                     Id = itemId,
                     Name = itemName,
-                    NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Costs = cost, Name = npcName } },
+                    NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Costs = cost, Name = npcName, ShopName = shopName } },
                     Type = type,
                     AchievementDescription = achievementDesc,
                 });
@@ -554,7 +562,7 @@ namespace ItemVendorLocation
             List<NpcInfo> npcs = itemInfo.NpcInfos;
             if (npcs.Find(j => j.Id == npcId) == null)
             {
-                npcs.Add(new NpcInfo { Id = npcId, Location = npcLocation, Name = npcName, Costs = cost });
+                npcs.Add(new NpcInfo { Id = npcId, Location = npcLocation, Name = npcName, Costs = cost, ShopName = shopName });
             }
 
             itemInfo.NpcInfos = npcs;
@@ -637,36 +645,36 @@ namespace ItemVendorLocation
             _npcLocations[1001945].TerritoryExcel = corrected;
             _npcLocations[1001821].TerritoryExcel = corrected;
 
+#pragma warning disable format
             // Fix Kugane npcs location
             TerritoryType kugane = _territoryType.GetRow(641);
-            _npcLocations[1019100] = new NpcLocation(-85.03851f, 117.05188f, kugane);
-            _npcLocations[1022846] = new NpcLocation(-83.93994f, 115.31238f, kugane);
-            _npcLocations[1019106] = new NpcLocation(-99.22949f, 105.6687f, kugane);
-            _npcLocations[1019107] = new NpcLocation(-100.26703f, 107.43872f, kugane);
-            _npcLocations[1019104] = new NpcLocation(-67.582275f, 59.739014f, kugane);
-            _npcLocations[1019102] = new NpcLocation(-59.617065f, 33.524048f, kugane);
-            _npcLocations[1019103] = new NpcLocation(-52.35376f, 76.58496f, kugane);
-            _npcLocations[1019101] = new NpcLocation(-36.484375f, 49.240845f, kugane);
+            _npcLocations[1019100] = new NpcLocation(-85.03851f,    117.05188f, kugane);
+            _npcLocations[1022846] = new NpcLocation(-83.93994f,    115.31238f, kugane);
+            _npcLocations[1019106] = new NpcLocation(-99.22949f,    105.6687f,  kugane);
+            _npcLocations[1019107] = new NpcLocation(-100.26703f,   107.43872f, kugane);
+            _npcLocations[1019104] = new NpcLocation(-67.582275f,   59.739014f, kugane);
+            _npcLocations[1019102] = new NpcLocation(-59.617065f,   33.524048f, kugane);
+            _npcLocations[1019103] = new NpcLocation(-52.35376f,    76.58496f,  kugane);
+            _npcLocations[1019101] = new NpcLocation(-36.484375f,   49.240845f, kugane);
 
             // some are missing from my test, so we gotta hardcode them
-            _ = _npcLocations.TryAdd(1006004, new NpcLocation(5.355835f, 155.22998f, _territoryType.GetRow(128)));
-            _ = _npcLocations.TryAdd(1017613, new NpcLocation(2.822865f, 153.521f, _territoryType.GetRow(128)));
-            _ = _npcLocations.TryAdd(1003077, new NpcLocation(-259.32715f, 37.491333f, _territoryType.GetRow(129)));
+            _ = _npcLocations.TryAdd(1006004, new NpcLocation(5.355835f,    155.22998f,     _territoryType.GetRow(128)));
+            _ = _npcLocations.TryAdd(1017613, new NpcLocation(2.822865f,    153.521f,       _territoryType.GetRow(128)));
+            _ = _npcLocations.TryAdd(1003077, new NpcLocation(-259.32715f,  37.491333f,     _territoryType.GetRow(129)));
 
-            _ = _npcLocations.TryAdd(1008145, new NpcLocation(-31.265808f, -245.38031f, _territoryType.GetRow(133)));
-            _ = _npcLocations.TryAdd(1006005, new NpcLocation(-61.234497f, -141.31384f, _territoryType.GetRow(133)));
-            _ = _npcLocations.TryAdd(1017614, new NpcLocation(-58.79309f, -142.1073f, _territoryType.GetRow(133)));
-            _ = _npcLocations.TryAdd(1003633, new NpcLocation(145.83044f, -106.767456f, _territoryType.GetRow(133)));
+            _ = _npcLocations.TryAdd(1008145, new NpcLocation(-31.265808f,  -245.38031f,    _territoryType.GetRow(133)));
+            _ = _npcLocations.TryAdd(1006005, new NpcLocation(-61.234497f,  -141.31384f,    _territoryType.GetRow(133)));
+            _ = _npcLocations.TryAdd(1017614, new NpcLocation(-58.79309f,   -142.1073f,     _territoryType.GetRow(133)));
+            _ = _npcLocations.TryAdd(1003633, new NpcLocation(145.83044f,   -106.767456f,   _territoryType.GetRow(133)));
+
+            // more locations missing
+            _ = _npcLocations.TryAdd(1000215, new NpcLocation(155.35205f,   -70.26782f,     _territoryType.GetRow(133)));
+#pragma warning restore format
         }
 
         public ItemInfo GetItemInfo(uint itemId)
         {
             return !_isDataReady ? null : _itemDataMap.TryGetValue(itemId, out ItemInfo itemInfo) ? itemInfo : null;
-        }
-
-        public List<uint> GetItemInfoTest(uint itemId)
-        {
-            return _itemDataMap.ToList().OrderBy(i => i.Key).ToList().Select(i => i.Key).ToList();
         }
 
         // https://github.com/SapphireServer/Sapphire/blob/a5c15f321f7e795ed7362ae15edaada99ca7d9be/src/world/Event/EventHandler.h#L48-L83

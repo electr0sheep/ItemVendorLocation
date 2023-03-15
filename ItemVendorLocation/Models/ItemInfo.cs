@@ -20,6 +20,11 @@ namespace ItemVendorLocation.Models
         public ItemType Type;
         public string AchievementDescription;
 
+        public bool HasShopNames()
+        {
+            return NpcInfos.Any(i => i.ShopName != null);
+        }
+
         public void ApplyFilters()
         {
             FilterDuplicates();

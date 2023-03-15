@@ -1,4 +1,5 @@
 ﻿using Lumina.Excel.GeneratedSheets;
+using System;
 
 namespace ItemVendorLocation.Models
 {
@@ -17,24 +18,18 @@ namespace ItemVendorLocation.Models
 
         public TerritoryType TerritoryExcel { get; set; }
 
-        public float MapX => ToMapCoordinate(x, TerritoryExcel.Map.Value.SizeFactor);
-        public float MapY => ToMapCoordinate(y, TerritoryExcel.Map.Value.SizeFactor);
+        public float MapX => ToMapCoordinate(x, TerritoryExcel.Map.Value.SizeFactor, TerritoryExcel.Map.Value.OffsetX);
+        public float MapY => ToMapCoordinate(y, TerritoryExcel.Map.Value.SizeFactor, TerritoryExcel.Map.Value.OffsetY);
         public uint TerritoryType => TerritoryExcel.RowId;
         public uint MapId => TerritoryExcel.Map.Row;
 
-        /// <summary>
-        /// Looks like what <see href="https://github.com/goatcorp/Dalamud/blob/master/Dalamud/Game/Text/SeStringHandling/Payloads/MapLinkPayload.cs#L218">Dalamud</see> does with maplinks, but missing the offset
-        /// </summary>
-        /// <remarks>
-        /// TODO: I would like to remove this and just use native dalamud functionality
-        /// </remarks>
-        private static float ToMapCoordinate(float val, float scale)
+        private static float ToMapCoordinate(float val, float scale, short offset)
         {
             float c = scale / 100.0f;
 
-            val *= c;
+            val = (val + offset) * c;
 
-            return 41.0f / c * ((val + 1024.0f) / 2048.0f) + 1;
+            return (41.0f / c * ((val + 1024.0f) / 2048.0f)) + 1;
         }
     }
 }

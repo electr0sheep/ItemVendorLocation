@@ -16,12 +16,17 @@ namespace ItemVendorLocation
             Flags = ImGuiWindowFlags.AlwaysAutoResize;
         }
 
-        private void DrawTable(string npcName, NpcLocation location, string costStr)
+        private void DrawTableRow(string npcName, string shopName, NpcLocation location, string costStr)
         {
             ImGui.TableNextRow();
             _ = ImGui.TableNextColumn();
             ImGui.Text(npcName);
             _ = ImGui.TableNextColumn();
+            if (_itemToDisplay.HasShopNames())
+            {
+                ImGui.Text(shopName ?? "");
+                _ = ImGui.TableNextColumn();
+            }
             if (location != null)
             {
                 if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.MapX:F1}, {location.MapY:F1})"))
@@ -58,9 +63,22 @@ namespace ItemVendorLocation
         public override void Draw()
         {
             ImGui.Text($"{_itemToDisplay.Name} Vendor list:");
-            if (ImGui.BeginTable("Vendors", _itemToDisplay.Type == ItemType.Achievement ? 4 : 3, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp, new Vector2(-1, -1)))
+            int columnCount = 3;
+            if (_itemToDisplay.Type == ItemType.Achievement)
             {
-                ImGui.TableSetupColumn("Name");
+                columnCount++;
+            }
+            if (_itemToDisplay.HasShopNames())
+            {
+                columnCount++;
+            }
+            if (ImGui.BeginTable("Vendors", columnCount, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp, new Vector2(-1, -1)))
+            {
+                ImGui.TableSetupColumn("NPC Name");
+                if (_itemToDisplay.HasShopNames())
+                {
+                    ImGui.TableSetupColumn("Shop Name");
+                }
                 ImGui.TableSetupColumn("Location");
                 ImGui.TableSetupColumn("Cost");
                 if (_itemToDisplay.Type == ItemType.Achievement)
@@ -75,7 +93,7 @@ namespace ItemVendorLocation
                     string costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
                     costStr = costStr[..^2];
 
-                    DrawTable(npcInfo.Name, npcInfo.Location, costStr);
+                    DrawTableRow(npcInfo.Name, npcInfo.ShopName, npcInfo.Location, costStr);
                 }
             }
 

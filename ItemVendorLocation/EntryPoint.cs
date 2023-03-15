@@ -19,7 +19,7 @@ namespace ItemVendorLocation
 {
     public class EntryPoint : IDalamudPlugin
     {
-        public static readonly List<string> GameAddonWhitelist = new()
+        private static readonly List<string> GameAddonWhitelist = new()
         {
              "ChatLog",
              "ContentsInfoDetail",
@@ -33,6 +33,13 @@ namespace ItemVendorLocation
              "ShopExchangeItem",
              "ShopExchangeItemDialog",
              "SubmarinePartsMenu",
+        };
+
+        public readonly Dictionary<byte, uint> GcVendorIdMap = new()
+        {
+            { 1, 1002387 },
+            { 2, 1002393 },
+            { 3, 1002390 },
         };
 
         private readonly string ButtonName = "";
@@ -154,19 +161,6 @@ namespace ItemVendorLocation
                     LegacyOnOpenGameObjectContextMenu(args, itemId);
                     return;
             }
-            //ItemInfo itemInfo = Service.Configuration.DataSource switch
-            //{
-            //    DataSource.Internal => _itemLookup.GetItemInfo(CorrectitemId(itemId)),
-            //    DataSource.GarlandTools => _legacyStuff.GetItemInfo(CorrectitemId(itemId)),
-            //};
-
-            //if (itemInfo == null)
-            //{
-            //    return;
-            //}
-
-            //args.AddCustomItem(new GameObjectContextMenuItem(ButtonName, _ => { ContextMenuCallback(itemInfo); }, true));
-            //return;
         }
 
         private void NewOnOpenInventoryContextMenu(InventoryContextMenuOpenArgs args)
@@ -304,15 +298,27 @@ namespace ItemVendorLocation
 
         private void NewContextMenuCallback(ItemInfo itemInfo)
         {
-            // this is my attempt to dedupe things like "junkmonger" appearing many times
-            itemInfo.NpcInfos = itemInfo.NpcInfos.DistinctBy(i => i.Name).ToList();
+            // filteredResults allows us to apply filters without modifying core data,
+            // itemInfo is initialized once upon plugin load, so a filter would not
+            // be able to be unchecked otherwise
+            ItemInfo filteredResults = new()
+            {
+                AchievementDescription = itemInfo.AchievementDescription,
+                Id = itemInfo.Id,
+                Name = itemInfo.Name,
+                Type = itemInfo.Type,
+                NpcInfos = itemInfo.NpcInfos,
+            };
+
+            filteredResults.ApplyFilters();
+
             switch (Service.Configuration.ResultsViewType)
             {
                 case ResultsViewType.Multiple:
-                    ShowMultipleVendors(itemInfo);
+                    ShowMultipleVendors(filteredResults);
                     return;
                 case ResultsViewType.Single:
-                    ShowSingleVendor(itemInfo);
+                    ShowSingleVendor(filteredResults);
                     return;
             }
         }
@@ -326,6 +332,8 @@ namespace ItemVendorLocation
                 LegacyStuff _legacyStuff = new();
 
                 ItemInfo itemInfo = _legacyStuff.GetItemInfo(CorrectitemId(itemId));
+
+                itemInfo.ApplyFilters();
 
                 switch (Service.Configuration.ResultsViewType)
                 {

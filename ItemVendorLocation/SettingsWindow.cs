@@ -21,6 +21,27 @@ namespace ItemVendorLocation
 
         public override void Draw()
         {
+            bool filterGCResults = Service.Configuration.FilterGCResults;
+            if (ImGui.Checkbox("Filter GC Results", ref filterGCResults))
+            {
+                Service.Configuration.FilterGCResults = filterGCResults;
+                Service.Configuration.Save();
+            }
+            ImGui.SameLine();
+            ImGuiComponents.HelpMarker(@"If checked, will only show your own GC vendor
+
+Only applies when Data Source is set to Internal
+");
+
+            bool filterNPCsWithNoLocation = Service.Configuration.FilterNPCsWithNoLocation;
+            if (ImGui.Checkbox("Filter Results With No Location", ref filterNPCsWithNoLocation))
+            {
+                Service.Configuration.FilterNPCsWithNoLocation = filterNPCsWithNoLocation;
+                Service.Configuration.Save();
+            }
+            ImGui.SameLine();
+            ImGuiComponents.HelpMarker(@"If checked, will only show npcs with a location");
+
             string[] dataSourceNames = Enum.GetNames<DataSource>();
             DataSource[] dataSourceValues = Enum.GetValues<DataSource>();
             int selectedDataSource = Array.IndexOf(dataSourceValues, Service.Configuration.DataSource);

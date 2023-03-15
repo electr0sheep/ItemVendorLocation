@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Dalamud.Logging;
@@ -288,7 +289,7 @@ namespace ItemVendorLocation
                 return;
             }
 
-            Item seal = _gcSeal.Find(i => i.Name.RawString.StartsWith(gcId.GrandCompany.Value.Name));
+            Item seal = _gcSeal.Find(i => i.Description.RawString.EndsWith($"{gcId.GrandCompany.Value.Name.RawString}."));
             if (seal == null)
             {
                 return;
@@ -661,6 +662,11 @@ namespace ItemVendorLocation
         public ItemInfo GetItemInfo(uint itemId)
         {
             return !_isDataReady ? null : _itemDataMap.TryGetValue(itemId, out ItemInfo itemInfo) ? itemInfo : null;
+        }
+
+        public List<uint> GetItemInfoTest(uint itemId)
+        {
+            return _itemDataMap.ToList().OrderBy(i => i.Key).ToList().Select(i => i.Key).ToList();
         }
 
         // https://github.com/SapphireServer/Sapphire/blob/a5c15f321f7e795ed7362ae15edaada99ca7d9be/src/world/Event/EventHandler.h#L48-L83

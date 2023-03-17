@@ -22,16 +22,26 @@ namespace ItemVendorLocation
             _ = ImGui.TableNextColumn();
             ImGui.Text(npcName);
             _ = ImGui.TableNextColumn();
-            if (_itemToDisplay.HasShopNames())
+            if (Service.Configuration.ShowShopName && _itemToDisplay.HasShopNames())
             {
                 ImGui.Text(shopName ?? "");
                 _ = ImGui.TableNextColumn();
             }
             if (location != null)
             {
-                if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.MapX:F1}, {location.MapY:F1})"))
+                if (Service.Configuration.DataSource == DataSource.Internal)
                 {
-                    _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.MapX, location.MapY));
+                    if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.MapX:F1}, {location.MapY:F1})"))
+                    {
+                        _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.MapX, location.MapY, 0f));
+                    }
+                }
+                else if (Service.Configuration.DataSource == DataSource.GarlandTools)
+                {
+                    if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.LegacyMapX:F1}, {location.LegacyMapY:F1})"))
+                    {
+                        _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.LegacyMapX, location.LegacyMapY, 0f));
+                    }
                 }
             }
             else
@@ -68,14 +78,14 @@ namespace ItemVendorLocation
             {
                 columnCount++;
             }
-            if (_itemToDisplay.HasShopNames())
+            if (Service.Configuration.ShowShopName && _itemToDisplay.HasShopNames())
             {
                 columnCount++;
             }
             if (ImGui.BeginTable("Vendors", columnCount, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp, new Vector2(-1, -1)))
             {
                 ImGui.TableSetupColumn("NPC Name");
-                if (_itemToDisplay.HasShopNames())
+                if (Service.Configuration.ShowShopName && _itemToDisplay.HasShopNames())
                 {
                     ImGui.TableSetupColumn("Shop Name");
                 }

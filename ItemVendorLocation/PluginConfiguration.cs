@@ -13,6 +13,7 @@ namespace ItemVendorLocation
         public ushort NPCNameChatColor { get; set; } = 67;
         public bool FilterGCResults { get; set; } = false;
         public bool FilterNPCsWithNoLocation { get; set; } = false;
+        public bool ShowShopName { get; set; } = false;
         public void Save()
         {
             Service.Interface.SavePluginConfig(this);

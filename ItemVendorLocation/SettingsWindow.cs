@@ -42,12 +42,25 @@ Only applies when Data Source is set to Internal
             ImGui.SameLine();
             ImGuiComponents.HelpMarker(@"If checked, will only show npcs with a location");
 
+            bool showShopName = Service.Configuration.ShowShopName;
+            if (ImGui.Checkbox("Show Shop Info", ref showShopName))
+            {
+                Service.Configuration.ShowShopName = showShopName;
+                Service.Configuration.Save();
+            }
+            ImGui.SameLine();
+            ImGuiComponents.HelpMarker(@"If checked, will show shop name info e.g. 'Purchase Disciple of Magic Gear - Purchase Gear (Lv. 20-29)'
+
+Only applies when Data Source is set to Internal
+");
+
             string[] dataSourceNames = Enum.GetNames<DataSource>();
             DataSource[] dataSourceValues = Enum.GetValues<DataSource>();
             int selectedDataSource = Array.IndexOf(dataSourceValues, Service.Configuration.DataSource);
             ImGui.SetNextItemWidth(200f);
             if (ImGui.Combo("Data Source", ref selectedDataSource, dataSourceNames, dataSourceNames.Length))
             {
+                Service.PluginUi.IsOpen = false;
                 Service.Configuration.DataSource = dataSourceValues[selectedDataSource];
                 Service.Configuration.Save();
             }

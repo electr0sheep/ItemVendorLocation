@@ -1,4 +1,5 @@
-﻿using ItemVendorLocation.Models;
+﻿using Dalamud.Logging;
+using ItemVendorLocation.Models;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using System;
@@ -293,7 +294,16 @@ namespace ItemVendorLocation
                         foreach (ulong npcId in tradeShop.npcs)
                         {
                             List<Currency> currencies = new();
-                            GarlandToolsWrapper.Models.Partial? tradeShopNpc = itemDetails.partials.Find(i => (ulong)i.obj.i == npcId);
+                            GarlandToolsWrapper.Models.Partial tradeShopNpc = new();
+                            try
+                            {
+                                tradeShopNpc = itemDetails.partials.Find(i => (ulong)i.obj.i == npcId);
+                            }
+                            // There is a currency that has an "i" of "fccredit", so can't convert to ulong
+                            catch (Microsoft.CSharp.RuntimeBinder.RuntimeBinderException)
+                            {
+                                continue;
+                            }
                             if (tradeShopNpc != null)
                             {
                                 string name = tradeShopNpc.obj.n;

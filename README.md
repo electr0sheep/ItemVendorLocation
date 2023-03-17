@@ -1,14 +1,16 @@
 # ItemVendorLocation
 Adds a context menu to find vendor locations for items that can be purchased from a vendor.
 
-This plugin uses [Garland Tools](https://garlandtools.org/) as it's source of information.
+The plugin can use one of two possible data sources:
+1. [Garland Tools](https://garlandtools.org/) as it's source of information (slow, hoping to deprecate)
+2. Internal Data sheets (fast)
 
 The plugin provides the following indicators to know if an item is sold by a vendor:
 1. The game indicates the shop selling price without any plugins
 
 ![Alt text](/Images/GilVendor.png?raw=true "Item Sold for Gil")
 
-2. If the plugin determines an item is sold by a GC vendor, the item's popup will show the price in GC Seals
+2. If the plugin determines an item is sold by a GC vendor, the item's popup will show the price in your GC's currency
 
 ![Alt text](/Images/GCVendor.png?raw=true "Item Sold for GC Seals")
 

@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using Dalamud.DrunkenToad;
 using Dalamud.Logging;
 using ItemVendorLocation.Models;
 using Lumina.Data.Files;
@@ -98,7 +97,21 @@ namespace ItemVendorLocation
                 BuildVendorInfo();
                 AddAchievementItem();
                 _isDataReady = true;
+#if DEBUG
+                uint noLocationNpcs = 0;
+                foreach (KeyValuePair<uint, ItemInfo> items in _itemDataMap)
+                {
+                    foreach (NpcInfo npc in items.Value.NpcInfos)
+                    {
+                        if (npc.Location == null)
+                        {
+                            noLocationNpcs++;
+                        }
+                    }
+                }
                 PluginLog.Debug("Data is ready");
+                PluginLog.Debug($"NPCs with no location: {noLocationNpcs}");
+#endif
             });
         }
 
@@ -478,10 +491,15 @@ namespace ItemVendorLocation
                     AddGilShopItem(gilShop, npcBase, resident);
                     return true;
 
-                case 1027123: // eureka
+                case 1027123: // eureka expedition artisan
                     AddSpecialItem(_specialShops.GetRow(1769934), npcBase, resident);
                     AddSpecialItem(_specialShops.GetRow(1769935), npcBase, resident);
                     return true;
+
+                case 1027124: // eureka expedition scholar
+                    AddSpecialItem(_specialShops.GetRow(1769937), npcBase, resident);
+                    return true;
+
 
                 case 1033921: // faux
                     SpecialShopCustom sShop = _specialShops.GetRow(1770282);
@@ -669,6 +687,10 @@ namespace ItemVendorLocation
 
             // more locations missing
             _ = _npcLocations.TryAdd(1000215, new NpcLocation(155.35205f,   -70.26782f,     _territoryType.GetRow(133)));
+            _ = _npcLocations.TryAdd(1000996, new NpcLocation(-28.152893f,  196.70398f,     _territoryType.GetRow(128)));
+            _ = _npcLocations.TryAdd(1000999, new NpcLocation(-29.465149f,  197.92468f,     _territoryType.GetRow(128)));
+            _ = _npcLocations.TryAdd(1000217, new NpcLocation(170.30591f,   -73.16705f,     _territoryType.GetRow(133)));
+            _ = _npcLocations.TryAdd(1000597, new NpcLocation(-163.07324f,  -78.62976f,     _territoryType.GetRow(153)));
 #pragma warning restore format
         }
 

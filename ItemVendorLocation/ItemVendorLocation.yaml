@@ -13,8 +13,7 @@ tags: [
   item
 ]
 changelog: |
-  - Added settings UI
-  - Added single vendor chat option back
-  - Allow searching GarlandTools OR internal data sheets
+  - Fixed issue with Garland Tools map links
+  - Added setting for showing shop info
 
   If the plugin isn't working for a particular item, please let me know the name of the item. Creating an issue in GitHub works best, but leaving feedback will work as well.

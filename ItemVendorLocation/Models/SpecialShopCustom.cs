@@ -28,6 +28,11 @@ namespace ItemVendorLocation.Models
 
         public override void PopulateData(RowParser parser, GameData lumina, Language language)
         {
+            if (parser.RowId == 1770638)
+            {
+                UseCurrencyType = 16;
+            }
+
             base.PopulateData(parser, lumina, language);
 
             Entries = new Entry[60];

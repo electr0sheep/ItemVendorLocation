@@ -14,6 +14,9 @@ namespace ItemVendorLocation
         public bool FilterGCResults { get; set; } = false;
         public bool FilterNPCsWithNoLocation { get; set; } = false;
         public bool ShowShopName { get; set; } = false;
+#if DEBUG
+        public int BuildDebugVendorInfo { get; set; } = 0;
+#endif
         public void Save()
         {
             Service.Interface.SavePluginConfig(this);

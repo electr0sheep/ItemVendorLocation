@@ -43,7 +43,11 @@ namespace ItemVendorLocation
         };
 
         private readonly string ButtonName = "";
+#if DEBUG
+        public readonly ItemLookup _itemLookup;
+#else
         private readonly ItemLookup _itemLookup;
+#endif
         private readonly LegacyStuff _legacyStuff;
         private readonly WindowSystem _windowSystem;
         private readonly SettingsWindow _configWindow;

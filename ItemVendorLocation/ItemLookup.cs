@@ -11,7 +11,11 @@ using Lumina.Excel.GeneratedSheets;
 
 namespace ItemVendorLocation
 {
+#if DEBUG
+    public class ItemLookup
+#else
     internal class ItemLookup
+#endif
     {
         private readonly ExcelSheet<CustomTalk> _customTalks;
         private readonly ExcelSheet<Achievement> _achievements;

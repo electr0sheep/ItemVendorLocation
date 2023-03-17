@@ -38,9 +38,9 @@ namespace ItemVendorLocation
                 }
                 else if (Service.Configuration.DataSource == DataSource.GarlandTools)
                 {
-                    if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.LegacyMapX:F1}, {location.LegacyMapY:F1})"))
+                    if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.X:F1}, {location.Y:F1})"))
                     {
-                        _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.LegacyMapX, location.LegacyMapY, 0f));
+                        _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.X, location.Y, 0f));
                     }
                 }
             }

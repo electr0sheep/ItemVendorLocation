@@ -6,6 +6,7 @@ using Dalamud.Interface.Components;
 using Lumina.Excel.GeneratedSheets;
 using System.Linq;
 using System.Collections.Generic;
+using ItemVendorLocation.Models;
 
 namespace ItemVendorLocation
 {
@@ -21,6 +22,20 @@ namespace ItemVendorLocation
 
         public override void Draw()
         {
+#if DEBUG
+            ImGui.SetNextItemWidth(200f);
+            int num = Service.Configuration.BuildDebugVendorInfo;
+            if (ImGui.InputInt("NPC ID", ref num))
+            {
+                Service.Configuration.BuildDebugVendorInfo = num;
+                Service.Configuration.Save();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Build Debug Vendor Info"))
+            {
+                Service.Plugin._itemLookup.BuildDebugVendorInfo((uint)num);
+            }
+#endif
             bool filterGCResults = Service.Configuration.FilterGCResults;
             if (ImGui.Checkbox("Filter GC Results", ref filterGCResults))
             {

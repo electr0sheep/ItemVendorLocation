@@ -98,19 +98,38 @@ namespace ItemVendorLocation
                 AddAchievementItem();
                 _isDataReady = true;
 #if DEBUG
-                uint noLocationNpcs = 0;
+                Dictionary<string, uint> noLocationNpcs = new();
                 foreach (KeyValuePair<uint, ItemInfo> items in _itemDataMap)
                 {
                     foreach (NpcInfo npc in items.Value.NpcInfos)
                     {
                         if (npc.Location == null)
                         {
-                            noLocationNpcs++;
+                            if (!noLocationNpcs.TryAdd(npc.Name, 1))
+                            {
+                                noLocationNpcs[npc.Name]++;
+                            }
                         }
                     }
                 }
                 PluginLog.Debug("Data is ready");
-                PluginLog.Debug($"NPCs with no location: {noLocationNpcs}");
+                PluginLog.Debug($"Items sold by NPCs with no location: {noLocationNpcs.Values.Aggregate((sum, i) => sum += i)}");
+                PluginLog.Debug("Named NPCs:");
+                foreach (KeyValuePair<string, uint> npc in noLocationNpcs)
+                {
+                    if (char.IsUpper(npc.Key.First()))
+                    {
+                        PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
+                    }
+                }
+                PluginLog.Debug("Unnamed NPCs:");
+                foreach (KeyValuePair<string, uint> npc in noLocationNpcs)
+                {
+                    if (!char.IsUpper(npc.Key.First()))
+                    {
+                        PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
+                    }
+                }
 #endif
             });
         }
@@ -122,6 +141,103 @@ namespace ItemVendorLocation
         {
             return ((data >> 16) & (uint)type) == (uint)type;
         }
+
+#if DEBUG
+        public void BuildDebugVendorInfo(uint vendorId)
+        {
+            uint firstSpecialShopId = _specialShops.First().RowId;
+            uint lastSpecialShopId = _specialShops.Last().RowId;
+
+            ENpcBase npcBase = _eNpcBases.GetRow(vendorId);
+            if (npcBase == null)
+            {
+                return;
+            }
+
+            ENpcResident resident = _eNpcResidents.GetRow(npcBase.RowId);
+
+            if (HackyFix_Npc(npcBase, resident))
+            {
+                return;
+            }
+
+            FateShopCustom fateShop = _fateShops.GetRow(npcBase.RowId);
+            if (fateShop != null)
+            {
+                foreach (LazyRow<SpecialShop> specialShop in fateShop.SpecialShop)
+                {
+                    if (specialShop.Value == null)
+                    {
+                        return;
+                    }
+
+                    SpecialShopCustom specialShopCustom = _specialShops.GetRow(specialShop.Row);
+                    AddSpecialItem(specialShopCustom, npcBase, resident);
+                }
+
+                return;
+            }
+
+            foreach (uint npcData in npcBase.ENpcData)
+            {
+                if (npcData == 0)
+                {
+                    continue;
+                }
+
+                AddInclusionShopItem(npcData, npcBase, resident);
+                AddFccShop(npcData, npcBase, resident);
+                AddItemsInPrehandler(npcData, npcBase, resident);
+                AddItemsInTopicSelect(npcData, npcBase, resident);
+
+                if (MatchEventHandlerType(npcData, EventHandlerType.GcShop))
+                {
+                    AddGcShopItem(npcData, npcBase, resident);
+                    continue;
+                }
+
+                if (MatchEventHandlerType(npcData, EventHandlerType.SpecialShop))
+                {
+                    SpecialShopCustom specialShop = _specialShops.GetRow(npcData);
+                    AddSpecialItem(specialShop, npcBase, resident);
+                    continue;
+                }
+
+                if (MatchEventHandlerType(npcData, EventHandlerType.GilShop))
+                {
+                    GilShop gilShop = _gilShops.GetRow(npcData);
+                    AddGilShopItem(gilShop, npcBase, resident);
+                }
+
+                if (MatchEventHandlerType(npcData, EventHandlerType.CustomTalk))
+                {
+                    CustomTalk customTalk = _customTalks.GetRow(npcData);
+                    if (customTalk == null)
+                    {
+                        continue;
+                    }
+
+                    foreach (uint arg in customTalk.ScriptArg)
+                    {
+                        if (MatchEventHandlerType(arg, EventHandlerType.GilShop))
+                        {
+                            GilShop gilShop = _gilShops.GetRow(arg);
+                            AddGilShopItem(gilShop, npcBase, resident);
+                            continue;
+                        }
+
+                        if (arg < firstSpecialShopId || arg > lastSpecialShopId)
+                        {
+                            continue;
+                        }
+
+                        SpecialShopCustom specialShop = _specialShops.GetRow(arg);
+                        AddSpecialItem(specialShop, npcBase, resident);
+                    }
+                }
+            }
+        }
+#endif
 
         private void BuildVendorInfo()
         {
@@ -217,8 +333,8 @@ namespace ItemVendorLocation
                         }
                     }
                 }
-            }
         }
+    }
 
         private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, TopicSelect topic = null)
         {
@@ -675,6 +791,9 @@ namespace ItemVendorLocation
             _npcLocations[1019103] = new NpcLocation(-52.35376f,    76.58496f,  kugane);
             _npcLocations[1019101] = new NpcLocation(-36.484375f,   49.240845f, kugane);
 
+            // random NPC fixes
+            _ = _npcLocations[1004418] = new NpcLocation(-114.0307f, 118.30322f, _territoryType.GetRow(131), 73);
+
             // some are missing from my test, so we gotta hardcode them
             _ = _npcLocations.TryAdd(1006004, new NpcLocation(5.355835f,    155.22998f,     _territoryType.GetRow(128)));
             _ = _npcLocations.TryAdd(1017613, new NpcLocation(2.822865f,    153.521f,       _territoryType.GetRow(128)));
@@ -691,6 +810,14 @@ namespace ItemVendorLocation
             _ = _npcLocations.TryAdd(1000999, new NpcLocation(-29.465149f,  197.92468f,     _territoryType.GetRow(128)));
             _ = _npcLocations.TryAdd(1000217, new NpcLocation(170.30591f,   -73.16705f,     _territoryType.GetRow(133)));
             _ = _npcLocations.TryAdd(1000597, new NpcLocation(-163.07324f,  -78.62976f,     _territoryType.GetRow(153)));
+            _ = _npcLocations.TryAdd(1000185, new NpcLocation(-8.590881f,   -2.2125854f,    _territoryType.GetRow(132)));
+            _ = _npcLocations.TryAdd(1000392, new NpcLocation(-17.746277f,  43.35083f,      _territoryType.GetRow(132)));
+            _ = _npcLocations.TryAdd(1000391, new NpcLocation(66.819214f,   -143.45007f,    _territoryType.GetRow(133)));
+            _ = _npcLocations.TryAdd(1000232, new NpcLocation(164.72107f,   -133.68433f,    _territoryType.GetRow(133)));
+            _ = _npcLocations.TryAdd(1000301, new NpcLocation(-87.174866f,  -173.51044f,    _territoryType.GetRow(133)));
+            _ = _npcLocations.TryAdd(1000267, new NpcLocation(103.89868f,   -213.03125f,    _territoryType.GetRow(133)));
+            _ = _npcLocations.TryAdd(1003252, new NpcLocation(-139.57434f,  31.967651f,     _territoryType.GetRow(129)));
+            _ = _npcLocations.TryAdd(1001016, new NpcLocation(-42.679565f,  119.920654f,    _territoryType.GetRow(128)));
 #pragma warning restore format
         }
 

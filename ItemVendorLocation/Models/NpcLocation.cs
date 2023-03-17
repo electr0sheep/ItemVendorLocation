@@ -5,28 +5,25 @@ namespace ItemVendorLocation.Models
 {
     public class NpcLocation
     {
-        private readonly float x;
-
-        private readonly float y;
-
-        public NpcLocation(float x, float y, TerritoryType territoryType)
+        public NpcLocation(float x, float y, TerritoryType territoryType, uint? map = null)
         {
-            this.x = x;
-            this.y = y;
+            X = x;
+            Y = y;
             TerritoryExcel = territoryType;
+            MapId = map != null ? (uint)map : territoryType.Map.Row;
         }
 
         public TerritoryType TerritoryExcel { get; set; }
 
-        public float MapX => ToMapCoordinate(x, TerritoryExcel.Map.Value.SizeFactor, TerritoryExcel.Map.Value.OffsetX);
-        public float MapY => ToMapCoordinate(y, TerritoryExcel.Map.Value.SizeFactor, TerritoryExcel.Map.Value.OffsetY);
+        public float MapX => ToMapCoordinate(X, TerritoryExcel.Map.Value.SizeFactor, TerritoryExcel.Map.Value.OffsetX);
+        public float MapY => ToMapCoordinate(Y, TerritoryExcel.Map.Value.SizeFactor, TerritoryExcel.Map.Value.OffsetY);
         // Garland Tools already sends over "map coordinates", so another option would be to invert ToMapCoordinate(),
         // or use a constructor that doesn't assume the coordinates aren't already converted or something.
         // Going with this for now
-        public float LegacyMapX => x;
-        public float LegacyMapY => y;
+        public float X { get; }
+        public float Y { get; }
         public uint TerritoryType => TerritoryExcel.RowId;
-        public uint MapId => TerritoryExcel.Map.Row;
+        public uint MapId { get; }
 
         private static float ToMapCoordinate(float val, float scale, short offset)
         {

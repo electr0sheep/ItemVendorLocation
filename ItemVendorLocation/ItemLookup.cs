@@ -385,7 +385,7 @@ namespace ItemVendorLocation
 
             for (int i = 0; i < shop.Item.Length; i++)
             {
-                Item item = _items.GetRow((uint)i);
+                Item item = _items.GetRow(shop.Item[i]);
                 if (item == null || item.Name == string.Empty)
                 {
                     continue;

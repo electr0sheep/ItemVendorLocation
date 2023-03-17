@@ -20,6 +20,11 @@ namespace ItemVendorLocation.Models
 
         public float MapX => ToMapCoordinate(x, TerritoryExcel.Map.Value.SizeFactor, TerritoryExcel.Map.Value.OffsetX);
         public float MapY => ToMapCoordinate(y, TerritoryExcel.Map.Value.SizeFactor, TerritoryExcel.Map.Value.OffsetY);
+        // Garland Tools already sends over "map coordinates", so another option would be to invert ToMapCoordinate(),
+        // or use a constructor that doesn't assume the coordinates aren't already converted or something.
+        // Going with this for now
+        public float LegacyMapX => x;
+        public float LegacyMapY => y;
         public uint TerritoryType => TerritoryExcel.RowId;
         public uint MapId => TerritoryExcel.Map.Row;
 

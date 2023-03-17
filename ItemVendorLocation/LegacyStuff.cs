@@ -1,10 +1,8 @@
-﻿using Dalamud.Game.Text.SeStringHandling.Payloads;
-using ItemVendorLocation.Models;
+﻿using ItemVendorLocation.Models;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 
 namespace ItemVendorLocation
@@ -105,22 +103,6 @@ namespace ItemVendorLocation
             {
                 this.name = name;
                 this.cost = cost;
-            }
-        }
-
-        private class Vendor
-        {
-            public string name = "";
-            public MapLinkPayload mapLink = null;
-            public string location = "";
-            public List<Currency> currencies;
-
-            public Vendor(string name, MapLinkPayload? mapLink, string location, List<Currency> currencies)
-            {
-                this.name = name;
-                this.mapLink = mapLink;
-                this.location = location;
-                this.currencies = currencies;
             }
         }
 
@@ -271,28 +253,31 @@ namespace ItemVendorLocation
 
                         string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[vendor.obj.l.ToString()].name;
                         uint[] internalLocationIndex = CommonLocationNameToInternalCoords[location];
-                        MapLinkPayload mapLink = null;
-                        if (vendor.obj.CIsValid())
-                        {
-                            mapLink = new(internalLocationIndex[0], internalLocationIndex[1], (float)vendor.obj.c[0], (float)vendor.obj.c[1]);
-                        }
-                        else
-                        {
-                            // For now, we'll just set 0,0 as the coords for those vendors that Garland Tools doesn't have actual coords for
-                            mapLink = new(internalLocationIndex[0], internalLocationIndex[1], 0f, 0f);
-                        }
-
                         List<Tuple<uint, string>> costs = new();
                         foreach (Currency currency in currencies)
                         {
                             costs.Add(new((uint)currency.cost, currency.name));
                         }
-                        itemInfo.NpcInfos.Add(new()
+
+                        if (vendor.obj.CIsValid())
                         {
-                            Name = name,
-                            Location = new(mapLink.XCoord, mapLink.YCoord, mapLink.TerritoryType),
-                            Costs = costs,
-                        });
+                            itemInfo.NpcInfos.Add(new()
+                            {
+                                Name = name,
+                                Location = new((float)vendor.obj.c[0], (float)vendor.obj.c[1], Service.DataManager.GetExcelSheet<TerritoryType>().GetRow(internalLocationIndex[0])),
+                                Costs = costs,
+                            });
+                        }
+                        else
+                        {
+                            // For now, we'll just set 0,0 as the coords for those vendors that Garland Tools doesn't have actual coords for
+                            itemInfo.NpcInfos.Add(new()
+                            {
+                                Name = name,
+                                Location = new(0f, 0f, Service.DataManager.GetExcelSheet<TerritoryType>().GetRow(internalLocationIndex[0])),
+                                Costs = costs,
+                            });
+                        }
                     }
                 }
             }
@@ -337,23 +322,25 @@ namespace ItemVendorLocation
 
                                 string location = GarlandToolsWrapper.WebRequests.DataObject.locationIndex[tradeShopNpc.obj.l.ToString()].name;
                                 uint[] internalLocationIndex = CommonLocationNameToInternalCoords[location];
-                                MapLinkPayload? mapLink = null;
                                 if (tradeShopNpc.obj.CIsValid())
                                 {
-                                    mapLink = new(internalLocationIndex[0], internalLocationIndex[1], (float)tradeShopNpc.obj.c[0], (float)tradeShopNpc.obj.c[1]);
+                                    itemInfo.NpcInfos.Add(new()
+                                    {
+                                        Name = name,
+                                        Location = new((float)tradeShopNpc.obj.c[0], (float)tradeShopNpc.obj.c[1], Service.DataManager.GetExcelSheet<TerritoryType>().GetRow(internalLocationIndex[0])),
+                                        Costs = costs,
+                                    });
                                 }
                                 else
                                 {
                                     // For now, we'll just set 0,0 as the coords for those vendors that Garland Tools doesn't have actual coords for
-                                    mapLink = new(internalLocationIndex[0], internalLocationIndex[1], 0f, 0f);
+                                    itemInfo.NpcInfos.Add(new()
+                                    {
+                                        Name = name,
+                                        Location = new(0f, 0f, Service.DataManager.GetExcelSheet<TerritoryType>().GetRow(internalLocationIndex[0])),
+                                        Costs = costs,
+                                    });
                                 }
-
-                                itemInfo.NpcInfos.Add(new()
-                                {
-                                    Name = name,
-                                    Location = new(mapLink.XCoord, mapLink.YCoord, mapLink.TerritoryType),
-                                    Costs = costs,
-                                });
                             }
                         }
                     }

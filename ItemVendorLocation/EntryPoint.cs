@@ -22,6 +22,7 @@ namespace ItemVendorLocation
         private static readonly List<string> GameAddonWhitelist = new()
         {
              "ChatLog",
+             "ColorantColoring",
              "ContentsInfoDetail",
              "DailyQuestSupply",
              "HousingGoods",
@@ -145,11 +146,19 @@ namespace ItemVendorLocation
             uint itemId;
             if (args.ParentAddonName == "RecipeNote")
             {
+                nint recipeNoteAgent = Service.GameGui.FindAgentInterface(args.ParentAddonName);
                 unsafe
                 {
                     // thank you ottermandias
-                    nint recipeNoteAgen = Service.GameGui.FindAgentInterface(args.ParentAddonName);
-                    itemId = *(uint*)(recipeNoteAgen + 0x398);
+                    itemId = *(uint*)(recipeNoteAgent + 0x398);
+                }
+            }
+            else if (args.ParentAddonName == "ColorantColoring")
+            {
+                nint colorantColoringAgent = Service.GameGui.FindAgentInterface(args.ParentAddonName);
+                unsafe
+                {
+                    itemId = *(uint*)(colorantColoringAgent + 0x34);
                 }
             }
             else

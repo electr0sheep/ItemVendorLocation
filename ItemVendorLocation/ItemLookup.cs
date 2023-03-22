@@ -150,6 +150,7 @@ namespace ItemVendorLocation
 #if DEBUG
         public void BuildDebugVendorInfo(uint vendorId)
         {
+            NpcLocation npcLocation = _npcLocations[vendorId];
             uint firstSpecialShopId = _specialShops.First().RowId;
             uint lastSpecialShopId = _specialShops.Last().RowId;
 

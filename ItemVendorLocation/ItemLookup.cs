@@ -8,6 +8,7 @@ using Lumina.Data.Files;
 using Lumina.Data.Parsing.Layer;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
+using Lumina.Text;
 
 namespace ItemVendorLocation
 {
@@ -340,7 +341,7 @@ namespace ItemVendorLocation
         }
     }
 
-        private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, TopicSelect topic = null)
+        private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, string shop = null)
         {
             if (specialShop == null)
             {
@@ -374,15 +375,15 @@ namespace ItemVendorLocation
                         achievementDescription = _achievements.Where(i => i.Item.Value == result.Item.Value).Select(i => i.Description).First();
                     }
 
-                    AddItem_Internal(result.Item.Value.RowId, result.Item.Value.Name, npcBase.RowId, resident.Singular, topic?.Name?.RawString,
+                    AddItem_Internal(result.Item.Value.RowId, result.Item.Value.Name, npcBase.RowId, resident.Singular, shop,
                         costs, _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null, type, achievementDescription);
                 }
             }
         }
 
-        private void AddGilShopItem(GilShop shop, ENpcBase npcBase, ENpcResident resident, TopicSelect topic = null)
+        private void AddGilShopItem(GilShop gilShop, ENpcBase npcBase, ENpcResident resident, string shop = null)
         {
-            if (shop == null)
+            if (gilShop == null)
             {
                 return;
             }
@@ -391,7 +392,7 @@ namespace ItemVendorLocation
             {
                 try
                 {
-                    GilShopItem item = _gilShopItems.GetRow(shop.RowId, i);
+                    GilShopItem item = _gilShopItems.GetRow(gilShop.RowId, i);
 
                     if (item?.Item.Value == null)
                     {
@@ -400,7 +401,7 @@ namespace ItemVendorLocation
 
 
                     AddItem_Internal(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular,
-                        topic != null ? $"{topic.Name} - {shop.Name}" : shop.Name,
+                        shop != null ? $"{shop}\n{gilShop.Name}" : gilShop.Name,
                         new List<Tuple<uint, string>> { new(item.Item.Value.PriceMid, _gil.Name) },
                         _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null, ItemType.GilShop);
                 }
@@ -485,7 +486,7 @@ namespace ItemVendorLocation
                         }
 
                         SpecialShopCustom specialShop = series.SpecialShopCustoms.Value;
-                        AddSpecialItem(specialShop, npcBase, resident);
+                        AddSpecialItem(specialShop, npcBase, resident, shop: $"{category.Value.Name}\n{specialShop.Name}");
                     }
                     catch (Exception)
                     {
@@ -567,7 +568,7 @@ namespace ItemVendorLocation
                 if (MatchEventHandlerType(data, EventHandlerType.SpecialShop))
                 {
                     SpecialShopCustom specialShop = _specialShops.GetRow(data);
-                    AddSpecialItem(specialShop, npcBase, resident, topic: topicSelect);
+                    AddSpecialItem(specialShop, npcBase, resident, shop: topicSelect.Name);
 
                     continue;
                 }
@@ -575,7 +576,7 @@ namespace ItemVendorLocation
                 if (MatchEventHandlerType(data, EventHandlerType.GilShop))
                 {
                     GilShop gilShop = _gilShops.GetRow(data);
-                    AddGilShopItem(gilShop, npcBase, resident, topic: topicSelect);
+                    AddGilShopItem(gilShop, npcBase, resident, shop: topicSelect.Name);
                     continue;
                 }
 

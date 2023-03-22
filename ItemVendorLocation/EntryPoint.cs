@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CheapLoc;
 using Dalamud.ContextMenu;
+using Dalamud.Game.Command;
 using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
@@ -25,6 +26,7 @@ namespace ItemVendorLocation
              "ColorantColoring",
              "ContentsInfoDetail",
              "DailyQuestSupply",
+             "HousingCatalogPreview",
              "HousingGoods",
              "ItemSearch",
              "Journal",
@@ -80,6 +82,15 @@ namespace ItemVendorLocation
             Service.ContextMenu.OnOpenGameObjectContextMenu += ContextMenu_OnOpenGameObjectContextMenu;
             Service.Interface.UiBuilder.Draw += _windowSystem.Draw;
             Service.Interface.UiBuilder.OpenConfigUi += OnOpenConfigUi;
+            _ = Service.CommandManager.AddHandler(Service.Configuration.CommandName, new CommandInfo(OnCommand)
+            {
+                HelpMessage = "Displays the Item Vendor Location config window",
+            });
+        }
+
+        private void OnCommand(string command, string args)
+        {
+            _configWindow.IsOpen = true;
         }
 
         private void OnOpenConfigUi()
@@ -414,6 +425,7 @@ namespace ItemVendorLocation
                 return;
             }
 
+            _ = Service.CommandManager.RemoveHandler(Service.Configuration.CommandName);
             _xivCommon.Functions.Tooltips.OnItemTooltip -= Tooltips_OnOnItemTooltip;
             Service.ContextMenu.OnOpenInventoryContextMenu -= ContextMenu_OnOpenInventoryContextMenu;
             Service.ContextMenu.OnOpenGameObjectContextMenu -= ContextMenu_OnOpenGameObjectContextMenu;

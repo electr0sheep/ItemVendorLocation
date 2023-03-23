@@ -8,7 +8,6 @@ using Lumina.Data.Files;
 using Lumina.Data.Parsing.Layer;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
-using Lumina.Text;
 
 namespace ItemVendorLocation
 {
@@ -50,16 +49,18 @@ namespace ItemVendorLocation
         private bool _isDataReady;
 
         private readonly Dictionary<uint, uint> _shbFateShopNpc = new()
-    {
-        { 1027998, 1769957 },
-        { 1027538, 1769958 },
-        { 1027385, 1769959 },
-        { 1027497, 1769960 },
-        { 1027892, 1769961 },
-        { 1027665, 1769962 },
-        { 1027709, 1769963 },
-        { 1027766, 1769964 },
-    };
+        {
+            { 1027998, 1769957 },
+            { 1027538, 1769958 },
+            { 1027385, 1769959 },
+            { 1027497, 1769960 },
+            { 1027892, 1769961 },
+            { 1027665, 1769962 },
+            { 1027709, 1769963 },
+            { 1027766, 1769964 },
+        };
+        private readonly uint firstSpecialShopId;
+        private readonly uint lastSpecialShopId;
 
         public ItemLookup()
         {
@@ -91,6 +92,9 @@ namespace ItemVendorLocation
 
             _gcSeal = _items.Where(i => i.RowId is >= 20 and <= 22).Select(i => i).ToList();
 
+            firstSpecialShopId = _specialShops.First().RowId;
+            lastSpecialShopId = _specialShops.Last().RowId;
+
             _ = Task.Run(async () =>
             {
                 while (!Service.DataManager.IsDataReady)
@@ -99,7 +103,7 @@ namespace ItemVendorLocation
                 }
 
                 BuildNpcLocation();
-                BuildVendorInfo();
+                BuildVendors();
                 AddAchievementItem();
                 _isDataReady = true;
 #if DEBUG
@@ -151,8 +155,6 @@ namespace ItemVendorLocation
         public void BuildDebugVendorInfo(uint vendorId)
         {
             NpcLocation npcLocation = _npcLocations[vendorId];
-            uint firstSpecialShopId = _specialShops.First().RowId;
-            uint lastSpecialShopId = _specialShops.Last().RowId;
 
             ENpcBase npcBase = _eNpcBases.GetRow(vendorId);
             if (npcBase == null)
@@ -160,6 +162,27 @@ namespace ItemVendorLocation
                 return;
             }
 
+            BuildVendorInfo(npcBase);
+        }
+#endif
+
+        private void BuildVendors()
+        {
+            
+
+            foreach (ENpcBase npcBase in _eNpcBases)
+            {
+                if (npcBase == null)
+                {
+                    continue;
+                }
+                BuildVendorInfo(npcBase);
+                
+            }
+        }
+
+        private void BuildVendorInfo(ENpcBase npcBase)
+        {
             ENpcResident resident = _eNpcResidents.GetRow(npcBase.RowId);
 
             if (HackyFix_Npc(npcBase, resident))
@@ -174,7 +197,7 @@ namespace ItemVendorLocation
                 {
                     if (specialShop.Value == null)
                     {
-                        return;
+                        continue;
                     }
 
                     SpecialShopCustom specialShopCustom = _specialShops.GetRow(specialShop.Row);
@@ -191,14 +214,20 @@ namespace ItemVendorLocation
                     continue;
                 }
 
-                AddInclusionShopItem(npcData, npcBase, resident);
-                AddFccShop(npcData, npcBase, resident);
-                AddItemsInPrehandler(npcData, npcBase, resident);
-                AddItemsInTopicSelect(npcData, npcBase, resident);
+                InclusionShop inclusionShop = _inclusionShops.GetRow(npcData);
+                FccShop fccShop = _fccShops.GetRow(npcData);
+                PreHandler preHandler = _preHandlers.GetRow(npcData);
+                TopicSelect topicSelect = _topicSelects.GetRow(npcData);
+
+                AddInclusionShop(inclusionShop, npcBase, resident);
+                AddFccShop(fccShop, npcBase, resident);
+                AddItemsInPrehandler(preHandler, npcBase, resident);
+                AddItemsInTopicSelect(topicSelect, npcBase, resident);
 
                 if (MatchEventHandlerType(npcData, EventHandlerType.GcShop))
                 {
-                    AddGcShopItem(npcData, npcBase, resident);
+                    GCShop gcShop = _gcShops.GetRow(npcData);
+                    AddGcShopItem(gcShop, npcBase, resident);
                     continue;
                 }
 
@@ -232,6 +261,13 @@ namespace ItemVendorLocation
                             continue;
                         }
 
+                        if (MatchEventHandlerType(arg, EventHandlerType.FcShop))
+                        {
+                            FccShop shop = _fccShops.GetRow(arg);
+                            AddFccShop(shop, npcBase, resident);
+                            continue;
+                        }
+
                         if (arg < firstSpecialShopId || arg > lastSpecialShopId)
                         {
                             continue;
@@ -243,104 +279,6 @@ namespace ItemVendorLocation
                 }
             }
         }
-#endif
-
-        private void BuildVendorInfo()
-        {
-            uint firstSpecialShopId = _specialShops.First().RowId;
-            uint lastSpecialShopId = _specialShops.Last().RowId;
-
-            foreach (ENpcBase npcBase in _eNpcBases)
-            {
-                if (npcBase == null)
-                {
-                    continue;
-                }
-
-                ENpcResident resident = _eNpcResidents.GetRow(npcBase.RowId);
-
-                if (HackyFix_Npc(npcBase, resident))
-                {
-                    continue;
-                }
-
-                FateShopCustom fateShop = _fateShops.GetRow(npcBase.RowId);
-                if (fateShop != null)
-                {
-                    foreach (LazyRow<SpecialShop> specialShop in fateShop.SpecialShop)
-                    {
-                        if (specialShop.Value == null)
-                        {
-                            continue;
-                        }
-
-                        SpecialShopCustom specialShopCustom = _specialShops.GetRow(specialShop.Row);
-                        AddSpecialItem(specialShopCustom, npcBase, resident);
-                    }
-
-                    continue;
-                }
-
-                foreach (uint npcData in npcBase.ENpcData)
-                {
-                    if (npcData == 0)
-                    {
-                        continue;
-                    }
-
-                    AddInclusionShopItem(npcData, npcBase, resident);
-                    AddFccShop(npcData, npcBase, resident);
-                    AddItemsInPrehandler(npcData, npcBase, resident);
-                    AddItemsInTopicSelect(npcData, npcBase, resident);
-
-                    if (MatchEventHandlerType(npcData, EventHandlerType.GcShop))
-                    {
-                        AddGcShopItem(npcData, npcBase, resident);
-                        continue;
-                    }
-
-                    if (MatchEventHandlerType(npcData, EventHandlerType.SpecialShop))
-                    {
-                        SpecialShopCustom specialShop = _specialShops.GetRow(npcData);
-                        AddSpecialItem(specialShop, npcBase, resident);
-                        continue;
-                    }
-
-                    if (MatchEventHandlerType(npcData, EventHandlerType.GilShop))
-                    {
-                        GilShop gilShop = _gilShops.GetRow(npcData);
-                        AddGilShopItem(gilShop, npcBase, resident);
-                    }
-
-                    if (MatchEventHandlerType(npcData, EventHandlerType.CustomTalk))
-                    {
-                        CustomTalk customTalk = _customTalks.GetRow(npcData);
-                        if (customTalk == null)
-                        {
-                            continue;
-                        }
-
-                        foreach (uint arg in customTalk.ScriptArg)
-                        {
-                            if (MatchEventHandlerType(arg, EventHandlerType.GilShop))
-                            {
-                                GilShop gilShop = _gilShops.GetRow(arg);
-                                AddGilShopItem(gilShop, npcBase, resident);
-                                continue;
-                            }
-
-                            if (arg < firstSpecialShopId || arg > lastSpecialShopId)
-                            {
-                                continue;
-                            }
-
-                            SpecialShopCustom specialShop = _specialShops.GetRow(arg);
-                            AddSpecialItem(specialShop, npcBase, resident);
-                        }
-                    }
-                }
-        }
-    }
 
         private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, string shop = null)
         {
@@ -413,9 +351,8 @@ namespace ItemVendorLocation
             }
         }
 
-        private void AddGcShopItem(uint data, ENpcBase npcBase, ENpcResident resident)
+        private void AddGcShopItem(GCShop gcId, ENpcBase npcBase, ENpcResident resident)
         {
-            GCShop gcId = _gcShops.GetRow(data);
             if (gcId == null)
             {
                 return;
@@ -461,9 +398,8 @@ namespace ItemVendorLocation
             }
         }
 
-        private void AddInclusionShopItem(uint data, ENpcBase npcBase, ENpcResident resident)
+        private void AddInclusionShop(InclusionShop inclusionShop, ENpcBase npcBase, ENpcResident resident)
         {
-            InclusionShop inclusionShop = _inclusionShops.GetRow(data);
             if (inclusionShop == null)
             {
                 return;
@@ -487,7 +423,7 @@ namespace ItemVendorLocation
                         }
 
                         SpecialShopCustom specialShop = series.SpecialShopCustoms.Value;
-                        AddSpecialItem(specialShop, npcBase, resident, shop: $"{category.Value.Name}\n{specialShop.Name}");
+                        AddSpecialItem(specialShop, npcBase, resident, shop: $"{category.Value.Name}\n{specialShop?.Name}");
                     }
                     catch (Exception)
                     {
@@ -497,9 +433,8 @@ namespace ItemVendorLocation
             }
         }
 
-        private void AddFccShop(uint data, ENpcBase npcBase, ENpcResident resident)
+        private void AddFccShop(FccShop shop, ENpcBase npcBase, ENpcResident resident)
         {
-            FccShop shop = _fccShops.GetRow(data);
             if (shop == null)
             {
                 return;
@@ -520,9 +455,8 @@ namespace ItemVendorLocation
             }
         }
 
-        private void AddItemsInPrehandler(uint data, ENpcBase npcBase, ENpcResident resident)
+        private void AddItemsInPrehandler(PreHandler preHandler, ENpcBase npcBase, ENpcResident resident)
         {
-            PreHandler preHandler = _preHandlers.GetRow(data);
             if (preHandler == null)
             {
                 return;
@@ -548,12 +482,12 @@ namespace ItemVendorLocation
                 return;
             }
 
-            AddInclusionShopItem(target, npcBase, resident);
+            InclusionShop inclusionShop = _inclusionShops.GetRow(target);
+            AddInclusionShop(inclusionShop, npcBase, resident);
         }
 
-        private void AddItemsInTopicSelect(uint npcData, ENpcBase npcBase, ENpcResident resident)
+        private void AddItemsInTopicSelect(TopicSelect topicSelect, ENpcBase npcBase, ENpcResident resident)
         {
-            TopicSelect topicSelect = _topicSelects.GetRow(npcData);
             if (topicSelect == null)
             {
                 return;
@@ -581,7 +515,8 @@ namespace ItemVendorLocation
                     continue;
                 }
 
-                AddItemsInPrehandler(data, npcBase, resident);
+                PreHandler preHandler = _preHandlers.GetRow(data);
+                AddItemsInPrehandler(preHandler, npcBase, resident);
             }
         }
 
@@ -839,6 +774,7 @@ namespace ItemVendorLocation
             CustomTalk = 0x000B,
             GcShop = 0x0016,
             SpecialShop = 0x001B,
+            FcShop = 0x002A,    // not sure how these numbers were obtained by the folks at sapphire. This works for my isolated use case though I guess.
         }
     }
 }

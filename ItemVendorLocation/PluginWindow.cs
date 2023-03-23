@@ -32,7 +32,7 @@ namespace ItemVendorLocation
                 if (Service.Configuration.DataSource == DataSource.Internal)
                 {
                     // need to use an ID here, the armorer/blacksmith vendors have the same location, resulting in a problem otherwise
-                    if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.MapX:F1}, {location.MapY:F1})###{npcName}"))
+                    if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.MapX:F1}, {location.MapY:F1})###{npcName}{location.TerritoryType}{location.MapId}{location.MapX}{location.MapY}"))
                     {
                         _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.MapX, location.MapY, 0f));
                     }

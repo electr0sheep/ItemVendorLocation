@@ -59,8 +59,10 @@ namespace ItemVendorLocation
             { 1027709, 1769963 },
             { 1027766, 1769964 },
         };
-        private readonly uint firstSpecialShopId;
-        private readonly uint lastSpecialShopId;
+
+        private readonly uint FirstSpecialShopId;
+        private readonly uint LastSpecialShopId;
+
 
         public ItemLookup()
         {
@@ -92,8 +94,8 @@ namespace ItemVendorLocation
 
             _gcSeal = _items.Where(i => i.RowId is >= 20 and <= 22).Select(i => i).ToList();
 
-            firstSpecialShopId = _specialShops.First().RowId;
-            lastSpecialShopId = _specialShops.Last().RowId;
+            FirstSpecialShopId = _specialShops.First().RowId;
+            LastSpecialShopId = _specialShops.Last().RowId;
 
             _ = Task.Run(async () =>
             {
@@ -268,7 +270,7 @@ namespace ItemVendorLocation
                             continue;
                         }
 
-                        if (arg < firstSpecialShopId || arg > lastSpecialShopId)
+                        if (arg < FirstSpecialShopId || arg > LastSpecialShopId)
                         {
                             continue;
                         }
@@ -759,6 +761,9 @@ namespace ItemVendorLocation
             _ = _npcLocations.TryAdd(1000267, new NpcLocation(103.89868f,   -213.03125f,    _territoryType.GetRow(133)));
             _ = _npcLocations.TryAdd(1003252, new NpcLocation(-139.57434f,  31.967651f,     _territoryType.GetRow(129)));
             _ = _npcLocations.TryAdd(1001016, new NpcLocation(-42.679565f,  119.920654f,    _territoryType.GetRow(128)));
+
+            // OIC Quartermaster hax, only Maelstrom missing
+            _ = _npcLocations.TryAdd(1002389, new NpcLocation(95.8114f, 67.61267f, _territoryType.GetRow(128)));
 #pragma warning restore format
         }
 

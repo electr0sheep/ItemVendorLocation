@@ -36,6 +36,15 @@ namespace ItemVendorLocation
                 Service.Plugin._itemLookup.BuildDebugVendorInfo((uint)num);
             }
 #endif
+            bool filterDuplicates = Service.Configuration.FilterDuplicates;
+            if (ImGui.Checkbox("Filter Duplicates", ref filterDuplicates))
+            {
+                Service.Configuration.FilterDuplicates = filterDuplicates;
+                Service.Configuration.Save();
+            }
+            ImGui.SameLine();
+            ImGuiComponents.HelpMarker(@"If checked, will filter duplicate vendors by location");
+
             bool filterGCResults = Service.Configuration.FilterGCResults;
             if (ImGui.Checkbox("Filter GC Results", ref filterGCResults))
             {

@@ -15,6 +15,7 @@ namespace ItemVendorLocation
         public ushort NPCNameChatColor { get; set; } = 67;
         public bool FilterGCResults { get; set; } = false;
         public bool FilterNPCsWithNoLocation { get; set; } = false;
+        public bool FilterDuplicates { get; set; } = true;
         public bool ShowShopName { get; set; } = false;
 #if DEBUG
         public int BuildDebugVendorInfo { get; set; } = 0;

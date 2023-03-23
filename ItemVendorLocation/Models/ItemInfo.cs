@@ -55,7 +55,10 @@ namespace ItemVendorLocation.Models
 
         public void FilterDuplicates()
         {
-            NpcInfos = NpcInfos.DistinctBy(i => i.Name).ToList();
+            if (Service.Configuration.FilterDuplicates)
+            {
+                NpcInfos = NpcInfos.DistinctBy(i => i.Location).ToList();
+            }
         }
 
     }

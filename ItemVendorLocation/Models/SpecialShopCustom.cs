@@ -4,6 +4,7 @@ using Lumina;
 using Lumina.Data;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
+using Mono.Cecil.Rocks;
 
 namespace ItemVendorLocation.Models
 {
@@ -28,12 +29,15 @@ namespace ItemVendorLocation.Models
 
         public override void PopulateData(RowParser parser, GameData lumina, Language language)
         {
-            if (parser.RowId == 1770638)
+            base.PopulateData(parser, lumina, language);
+
+            // Quinnana's special shops use 4, tomestones, when they need to use 16, items
+            // Not sure how the game is displaying scrips instead of tomestones given this
+            // ...they sure wouldn't hardcode a fix like this...right?
+            if (RowId is 1770638 or 1770637)
             {
                 UseCurrencyType = 16;
             }
-
-            base.PopulateData(parser, lumina, language);
 
             Entries = new Entry[60];
 
@@ -93,11 +97,11 @@ namespace ItemVendorLocation.Models
             }
         }
 
-        private int ConvertCurrency(int itemId, ushort useCurrecntType)
+        private int ConvertCurrency(int itemId, ushort useCurrencyType)
         {
             return itemId is >= 8 or 0
                 ? itemId
-                : useCurrecntType switch
+                : useCurrencyType switch
                 {
                     16 => (int)currencies[itemId],
                     8 => 1,

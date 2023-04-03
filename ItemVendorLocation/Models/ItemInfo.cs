@@ -59,7 +59,6 @@ namespace ItemVendorLocation.Models
                     {
                         InfoProxyFreeCompany* freeCompanyInfoProxy = (InfoProxyFreeCompany*)infoProxy;
                         GrandCompany playerFreeCompanyGC = *(&freeCompanyInfoProxy->GrandCompany + 0x25);
-                        PluginLog.LogDebug(playerFreeCompanyGC.ToString());
                         otherOicVendorIds = Service.Plugin.OicVendorIdMap.Values.Where(i => i != Service.Plugin.OicVendorIdMap[playerFreeCompanyGC]).ToList();
                     }
                 }

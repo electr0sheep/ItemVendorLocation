@@ -919,8 +919,6 @@ namespace ItemVendorLocation
 
             // OIC Quartermaster hax, only Maelstrom missing
             _ = _npcLocations.TryAdd(1002389, new NpcLocation(95.8114f, 67.61267f, _territoryType.GetRow(128)));
-            PluginLog.Debug("TEST");
-            PluginLog.Debug(_npcLocations[1005633].TerritoryType.ToString());
 #pragma warning restore format
         }
 

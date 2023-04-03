@@ -1,5 +1,9 @@
 # ItemVendorLocation
 Adds a context menu to find vendor locations for items that can be purchased from a vendor.
+Also adds a chat command that can be used to search for items
+`xlvendor` opens the configuration window
+`xlvendor ceruleum tank` searches for an item with "ceruleum tank" in the name. This is not case-sensitive and results are limited
+to a maximum of 50.
 
 The plugin can use one of two possible data sources:
 1. [Garland Tools](https://garlandtools.org/) as it's source of information (slow, hoping to deprecate)

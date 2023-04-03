@@ -17,6 +17,7 @@ namespace ItemVendorLocation
         public bool FilterNPCsWithNoLocation { get; set; } = false;
         public bool FilterDuplicates { get; set; } = true;
         public bool ShowShopName { get; set; } = false;
+        public ushort MaxSearchResults { get; set; } = 5;
 #if DEBUG
         public int BuildDebugVendorInfo { get; set; } = 0;
 #endif

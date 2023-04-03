@@ -10,11 +10,14 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ItemVendorLocation.Models;
+using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using XivCommon;
 using XivCommon.Functions.Tooltips;
+using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
 
 namespace ItemVendorLocation
 {
@@ -45,6 +48,13 @@ namespace ItemVendorLocation
             { 3, 1002390 },
         };
 
+        public readonly Dictionary<GrandCompany, uint> OicVendorIdMap = new()
+        {
+            { GrandCompany.Maelstrom, 1002389 },
+            { GrandCompany.TwinAdder, 1000165 },
+            { GrandCompany.ImmortalFlames, 1003925 },
+        };
+
         private readonly string ButtonName = "";
 #if DEBUG
         public readonly ItemLookup _itemLookup;
@@ -55,6 +65,8 @@ namespace ItemVendorLocation
         private readonly WindowSystem _windowSystem;
         private readonly SettingsWindow _configWindow;
         private readonly XivCommonBase _xivCommon;
+
+        private readonly ExcelSheet<Item> _items;
 
         public EntryPoint([RequiredVersion("1.0")] DalamudPluginInterface pi)
         {
@@ -74,6 +86,8 @@ namespace ItemVendorLocation
             _configWindow = new();
             Service.PluginUi = new PluginWindow();
 
+            _items = Service.DataManager.GetExcelSheet<Item>();
+
             _windowSystem.AddWindow(Service.PluginUi);
             _windowSystem.AddWindow(_configWindow = new());
 
@@ -90,7 +104,83 @@ namespace ItemVendorLocation
 
         private void OnCommand(string command, string args)
         {
-            _configWindow.IsOpen = true;
+            if (args.IsNullOrEmpty())
+            {
+                _configWindow.IsOpen = true;
+            }
+            else
+            {
+                if (_items.Any(i => i.Name.RawString.ToLower() == args.ToLower()))
+                {
+                    List<Item> items = _items.Where(i => i.Name.RawString.ToLower() == args.ToLower()).ToList();
+                    foreach (Item item in items)
+                    {
+                        ItemInfo itemDetails = _itemLookup.GetItemInfo(item.RowId);
+                        if (itemDetails == null)
+                        {
+                            continue;
+                        }
+                        ShowSingleVendor(itemDetails);
+                    }
+                }
+                else
+                {
+                    List<Item> items = _items.Where(i => i.Name.RawString.ToLower().Contains(args.ToLower())).ToList();
+                    if (items.Count == 0)
+                    {
+                        SeStringBuilder sb = new();
+
+                        _ = sb.AddUiForeground(45);
+                        _ = sb.AddText("[Item Vendor Location]");
+                        _ = sb.AddUiForegroundOff();
+                        _ = sb.AddText($" No vendors found for \"{args}\"");
+                        Service.ChatGui.PrintChat(new XivChatEntry
+                        {
+                            Message = sb.BuiltString
+                        });
+                    }
+                    else
+                    {
+                        SeStringBuilder sb = new();
+
+                        _ = sb.AddUiForeground(45);
+                        _ = sb.AddText("[Item Vendor Location]");
+                        _ = sb.AddUiForegroundOff();
+                        _ = sb.AddText($" {items.Count} {(items.Count == 1 ? "item" : "items")} found for \"{args}\"");
+                        Service.ChatGui.PrintChat(new XivChatEntry
+                        {
+                            Message = sb.BuiltString
+                        });
+                        if (items.Count > 20)
+                        {
+                            sb = new();
+                            _ = sb.AddUiForeground(45);
+                            _ = sb.AddText("[Item Vendor Location]");
+                            _ = sb.AddUiForegroundOff();
+                            _ = sb.AddText($" You may want to refine your search");
+                            Service.ChatGui.PrintChat(new XivChatEntry
+                            {
+                                Message = sb.BuiltString
+                            });
+                        }
+                        uint results = 0;
+                        foreach (Item item in items)
+                        {
+                            if (results == Service.Configuration.MaxSearchResults)
+                            {
+                                break;
+                            }
+                            ItemInfo itemDetails = _itemLookup.GetItemInfo(item.RowId);
+                            if (itemDetails == null)
+                            {
+                                continue;
+                            }
+                            results++;
+                            ShowSingleVendor(itemDetails);
+                        }
+                    }
+                }
+            }
         }
 
         private void OnOpenConfigUi()
@@ -270,6 +360,11 @@ namespace ItemVendorLocation
                 case ItemType.SpecialShop:
                     itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })), "：Special Vendor");
                     return;
+                case ItemType.FcShop:
+                    info = itemInfo.NpcInfos.First();
+                    costStr = $"FC Credits x{info.Costs[0].Item1}";
+                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })), "：", costStr);
+                    return;
             }
         }
 
@@ -397,7 +492,7 @@ namespace ItemVendorLocation
 
         private static void ShowSingleVendor(ItemInfo item)
         {
-            NpcInfo vendor = item.NpcInfos[0];
+            NpcInfo vendor = item.NpcInfos.Where(i => i.Location != null).First();
             SeStringBuilder sb = new();
 
             _ = sb.AddUiForeground(45);

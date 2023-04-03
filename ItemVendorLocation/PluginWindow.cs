@@ -4,6 +4,7 @@ using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using ItemVendorLocation.Models;
 using System.Numerics;
+using Dalamud.Logging;
 
 namespace ItemVendorLocation
 {
@@ -16,11 +17,15 @@ namespace ItemVendorLocation
             Flags = ImGuiWindowFlags.AlwaysAutoResize;
         }
 
-        private void DrawTableRow(string npcName, string shopName, NpcLocation location, string costStr)
+        private void DrawTableRow(NpcInfo npcInfo, string shopName, NpcLocation location, string costStr)
         {
             ImGui.TableNextRow();
             _ = ImGui.TableNextColumn();
-            ImGui.Text(npcName);
+#if DEBUG
+            ImGui.Text(npcInfo.Id.ToString());
+            _ = ImGui.TableNextColumn();
+#endif
+            ImGui.Text(npcInfo.Name);
             _ = ImGui.TableNextColumn();
             if (Service.Configuration.ShowShopName && _itemToDisplay.HasShopNames())
             {
@@ -31,10 +36,24 @@ namespace ItemVendorLocation
             {
                 if (Service.Configuration.DataSource == DataSource.Internal)
                 {
-                    // need to use an ID here, the armorer/blacksmith vendors have the same location, resulting in a problem otherwise
-                    if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.MapX:F1}, {location.MapY:F1})###{npcName}{location.TerritoryType}{location.MapId}{location.MapX}{location.MapY}"))
+                    if (location.TerritoryType == 282)
                     {
-                        _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.MapX, location.MapY, 0f));
+                        ImGui.Text("Player Housing");
+                    }
+                    else
+                    {
+                        // The <i>Endeavor</i> fix
+                        string placeString = location.TerritoryExcel.PlaceName.Value.Name;
+                        placeString = placeString.Replace("\u0002", "");
+                        placeString = placeString.Replace("\u001a", "");
+                        placeString = placeString.Replace("\u0003", "");
+                        placeString = placeString.Replace("\u0001", "");
+
+                        // need to use an ID here, the armorer/blacksmith vendors have the same location, resulting in a problem otherwise
+                        if (ImGui.Button($"{placeString} ({location.MapX:F1}, {location.MapY:F1})###{npcInfo.Id}"))
+                        {
+                            _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.MapX, location.MapY, 0f));
+                        }
                     }
                 }
                 else if (Service.Configuration.DataSource == DataSource.GarlandTools)
@@ -75,6 +94,9 @@ namespace ItemVendorLocation
         {
             ImGui.Text($"{_itemToDisplay.Name} Vendor list:");
             int columnCount = 3;
+#if DEBUG
+            columnCount++;
+#endif
             if (_itemToDisplay.Type == ItemType.Achievement)
             {
                 columnCount++;
@@ -85,6 +107,9 @@ namespace ItemVendorLocation
             }
             if (ImGui.BeginTable("Vendors", columnCount, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp, new Vector2(-1, -1)))
             {
+#if DEBUG
+                ImGui.TableSetupColumn("NPC ID");
+#endif
                 ImGui.TableSetupColumn("NPC Name");
                 if (Service.Configuration.ShowShopName && _itemToDisplay.HasShopNames())
                 {
@@ -104,7 +129,7 @@ namespace ItemVendorLocation
                     string costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
                     costStr = costStr[..^2];
 
-                    DrawTableRow(npcInfo.Name, npcInfo.ShopName, npcInfo.Location, costStr);
+                    DrawTableRow(npcInfo, npcInfo.ShopName, npcInfo.Location, costStr);
                 }
             }
 

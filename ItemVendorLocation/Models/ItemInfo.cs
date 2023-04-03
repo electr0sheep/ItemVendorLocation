@@ -1,4 +1,8 @@
-﻿using FFXIVClientStructs.FFXIV.Client.Game.UI;
+﻿using Dalamud.Logging;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using FFXIVClientStructs.FFXIV.Client.System.Framework;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using FFXIVClientStructs.FFXIV.Client.UI.Info;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,6 +14,7 @@ namespace ItemVendorLocation.Models
         SpecialShop,
         GcShop,
         Achievement,
+        FcShop,
     }
 
     public class ItemInfo
@@ -36,12 +41,29 @@ namespace ItemVendorLocation.Models
         {
             if (Service.Configuration.FilterGCResults)
             {
+                // filter gc vendors that accept gc seals
                 List<uint> otherGcVendorIds = new();
                 unsafe
                 {
-                    otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[UIState.Instance()->PlayerState.GrandCompany]).ToList();
+                    byte playerGC = UIState.Instance()->PlayerState.GrandCompany;
+                    otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[playerGC]).ToList();
                 }
                 _ = NpcInfos.RemoveAll(i => otherGcVendorIds.Contains(i.Id));
+
+                // filter fc gc vendors
+                List<uint> otherOicVendorIds = new();
+                unsafe
+                {
+                    InfoProxyInterface* infoProxy = Framework.Instance()->UIModule->GetInfoModule()->GetInfoProxyById(InfoProxyId.FreeCompany);
+                    if (infoProxy != null)
+                    {
+                        InfoProxyFreeCompany* freeCompanyInfoProxy = (InfoProxyFreeCompany*)infoProxy;
+                        GrandCompany playerFreeCompanyGC = *(&freeCompanyInfoProxy->GrandCompany + 0x25);
+                        PluginLog.LogDebug(playerFreeCompanyGC.ToString());
+                        otherOicVendorIds = Service.Plugin.OicVendorIdMap.Values.Where(i => i != Service.Plugin.OicVendorIdMap[playerFreeCompanyGC]).ToList();
+                    }
+                }
+                _ = NpcInfos.RemoveAll(i => otherOicVendorIds.Contains(i.Id));
             }
         }
 
@@ -57,7 +79,7 @@ namespace ItemVendorLocation.Models
         {
             if (Service.Configuration.FilterDuplicates)
             {
-                NpcInfos = NpcInfos.DistinctBy(i => i.Location).ToList();
+                NpcInfos = NpcInfos.GroupBy(i => new { i.Name, i.Location?.TerritoryType, i.Location?.X, i.Location?.Y }).Select(i => i.First()).ToList();
             }
         }
 

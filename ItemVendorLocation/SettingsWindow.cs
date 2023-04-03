@@ -78,6 +78,22 @@ Only applies when Data Source is set to Internal
 Only applies when Data Source is set to Internal
 ");
 
+            ImGui.SetNextItemWidth(200f);
+            int maxSearchResults = Service.Configuration.MaxSearchResults;
+            if (ImGui.InputInt("Max Search Results", ref maxSearchResults))
+            {
+                if (maxSearchResults <= 50)
+                {
+                    Service.Configuration.MaxSearchResults = (ushort)maxSearchResults;
+                    Service.Configuration.Save();
+                }
+            }
+            ImGui.SameLine();
+            ImGuiComponents.HelpMarker(@"The max number of search results when using the text command.
+Prevents chat spam.
+
+Max allowable is 50.");
+
             string[] dataSourceNames = Enum.GetNames<DataSource>();
             DataSource[] dataSourceValues = Enum.GetValues<DataSource>();
             int selectedDataSource = Array.IndexOf(dataSourceValues, Service.Configuration.DataSource);

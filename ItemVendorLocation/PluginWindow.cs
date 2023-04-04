@@ -4,7 +4,6 @@ using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using ItemVendorLocation.Models;
 using System.Numerics;
-using Dalamud.Logging;
 
 namespace ItemVendorLocation
 {

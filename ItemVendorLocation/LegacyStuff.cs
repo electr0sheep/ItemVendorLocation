@@ -1,5 +1,4 @@
-﻿using Dalamud.Logging;
-using ItemVendorLocation.Models;
+﻿using ItemVendorLocation.Models;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using System;

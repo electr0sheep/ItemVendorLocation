@@ -58,7 +58,7 @@ namespace ItemVendorLocation.Models
                     if (infoProxy != null)
                     {
                         InfoProxyFreeCompany* freeCompanyInfoProxy = (InfoProxyFreeCompany*)infoProxy;
-                        GrandCompany playerFreeCompanyGC = *(&freeCompanyInfoProxy->GrandCompany + 0x25);
+                        GrandCompany playerFreeCompanyGC = freeCompanyInfoProxy->GrandCompany;
                         otherOicVendorIds = Service.Plugin.OicVendorIdMap.Values.Where(i => i != Service.Plugin.OicVendorIdMap[playerFreeCompanyGC]).ToList();
                     }
                 }

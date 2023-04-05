@@ -5,7 +5,7 @@
 		<TargetFramework>net7.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Description>XIV Launcher plugin for item vendors</Description>
-		<Version>2.1.0.0</Version>
+		<Version>2.2.0.1</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>

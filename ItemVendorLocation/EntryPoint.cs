@@ -12,12 +12,15 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using ItemVendorLocation.Models;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
 using XivCommon;
 using XivCommon.Functions.Tooltips;
 using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
+using AgentInterface = FFXIVClientStructs.FFXIV.Component.GUI.AgentInterface;
 
 namespace ItemVendorLocation
 {
@@ -196,7 +199,7 @@ namespace ItemVendorLocation
             {
                 > 1000000 => itemId - 1000000, // hq
                 /*
-                 > 500000 and < 1000000 => itemId - 500000, // collectible
+                 > 500000 and < 1000000 => itemId - 500000, // collectible, doesnt seem to work
                  */
                 _ => itemId
             };
@@ -244,14 +247,25 @@ namespace ItemVendorLocation
                 return;
             }
 
+            // thank you ottermandias for the offsets
             uint itemId;
             if (args.ParentAddonName == "RecipeNote")
             {
                 nint recipeNoteAgent = Service.GameGui.FindAgentInterface(args.ParentAddonName);
                 unsafe
                 {
-                    // thank you ottermandias
                     itemId = *(uint*)(recipeNoteAgent + 0x398);
+                }
+            }
+            else if (args.ParentAddonName is "RecipeTree" or "RecipeMaterialList")
+            {
+                unsafe
+                {
+                    UIModule* uiModule = (UIModule*)Service.GameGui.GetUIModule();
+                    AgentModule* agents = uiModule->GetAgentModule();
+                    AgentInterface* agent = agents->GetAgentByInternalId(AgentId.RecipeItemContext);
+
+                    itemId = *(uint*)((nint)agent + 0x28);
                 }
             }
             else if (args.ParentAddonName == "ColorantColoring")
@@ -492,7 +506,7 @@ namespace ItemVendorLocation
 
         private static void ShowSingleVendor(ItemInfo item)
         {
-            NpcInfo vendor = item.NpcInfos.Where(i => i.Location != null).First();
+            NpcInfo vendor = item.NpcInfos.First(i => i.Location != null);
             SeStringBuilder sb = new();
 
             _ = sb.AddUiForeground(45);

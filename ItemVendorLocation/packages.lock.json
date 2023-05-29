@@ -14,9 +14,9 @@
       },
       "Dalamud.ContextMenu": {
         "type": "Direct",
-        "requested": "[1.2.2, )",
-        "resolved": "1.2.2",
-        "contentHash": "k+bCV7Xyxx/MCWFIEucSkQxQ9w+Zzz/FwIFOkSAh+13/F8IngivbRuL5NpDz9eAhlqnkifcPIycIKSauxNWHUg=="
+        "requested": "[1.2.3, )",
+        "resolved": "1.2.3",
+        "contentHash": "ydemplF7DNcA/LLeongDVzWUD/JV0Fw3EwA2+P0jYq3Le2ZYSt4U8qyJq4FyoChqt0lFG8BxYCAzfeWp4Jmnqw=="
       },
       "Dalamud.DrunkenToad": {
         "type": "Direct",
@@ -35,9 +35,9 @@
       },
       "XivCommon": {
         "type": "Direct",
-        "requested": "[7.0.0-alpha.1, )",
-        "resolved": "7.0.0-alpha.1",
-        "contentHash": "4Yy4Wg3bnI/g9BSEYAqOZALmVMJZS0wcP847VlUIThBqIS/47O6tw2BI84he4KuPSTfIsYOzrcz3vAia8+Pn3g=="
+        "requested": "[7.0.2, )",
+        "resolved": "7.0.2",
+        "contentHash": "raQqMKIquvM+BjDJz8QW8zOa2cajMtlwfKBlocNtkzNy/HMC7PGzkh8kN9KbUrwxc7PPvn6EjEXsAU9q9EUKJQ=="
       },
       "LiteDB": {
         "type": "Transitive",

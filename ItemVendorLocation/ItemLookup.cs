@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Dalamud;
 using Dalamud.Logging;
 using ItemVendorLocation.Models;
 using Lumina.Data.Files;
@@ -109,6 +110,7 @@ namespace ItemVendorLocation
                 BuildNpcLocation();
                 BuildVendors();
                 AddAchievementItem();
+                PostProcess();
                 _isDataReady = true;
 #if DEBUG
                 Dictionary<string, uint> noLocationNpcs = new();
@@ -147,6 +149,29 @@ namespace ItemVendorLocation
             });
         }
 
+        // Post processing item map, can be used to fix things
+        private void PostProcess()
+        {
+            // This fix is for non-japanese client
+            // SE is just being lazy on this, hence we have this bug lol
+            if (Service.ClientState.ClientLanguage != ClientLanguage.Japanese)
+            {
+                string correctShopName = _gilShops.GetRow(262151).Name.RawString;
+                // Look for items that can be purchased from this npc
+                foreach (KeyValuePair<uint, ItemInfo> item in _itemDataMap)
+                {
+                    foreach (NpcInfo npcInfo in item.Value.NpcInfos)
+                    {
+                        if (npcInfo.ShopName != "アイテムの購入")
+                            continue;
+
+                        PluginLog.Debug($"{_items.GetRow(item.Key).Name} has ShopName \"アイテムの購入\", correcting to correct one.");
+                        npcInfo.ShopName = correctShopName;
+                    }
+                }
+            }
+        }
+
 
         // https://discord.com/channels/581875019861328007/653504487352303619/860865002721247261
         // https://github.com/SapphireServer/Sapphire/blob/a5c15f321f7e795ed7362ae15edaada99ca7d9be/src/world/Manager/EventMgr.cpp#L14
@@ -158,7 +183,8 @@ namespace ItemVendorLocation
 #if DEBUG
         public void BuildDebugVendorInfo(uint vendorId)
         {
-            NpcLocation npcLocation = _npcLocations[vendorId];
+            if (!_npcLocations.TryGetValue(vendorId, out NpcLocation npcLocation))
+                return;
 
             ENpcBase npcBase = _eNpcBases.GetRow(vendorId);
             if (npcBase == null)
@@ -597,7 +623,7 @@ namespace ItemVendorLocation
                     SpecialShopCustom specShop = _specialShops.GetRow(1770087);
                     AddSpecialItem(specShop, npcBase, resident);
                     return true;
-
+                    
                 default:
                     if (_shbFateShopNpc.TryGetValue(npcBase.RowId, out uint value))
                     {

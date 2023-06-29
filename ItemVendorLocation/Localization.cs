@@ -33,14 +33,22 @@ namespace ItemVendorLocation
                     }
                 }
                 """,
-                ClientLanguage.English or _ => /*lang=json,strict*/ """
+                ClientLanguage.English => /*lang=json,strict*/ """
                 {
                     "ContextMenuItem": {
                         "message": "Vendor Location"
                     }
                 }
                 """,
+                (ClientLanguage)4 => /*lang=json,strict*/ """
+                {
+                    "ContextMenuItem": {
+                        "message": "查找兑换位置"
+                    }
+                }
+                """
             };
+
             Loc.Setup(localizationJson);
         }
     }

@@ -1,5 +1,6 @@
 ﻿using Dalamud.ContextMenu;
 using Dalamud.Data;
+using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui;
@@ -22,5 +23,6 @@ namespace ItemVendorLocation
         [PluginService] internal static DataManager DataManager { get; private set; } = null!;
         [PluginService] internal static GameGui GameGui { get; private set; } = null!;
         [PluginService] internal static DalamudPluginInterface Interface { get; private set; } = null!;
+        [PluginService] internal static SigScanner SigScanner { get; private set; } = null!;
     }
 }

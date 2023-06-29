@@ -6,7 +6,6 @@ using Dalamud.Interface.Components;
 using Lumina.Excel.GeneratedSheets;
 using System.Linq;
 using System.Collections.Generic;
-using ItemVendorLocation.Models;
 
 namespace ItemVendorLocation
 {
@@ -52,10 +51,7 @@ namespace ItemVendorLocation
                 Service.Configuration.Save();
             }
             ImGui.SameLine();
-            ImGuiComponents.HelpMarker(@"If checked, will only show your own GC vendor
-
-Only applies when Data Source is set to Internal
-");
+            ImGuiComponents.HelpMarker(@"If checked, will only show your own GC vendor");
 
             bool filterNPCsWithNoLocation = Service.Configuration.FilterNPCsWithNoLocation;
             if (ImGui.Checkbox("Filter Results With No Location", ref filterNPCsWithNoLocation))
@@ -73,50 +69,22 @@ Only applies when Data Source is set to Internal
                 Service.Configuration.Save();
             }
             ImGui.SameLine();
-            ImGuiComponents.HelpMarker(@"If checked, will show shop name info e.g. 'Purchase Disciple of Magic Gear - Purchase Gear (Lv. 20-29)'
-
-Only applies when Data Source is set to Internal
-");
+            ImGuiComponents.HelpMarker(@"If checked, will show shop name info e.g. 'Purchase Disciple of Magic Gear - Purchase Gear (Lv. 20-29)'");
 
             ImGui.SetNextItemWidth(200f);
             int maxSearchResults = Service.Configuration.MaxSearchResults;
             if (ImGui.InputInt("Max Search Results", ref maxSearchResults))
             {
-                if (maxSearchResults <= 50)
+                if (maxSearchResults is <= 50 and >= 1)
                 {
                     Service.Configuration.MaxSearchResults = (ushort)maxSearchResults;
                     Service.Configuration.Save();
                 }
             }
             ImGui.SameLine();
-            ImGuiComponents.HelpMarker(@"The max number of search results when using the text command.
-Prevents chat spam.
+            ImGuiComponents.HelpMarker(@"The max number of search results when using the text command to prevent chat spam.
 
 Max allowable is 50.");
-
-            string[] dataSourceNames = Enum.GetNames<DataSource>();
-            DataSource[] dataSourceValues = Enum.GetValues<DataSource>();
-            int selectedDataSource = Array.IndexOf(dataSourceValues, Service.Configuration.DataSource);
-            ImGui.SetNextItemWidth(200f);
-            if (ImGui.Combo("Data Source", ref selectedDataSource, dataSourceNames, dataSourceNames.Length))
-            {
-                Service.PluginUi.IsOpen = false;
-                Service.Configuration.DataSource = dataSourceValues[selectedDataSource];
-                Service.Configuration.Save();
-            }
-            ImGui.SameLine();
-            ImGuiComponents.HelpMarker(@"The data source the plugin uses to find out where vendors are located.
-
-GarlandTools is the original data source. If you leave it as this the plugin will function as it did before
-with no changes.
-
-Internal means the plugin will not make network requests, which means results appear MUCH faster.
-
-NOTE: If you are using the Internal option and notice that an item doesn't have results, but there are
-results using GarlandTools as the data source, please let me know by either leaving feedback, or
-creating a GitHub issue. Be sure to let me know what the item is. I would like to eventually deprecate
-GarlandTools, but I want to give an option in the meantime.
-");
 
             string[] resultsViewTypeNames = Enum.GetNames<ResultsViewType>();
             ResultsViewType[] resultsViewTypeValues = Enum.GetValues<ResultsViewType>();
@@ -164,9 +132,7 @@ Multiple will display the results in a popup window. If you leave it as this the
                 ImGui.EndCombo();
             }
             ImGui.SameLine();
-            ImGuiComponents.HelpMarker(@"The text color to use to highlight the name of the NPC.
-
-Only has an effect if Results View Type is set to Single");
+            ImGuiComponents.HelpMarker(@"The chat text highlight color of the NPC name.");
         }
     }
 }

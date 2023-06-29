@@ -5,9 +5,6 @@ namespace ItemVendorLocation
 {
     internal class Localization
     {
-        /// <summary>
-        /// I have no professional training
-        /// </summary>
         public static void SetupLocalization(ClientLanguage language)
         {
             string localizationJson = language switch
@@ -33,17 +30,17 @@ namespace ItemVendorLocation
                     }
                 }
                 """,
-                ClientLanguage.English => /*lang=json,strict*/ """
-                {
-                    "ContextMenuItem": {
-                        "message": "Vendor Location"
-                    }
-                }
-                """,
                 (ClientLanguage)4 => /*lang=json,strict*/ """
                 {
                     "ContextMenuItem": {
                         "message": "查找兑换位置"
+                    }
+                }
+                """,
+                ClientLanguage.English or _ => /*lang=json,strict*/ """
+                {
+                    "ContextMenuItem": {
+                        "message": "Vendor Location"
                     }
                 }
                 """

@@ -5,10 +5,6 @@ Also adds a chat command that can be used to search for items
 `xlvendor ceruleum tank` searches for an item with "ceruleum tank" in the name. This is not case-sensitive and results are limited
 to a maximum of 50.
 
-The plugin can use one of two possible data sources:
-1. [Garland Tools](https://garlandtools.org/) as it's source of information (slow, hoping to deprecate)
-2. Internal Data sheets (fast)
-
 The plugin provides the following indicators to know if an item is sold by a vendor:
 1. The game indicates the shop selling price without any plugins
 
@@ -26,11 +22,12 @@ The plugin provides the following indicators to know if an item is sold by a ven
 
 ![Alt text](/Images/NoVendors.png?raw=true "Item not sold for any currency")
 
-If the item is sold by a vendor, a new option will be added to the item's context menu
+If the item is sold by a vendor, a new option will be added to the item's context menu. When clicked, this option can display
+results in one of two possible formats.
 
 ![Alt text](/Images/ContextMenu.png?raw=true "Item Context Menu")
 
-The plugin will show a list of all possible vendors in a plugin GUI window
+1. The plugin will show a list of all possible vendors in a plugin GUI window
 
 ![Alt text](/Images/VendorLocations.png?raw=true "Vendor Locations")
 
@@ -38,9 +35,11 @@ The plugin will show a list of all possible vendors in a plugin GUI window
 
 ![Alt text](/Images/ChatVendorLocation.png?raw=true "Vendor Location")
 
+In addition, there is a chat command that can be used i.e. `/xlvendor bronze chaser hammer`
+
 # Contributors
 I appreciate everyone who has contributed, visible over there to the right.
 
 It would be remiss of me to not give special mention to [Nuko](https://github.com/NukoOoOoOoO) for a near complete rewrite.
-They added the capability to potentially completely deprecate GarlandTools using internal data sheets. This must have taken
+They reworked the plugin to completly remove Garland Tools as the data source. This must have taken
 a ton of work, and is much appreciated!

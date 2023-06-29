@@ -156,17 +156,18 @@ namespace ItemVendorLocation
             // SE is just being lazy on this, hence we have this bug lol
             if (Service.ClientState.ClientLanguage != ClientLanguage.Japanese)
             {
-                string correctShopName = _gilShops.GetRow(262151).Name.RawString;
                 // Look for items that can be purchased from this npc
                 foreach (KeyValuePair<uint, ItemInfo> item in _itemDataMap)
                 {
                     foreach (NpcInfo npcInfo in item.Value.NpcInfos)
                     {
-                        if (npcInfo.ShopName != "アイテムの購入")
-                            continue;
-
-                        PluginLog.Debug($"{_items.GetRow(item.Key).Name} has ShopName \"アイテムの購入\", correcting to correct one.");
-                        npcInfo.ShopName = correctShopName;
+                        if (npcInfo.ShopName == "アイテムの購入")
+                        {
+                            PluginLog.Debug($"{_items.GetRow(item.Key).Name} has ShopName \"アイテムの購入\", correcting to correct one.");
+                            // This correction is for Aenc Ose, who sells "Sheep Equipment Materials", for example.
+                            // A shop is the sub-menu presented at some vendors. Aenc Ose has no such sub-menu, so we simply remove the shop.
+                            npcInfo.ShopName = null;
+                        }
                     }
                 }
             }

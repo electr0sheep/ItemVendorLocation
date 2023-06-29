@@ -33,33 +33,23 @@ namespace ItemVendorLocation
             }
             if (location != null)
             {
-                if (Service.Configuration.DataSource == DataSource.Internal)
+                if (location.TerritoryType == 282)
                 {
-                    if (location.TerritoryType == 282)
-                    {
-                        ImGui.Text("Player Housing");
-                    }
-                    else
-                    {
-                        // The <i>Endeavor</i> fix
-                        string placeString = location.TerritoryExcel.PlaceName.Value.Name;
-                        placeString = placeString.Replace("\u0002", "");
-                        placeString = placeString.Replace("\u001a", "");
-                        placeString = placeString.Replace("\u0003", "");
-                        placeString = placeString.Replace("\u0001", "");
-
-                        // need to use an ID here, the armorer/blacksmith vendors have the same location, resulting in a problem otherwise
-                        if (ImGui.Button($"{placeString} ({location.MapX:F1}, {location.MapY:F1})###{npcInfo.Id}"))
-                        {
-                            _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.MapX, location.MapY, 0f));
-                        }
-                    }
+                    ImGui.Text("Player Housing");
                 }
-                else if (Service.Configuration.DataSource == DataSource.GarlandTools)
+                else
                 {
-                    if (ImGui.Button($"{location.TerritoryExcel.PlaceName.Value.Name} ({location.X:F1}, {location.Y:F1})"))
+                    // The <i>Endeavor</i> fix
+                    string placeString = location.TerritoryExcel.PlaceName.Value.Name;
+                    placeString = placeString.Replace("\u0002", "");
+                    placeString = placeString.Replace("\u001a", "");
+                    placeString = placeString.Replace("\u0003", "");
+                    placeString = placeString.Replace("\u0001", "");
+
+                    // need to use an ID here, the armorer/blacksmith vendors have the same location, resulting in a problem otherwise
+                    if (ImGui.Button($"{placeString} ({location.MapX:F1}, {location.MapY:F1})###{npcInfo.Id}"))
                     {
-                        _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.X, location.Y, 0f));
+                        _ = Service.GameGui.OpenMapWithMapLink(new MapLinkPayload(location.TerritoryType, location.MapId, location.MapX, location.MapY, 0f));
                     }
                 }
             }

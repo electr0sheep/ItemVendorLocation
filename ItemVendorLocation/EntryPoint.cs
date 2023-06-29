@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using CheapLoc;
 using Dalamud.ContextMenu;
 using Dalamud.Game.Command;
@@ -21,6 +20,7 @@ using XivCommon;
 using XivCommon.Functions.Tooltips;
 using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
 using AgentInterface = FFXIVClientStructs.FFXIV.Component.GUI.AgentInterface;
+using Dalamud.Logging;
 
 namespace ItemVendorLocation
 {
@@ -64,7 +64,6 @@ namespace ItemVendorLocation
 #else
         private readonly ItemLookup _itemLookup;
 #endif
-        private readonly LegacyStuff _legacyStuff;
         private readonly WindowSystem _windowSystem;
         private readonly SettingsWindow _configWindow;
         private readonly XivCommonBase _xivCommon;
@@ -82,7 +81,6 @@ namespace ItemVendorLocation
             Service.ContextMenu = new DalamudContextMenu();
             _xivCommon = new(Hooks.Tooltips);
             _itemLookup = new();
-            _legacyStuff = new();
 
             // Initialize the UI
             _windowSystem = new WindowSystem(typeof(EntryPoint).AssemblyQualifiedName);
@@ -205,23 +203,15 @@ namespace ItemVendorLocation
             };
         }
 
-        private void NewOnOpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args, uint itemId)
+        private void OnOpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args, uint itemId)
         {
             ItemInfo itemInfo = _itemLookup.GetItemInfo(itemId);
             if (itemInfo == null)
             {
                 return;
             }
-            args.AddCustomItem(new GameObjectContextMenuItem(ButtonName, _ => { NewContextMenuCallback(itemInfo); }, true));
+            args.AddCustomItem(new GameObjectContextMenuItem(ButtonName, _ => { ContextMenuCallback(itemInfo); }, true));
             return;
-        }
-
-        private void LegacyOnOpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args, uint itemId)
-        {
-            if (_legacyStuff.IsItemSoldByAnyVendor(itemId))
-            {
-                args.AddCustomItem(new GameObjectContextMenuItem(ButtonName, _ => { LegacyContextMenuCallback(itemId); }, true));
-            }
         }
 
         /// <summary>
@@ -280,18 +270,10 @@ namespace ItemVendorLocation
             {
                 itemId = CorrectitemId((uint)Service.GameGui.HoveredItem);
             }
-            switch (Service.Configuration.DataSource)
-            {
-                case DataSource.Internal:
-                    NewOnOpenGameObjectContextMenu(args, itemId);
-                    return;
-                case DataSource.GarlandTools:
-                    LegacyOnOpenGameObjectContextMenu(args, itemId);
-                    return;
-            }
+                OnOpenGameObjectContextMenu(args, itemId);
         }
 
-        private void NewOnOpenInventoryContextMenu(InventoryContextMenuOpenArgs args)
+        private void OnOpenInventoryContextMenu(InventoryContextMenuOpenArgs args)
         {
             uint itemId = CorrectitemId(args.ItemId);
             ItemInfo itemInfo = _itemLookup.GetItemInfo(itemId);
@@ -300,15 +282,7 @@ namespace ItemVendorLocation
                 return;
             }
 
-            args.AddCustomItem(new InventoryContextMenuItem(ButtonName, _ => { NewContextMenuCallback(itemInfo); }, true));
-        }
-
-        private void LegacyOnOpenInventoryContextMenu(InventoryContextMenuOpenArgs args)
-        {
-            if (_legacyStuff.IsItemSoldByAnyVendor(args.ItemId))
-            {
-                args.AddCustomItem(new InventoryContextMenuItem(ButtonName, _ => { LegacyContextMenuCallback(args.ItemId); }, true));
-            }
+            args.AddCustomItem(new InventoryContextMenuItem(ButtonName, _ => { ContextMenuCallback(itemInfo); }, true));
         }
 
         /// <summary>
@@ -322,18 +296,10 @@ namespace ItemVendorLocation
         /// </remarks>
         private void ContextMenu_OnOpenInventoryContextMenu(InventoryContextMenuOpenArgs args)
         {
-            switch (Service.Configuration.DataSource)
-            {
-                case DataSource.Internal:
-                    NewOnOpenInventoryContextMenu(args);
-                    return;
-                case DataSource.GarlandTools:
-                    LegacyOnOpenInventoryContextMenu(args);
-                    return;
-            }
+            OnOpenInventoryContextMenu(args);
         }
 
-        private void NewOnItemTooltip(ItemTooltip itemtooltip, ulong itemid)
+        private void OnItemTooltip(ItemTooltip itemtooltip, ulong itemid)
         {
             ItemInfo itemInfo = _itemLookup.GetItemInfo(CorrectitemId((uint)itemid));
             if (itemInfo == null)
@@ -382,33 +348,6 @@ namespace ItemVendorLocation
             }
         }
 
-        private void LegacyOnItemTooltip(ItemTooltip itemTooltip, ulong itemId)
-        {
-            //HQ items don't have recipes, only NQ items
-            if (itemId > 1000000)
-            {
-                itemId -= 1000000;
-            }
-
-            if (_legacyStuff.IsItemSoldByGilVendor((uint)itemId))
-            {
-                return;
-            }
-            List<GCScripShopItem> items = new(Service.DataManager.GetExcelSheet<GCScripShopItem>()!.Where(i => i.Item.Row == itemId));
-            // This code assumes all GC shops sell items for the same seal cost, which should be a safe assumption
-            if (items.Count > 0)
-            {
-                itemTooltip[ItemTooltipString.ShopSellingPrice] = $"Shop Selling Price: {items[0].CostGCSeals} GC Seals";
-                return;
-            }
-
-            if (_legacyStuff.IsItemSoldBySpecialVendor((uint)itemId))
-            {
-                itemTooltip[ItemTooltipString.ShopSellingPrice] = "Shop Selling Price: Special Vendor";
-                return;
-            }
-        }
-
         /// <summary>
         /// Function called when an in-game tooltip is generated.
         /// </summary>
@@ -418,18 +357,10 @@ namespace ItemVendorLocation
         /// </remarks>
         private void Tooltips_OnOnItemTooltip(ItemTooltip itemtooltip, ulong itemid)
         {
-            switch (Service.Configuration.DataSource)
-            {
-                case DataSource.Internal:
-                    NewOnItemTooltip(itemtooltip, itemid);
-                    break;
-                case DataSource.GarlandTools:
-                    LegacyOnItemTooltip(itemtooltip, itemid);
-                    break;
-            }
+            OnItemTooltip(itemtooltip, itemid);
         }
 
-        private void NewContextMenuCallback(ItemInfo itemInfo)
+        private void ContextMenuCallback(ItemInfo itemInfo)
         {
             // filteredResults allows us to apply filters without modifying core data,
             // itemInfo is initialized once upon plugin load, so a filter would not
@@ -456,30 +387,6 @@ namespace ItemVendorLocation
             }
         }
 
-        private void LegacyContextMenuCallback(uint itemId)
-        {
-            // we use threading here so that the game ui is not frozen while expensive
-            // operations take place
-            _ = Task.Run(() =>
-            {
-                LegacyStuff _legacyStuff = new();
-
-                ItemInfo itemInfo = _legacyStuff.GetItemInfo(CorrectitemId(itemId));
-
-                itemInfo.ApplyFilters();
-
-                switch (Service.Configuration.ResultsViewType)
-                {
-                    case ResultsViewType.Multiple:
-                        ShowMultipleVendors(itemInfo);
-                        return;
-                    case ResultsViewType.Single:
-                        ShowSingleVendor(itemInfo);
-                        return;
-                }
-            });
-        }
-
         /// <summary>
         /// This function is called when our custom context menu option is clicked.
         /// Therefore, all the heavy lifting needs to be done here. A small delay here
@@ -487,15 +394,7 @@ namespace ItemVendorLocation
         /// </summary>
         private void ContextMenuCallback(uint itemId, ItemInfo itemInfo)
         {
-            switch (Service.Configuration.DataSource)
-            {
-                case DataSource.Internal:
-                    NewContextMenuCallback(itemInfo);
-                    return;
-                case DataSource.GarlandTools:
-                    LegacyContextMenuCallback(itemId);
-                    return;
-            }
+            ContextMenuCallback(itemInfo);
         }
 
         private static void ShowMultipleVendors(ItemInfo item)
@@ -506,7 +405,15 @@ namespace ItemVendorLocation
 
         private static void ShowSingleVendor(ItemInfo item)
         {
-            NpcInfo vendor = item.NpcInfos.First(i => i.Location != null);
+            NpcInfo vendor = null;
+            try
+            {
+                vendor = item.NpcInfos.First(i => i.Location != null);
+            }
+            catch (InvalidOperationException) {
+                PluginLog.LogError($"NpcInfos does not contain data for {item.Name}");
+                return;
+            }
             SeStringBuilder sb = new();
 
             _ = sb.AddUiForeground(45);

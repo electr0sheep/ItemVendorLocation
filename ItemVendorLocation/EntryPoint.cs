@@ -4,7 +4,6 @@ using System.Linq;
 using CheapLoc;
 using Dalamud.ContextMenu;
 using Dalamud.Game.Command;
-using Dalamud.Game.Text;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
@@ -20,7 +19,8 @@ using XivCommon;
 using XivCommon.Functions.Tooltips;
 using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
 using AgentInterface = FFXIVClientStructs.FFXIV.Component.GUI.AgentInterface;
-using Dalamud.Logging;
+using System.Threading.Tasks;
+using Dalamud.Game.ClientState.Keys;
 
 namespace ItemVendorLocation
 {
@@ -46,6 +46,7 @@ namespace ItemVendorLocation
 
         public readonly Dictionary<byte, uint> GcVendorIdMap = new()
         {
+            { 0, 0 },
             { 1, 1002387 },
             { 2, 1002393 },
             { 3, 1002390 },
@@ -56,6 +57,7 @@ namespace ItemVendorLocation
             { GrandCompany.Maelstrom, 1002389 },
             { GrandCompany.TwinAdder, 1000165 },
             { GrandCompany.ImmortalFlames, 1003925 },
+            { GrandCompany.None, 0 },
         };
 
         private readonly string ButtonName = "";
@@ -111,76 +113,59 @@ namespace ItemVendorLocation
             }
             else
             {
-                if (_items.Any(i => i.Name.RawString.ToLower() == args.ToLower()))
+                _ = Task.Run(() =>
                 {
-                    List<Item> items = _items.Where(i => i.Name.RawString.ToLower() == args.ToLower()).ToList();
-                    foreach (Item item in items)
+                    if (_items.Any(i => i.Name.RawString.ToLower() == args.ToLower()))
                     {
-                        ItemInfo itemDetails = _itemLookup.GetItemInfo(item.RowId);
-                        if (itemDetails == null)
-                        {
-                            continue;
-                        }
-                        ShowSingleVendor(itemDetails);
-                    }
-                }
-                else
-                {
-                    List<Item> items = _items.Where(i => i.Name.RawString.ToLower().Contains(args.ToLower())).ToList();
-                    if (items.Count == 0)
-                    {
-                        SeStringBuilder sb = new();
-
-                        _ = sb.AddUiForeground(45);
-                        _ = sb.AddText("[Item Vendor Location]");
-                        _ = sb.AddUiForegroundOff();
-                        _ = sb.AddText($" No vendors found for \"{args}\"");
-                        Service.ChatGui.PrintChat(new XivChatEntry
-                        {
-                            Message = sb.BuiltString
-                        });
-                    }
-                    else
-                    {
-                        SeStringBuilder sb = new();
-
-                        _ = sb.AddUiForeground(45);
-                        _ = sb.AddText("[Item Vendor Location]");
-                        _ = sb.AddUiForegroundOff();
-                        _ = sb.AddText($" {items.Count} {(items.Count == 1 ? "item" : "items")} found for \"{args}\"");
-                        Service.ChatGui.PrintChat(new XivChatEntry
-                        {
-                            Message = sb.BuiltString
-                        });
-                        if (items.Count > 20)
-                        {
-                            sb = new();
-                            _ = sb.AddUiForeground(45);
-                            _ = sb.AddText("[Item Vendor Location]");
-                            _ = sb.AddUiForegroundOff();
-                            _ = sb.AddText($" You may want to refine your search");
-                            Service.ChatGui.PrintChat(new XivChatEntry
-                            {
-                                Message = sb.BuiltString
-                            });
-                        }
-                        uint results = 0;
+                        List<Item> items = _items.Where(i => i.Name.RawString.ToLower() == args.ToLower()).ToList();
                         foreach (Item item in items)
                         {
-                            if (results == Service.Configuration.MaxSearchResults)
-                            {
-                                break;
-                            }
                             ItemInfo itemDetails = _itemLookup.GetItemInfo(item.RowId);
                             if (itemDetails == null)
                             {
                                 continue;
                             }
-                            results++;
                             ShowSingleVendor(itemDetails);
                         }
                     }
-                }
+                    else
+                    {
+                        List<Item> items = _items.Where(i => i.Name.RawString.ToLower().Contains(args.ToLower())).ToList();
+                        if (items.Count == 0)
+                        {
+                            Utilities.OutputChatLine($" No vendors found for \"{args}\"");
+                        }
+                        else
+                        {
+                            if (items.Count > 20)
+                            {
+                                Utilities.OutputChatLine("You may want to refine your search");
+                            }
+                            uint results = 0;
+                            foreach (Item item in items)
+                            {
+                                if (results == Service.Configuration.MaxSearchResults)
+                                {
+                                    Utilities.OutputChatLine($"Displayed {Service.Configuration.MaxSearchResults}/{items.Count} matches.");
+                                    if (items.Count > Service.Configuration.MaxSearchResults)
+                                    {
+                                        Utilities.OutputChatLine("You may want to be more specific.");
+                                    }
+
+
+                                    break;
+                                }
+                                ItemInfo itemDetails = _itemLookup.GetItemInfo(item.RowId);
+                                if (itemDetails == null)
+                                {
+                                    continue;
+                                }
+                                results++;
+                                ShowSingleVendor(itemDetails);
+                            }
+                        }
+                    }
+                });
             }
         }
 
@@ -270,7 +255,7 @@ namespace ItemVendorLocation
             {
                 itemId = CorrectitemId((uint)Service.GameGui.HoveredItem);
             }
-                OnOpenGameObjectContextMenu(args, itemId);
+            OnOpenGameObjectContextMenu(args, itemId);
         }
 
         private void OnOpenInventoryContextMenu(InventoryContextMenuOpenArgs args)
@@ -313,25 +298,18 @@ namespace ItemVendorLocation
             {
                 case ItemType.GcShop:
                     List<NpcInfo> npcInfos = itemInfo.NpcInfos;
-                    NpcInfo info = new();
+                    List<uint> otherGcVendorIds = new();
                     unsafe
                     {
-                        // Only do this if the item can be found among the companies
-                        if (npcInfos.Count > 1)
-                        {
-                            byte gc = UIState.Instance()->PlayerState.GrandCompany;
-                            info = gc switch
-                            {
-                                1 => npcInfos.Find(i => i.Id == 1002387),
-                                2 => npcInfos.Find(i => i.Id == 1002393),
-                                3 => npcInfos.Find(i => i.Id == 1002390),
-                            };
-                        }
-                        else
-                        {
-                            info = npcInfos.First();
-                        }
+                        byte playerGC = UIState.Instance()->PlayerState.GrandCompany;
+                        otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[playerGC]).ToList();
                     }
+                    // Only remove items if doing so doesn't remove all the results
+                    if (npcInfos.Any(i => !otherGcVendorIds.Contains(i.Id)))
+                    {
+                        _ = npcInfos.RemoveAll(i => otherGcVendorIds.Contains(i.Id));
+                    }
+                    NpcInfo info = npcInfos.First();
 
                     string costStr = $"{info.Costs[0].Item2} x{info.Costs[0].Item1}";
 
@@ -360,7 +338,7 @@ namespace ItemVendorLocation
             OnItemTooltip(itemtooltip, itemid);
         }
 
-        private void ContextMenuCallback(ItemInfo itemInfo)
+        private static void ContextMenuCallback(ItemInfo itemInfo)
         {
             // filteredResults allows us to apply filters without modifying core data,
             // itemInfo is initialized once upon plugin load, so a filter would not
@@ -376,25 +354,7 @@ namespace ItemVendorLocation
 
             filteredResults.ApplyFilters();
 
-            switch (Service.Configuration.ResultsViewType)
-            {
-                case ResultsViewType.Multiple:
-                    ShowMultipleVendors(filteredResults);
-                    return;
-                case ResultsViewType.Single:
-                    ShowSingleVendor(filteredResults);
-                    return;
-            }
-        }
-
-        /// <summary>
-        /// This function is called when our custom context menu option is clicked.
-        /// Therefore, all the heavy lifting needs to be done here. A small delay here
-        /// is acceptable, since we know the user is wanting to interact with the plugin
-        /// </summary>
-        private void ContextMenuCallback(uint itemId, ItemInfo itemInfo)
-        {
-            ContextMenuCallback(itemInfo);
+            ResultDisplayHandler(filteredResults);
         }
 
         private static void ShowMultipleVendors(ItemInfo item)
@@ -406,19 +366,19 @@ namespace ItemVendorLocation
         private static void ShowSingleVendor(ItemInfo item)
         {
             NpcInfo vendor = null;
+            SeStringBuilder sb = new();
             try
             {
                 vendor = item.NpcInfos.First(i => i.Location != null);
             }
-            catch (InvalidOperationException) {
-                PluginLog.LogError($"NpcInfos does not contain data for {item.Name}");
+            catch (InvalidOperationException)
+            {
+                _ = sb.AddText("No NPCs with a location could be found for ");
+                _ = sb.Append(SeString.CreateItemLink(item.Id, false));
+                Utilities.OutputChatLine(sb.BuiltString);
                 return;
             }
-            SeStringBuilder sb = new();
 
-            _ = sb.AddUiForeground(45);
-            _ = sb.AddText("[Item Vendor Location]");
-            _ = sb.AddUiForegroundOff();
             _ = sb.Append(SeString.CreateItemLink(item.Id, false));
             _ = sb.AddText(" can be purchased from ");
             _ = sb.AddUiForeground(Service.Configuration.NPCNameChatColor);
@@ -426,11 +386,25 @@ namespace ItemVendorLocation
             _ = sb.AddUiForegroundOff();
             _ = sb.AddText(" at ");
             _ = sb.Append(SeString.CreateMapLink(vendor.Location.TerritoryType, vendor.Location.MapId, vendor.Location.MapX, vendor.Location.MapY));
+            Utilities.OutputChatLine(sb.BuiltString);
+        }
 
-            Service.ChatGui.PrintChat(new XivChatEntry
+        private static void ResultDisplayHandler(ItemInfo item)
+        {
+            ResultsViewType viewType = Service.Configuration.ResultsViewType;
+            if (Service.Configuration.SearchDisplayModifier != VirtualKey.NO_KEY && Service.KeyState.GetRawValue(Service.Configuration.SearchDisplayModifier) == 1)
             {
-                Message = sb.BuiltString
-            });
+                viewType = viewType == ResultsViewType.Single ? ResultsViewType.Multiple : ResultsViewType.Single;
+            }
+
+            if (viewType == ResultsViewType.Multiple)
+            {
+                ShowMultipleVendors(item);
+            }
+            else
+            {
+                ShowSingleVendor(item);
+            }
         }
 
         #region IDisposable Support     

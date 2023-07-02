@@ -1,4 +1,5 @@
 ﻿using Dalamud.Configuration;
+using Dalamud.Game.ClientState.Keys;
 using System;
 
 namespace ItemVendorLocation
@@ -16,6 +17,7 @@ namespace ItemVendorLocation
         public bool FilterDuplicates { get; set; } = true;
         public bool ShowShopName { get; set; } = false;
         public ushort MaxSearchResults { get; set; } = 5;
+        public VirtualKey SearchDisplayModifier { get; set; } = VirtualKey.NO_KEY;
 #if DEBUG
         public int BuildDebugVendorInfo { get; set; } = 0;
 #endif

@@ -16,3 +16,5 @@ changelog: |
   - Added Chinese localization (Nuko)
   - Fix for some Aenc Ose shop data (Nuko)
   - Removed Garland Tools
+  - GC bug fixes
+  - Add keybinding modifier option

@@ -41,13 +41,19 @@ namespace ItemVendorLocation.Models
             if (Service.Configuration.FilterGCResults)
             {
                 // filter gc vendors that accept gc seals
+                // we remove non player affiliated gc vendors rather thank keeping player affiliated gc vendors
+                // because there could be other vendors in the list
                 List<uint> otherGcVendorIds = new();
                 unsafe
                 {
                     byte playerGC = UIState.Instance()->PlayerState.GrandCompany;
                     otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[playerGC]).ToList();
                 }
-                _ = NpcInfos.RemoveAll(i => otherGcVendorIds.Contains(i.Id));
+                // Only remove items if doing so doesn't remove all the results
+                if (NpcInfos.Any(i => !otherGcVendorIds.Contains(i.Id)))
+                {
+                    _ = NpcInfos.RemoveAll(i => otherGcVendorIds.Contains(i.Id));
+                }
 
                 // filter fc gc vendors
                 List<uint> otherOicVendorIds = new();
@@ -61,7 +67,10 @@ namespace ItemVendorLocation.Models
                         otherOicVendorIds = Service.Plugin.OicVendorIdMap.Values.Where(i => i != Service.Plugin.OicVendorIdMap[playerFreeCompanyGC]).ToList();
                     }
                 }
-                _ = NpcInfos.RemoveAll(i => otherOicVendorIds.Contains(i.Id));
+                if (NpcInfos.Any(i => !otherOicVendorIds.Contains(i.Id)))
+                {
+                    _ = NpcInfos.RemoveAll(i => otherOicVendorIds.Contains(i.Id));
+                }
             }
         }
 

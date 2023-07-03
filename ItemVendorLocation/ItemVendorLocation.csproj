@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<Authors>electr0sheep</Authors>
+		<Authors>electr0sheep, Nuko</Authors>
 		<TargetFramework>net7.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Description>XIV Launcher plugin for item vendors</Description>

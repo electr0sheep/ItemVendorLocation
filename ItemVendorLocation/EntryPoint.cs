@@ -133,7 +133,7 @@ namespace ItemVendorLocation
                         List<Item> items = _items.Where(i => i.Name.RawString.ToLower().Contains(args.ToLower())).ToList();
                         if (items.Count == 0)
                         {
-                            Utilities.OutputChatLine($" No vendors found for \"{args}\"");
+                            Utilities.OutputChatLine($" No items found for \"{args}\"");
                         }
                         else
                         {
@@ -162,6 +162,10 @@ namespace ItemVendorLocation
                                 }
                                 results++;
                                 ShowSingleVendor(itemDetails);
+                            }
+                            if (results == 0)
+                            {
+                                Utilities.OutputChatLine($"No vendors found for \"{args}\"");
                             }
                         }
                     }

@@ -37,6 +37,8 @@ namespace ItemVendorLocation
         private readonly ExcelSheet<FccShop> _fccShops;
         private readonly ExcelSheet<PreHandler> _preHandlers;
         private readonly ExcelSheet<TopicSelect> _topicSelects;
+        private readonly ExcelSheet<CollectablesShop> _collectablesShops;
+        private readonly ExcelSheet<CollectablesShopItem> _collectablesShopItems;
 
         private readonly ExcelSheet<TerritoryType> _territoryType;
 
@@ -87,6 +89,8 @@ namespace ItemVendorLocation
             _fccShops = Service.DataManager.GetExcelSheet<FccShop>();
             _preHandlers = Service.DataManager.GetExcelSheet<PreHandler>();
             _topicSelects = Service.DataManager.GetExcelSheet<TopicSelect>();
+            _collectablesShops = Service.DataManager.GetExcelSheet<CollectablesShop>();
+            _collectablesShopItems = Service.DataManager.GetExcelSheet<CollectablesShopItem>();
 
             _achievements = Service.DataManager.GetExcelSheet<Achievement>();
 
@@ -196,8 +200,6 @@ namespace ItemVendorLocation
 
         private void BuildVendors()
         {
-
-
             foreach (ENpcBase npcBase in _eNpcBases)
             {
                 if (npcBase == null)
@@ -205,7 +207,6 @@ namespace ItemVendorLocation
                     continue;
                 }
                 BuildVendorInfo(npcBase);
-
             }
         }
 
@@ -270,6 +271,7 @@ namespace ItemVendorLocation
                 {
                     GilShop gilShop = _gilShops.GetRow(npcData);
                     AddGilShopItem(gilShop, npcBase, resident);
+                    continue;
                 }
 
                 if (MatchEventHandlerType(npcData, EventHandlerType.CustomTalk))
@@ -573,6 +575,57 @@ namespace ItemVendorLocation
             }
         }
 
+        private void AddCollectablesShop(CollectablesShop shop, ENpcBase npcBase, ENpcResident resident)
+        {
+            if (shop == null)
+            {
+                return;
+            }
+
+            // skip rows without name
+            if (shop.Name.RawString == string.Empty)
+            {
+                return;
+            }
+
+            for (uint i = 0; i < shop.ShopItems.Length; i++)
+            {
+                uint row = shop.ShopItems[i].Value.RowId;
+
+                // 0 is unspecified, we dont need that
+                if (row == 0)
+                {
+                    continue;
+                }
+
+                // 100 should be enough.. unless SE add more subrows in the future
+                for (uint subRow = 0; subRow < 100; subRow++)
+                {
+                    try
+                    {
+                        CollectablesShopItem item = _collectablesShopItems.GetRow(row, subRow);
+                        // filter out junk data
+                        if (item.Item.Value == null || item.Item.Row <= 1000)
+                        {
+                            continue;
+                        }
+
+                        PluginLog.Warning($"{row}, {subRow} / {item.Item.Value.Name}, {item.Item.Row}");
+
+                        AddItem_Internal(item.Item.Value.RowId, item.Item.Value.Name.RawString, npcBase.RowId,
+                            resident.Singular.RawString, shop.ShopItems[i].Value.CollectablesShopItemGroup?.Value?.Name,
+                            new List<Tuple<uint, string>>(), /* Will build cost later*/
+                            _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null,
+                            ItemType.SpecialShop /*Yes this is special shop*/);
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
         private bool HackyFix_Npc(ENpcBase npcBase, ENpcResident resident)
         {
             switch (npcBase.RowId)
@@ -597,8 +650,7 @@ namespace ItemVendorLocation
                     return true;
 
                 case 1025763: // doman junkmonger
-                    GilShop gilShop = _gilShops.GetRow(262919);
-                    AddGilShopItem(gilShop, npcBase, resident);
+                    AddGilShopItem(_gilShops.GetRow(262919), npcBase, resident);
                     return true;
 
                 case 1027123: // eureka expedition artisan
@@ -610,23 +662,77 @@ namespace ItemVendorLocation
                     AddSpecialItem(_specialShops.GetRow(1769937), npcBase, resident);
                     return true;
 
-
                 case 1033921: // faux
-                    SpecialShopCustom sShop = _specialShops.GetRow(1770282);
-                    AddSpecialItem(sShop, npcBase, resident);
+                    AddSpecialItem(_specialShops.GetRow(1770282), npcBase, resident);
                     return true;
 
                 case 1034007: // bozja
                 case 1036895:
-                    SpecialShopCustom specShop = _specialShops.GetRow(1770087);
-                    AddSpecialItem(specShop, npcBase, resident);
+                    AddSpecialItem(_specialShops.GetRow(1770087), npcBase, resident);
+                    return true;
+
+                case 1027566: // Limbeth, Resplendent Tool Exchange
+                    // we only need the first three npc data (the last one is CustomTalk, we dont need it here)
+                    // the first one is from CollectablesShopItem and the last one is from SpecialShop
+                    AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[0]), npcBase, resident);
+                    // the second one is obsolete materials, even though they are not craftable, still add them anyway
+                    AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[1]), npcBase, resident);
+                    // after adding all the items, build the cost
+                    AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
+
+                    return true;
+
+                case 1035014: // Spanner, Skysteel Tool Exchange (but it doesnt seem to do anything???)
+                    // NPCData:
+                    // 0 - Story
+                    // 1 - Default talk
+                    // 2 - CollectableShop
+                    // 3 ~ 5 - PreHandler
+                    AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
+
+                    for (int i = 3; i <= 5; i++)
+                    {
+                        PreHandler preHandler = _preHandlers.GetRow(npcBase.ENpcData[i]);
+                        AddItemsInPrehandler(preHandler, npcBase, resident);
+                    }
+
+                    return true;
+
+                case 1032900:
+                    // NPCData:
+                    // 0 - Story id
+                    // 1 - SwitchTalk
+                    // 2 ~ 3 SpecialShop 
+                    // 4 - CollectableShop
+                    // 5 - SpecialShop
+                    // 6 - GilShop
+                    // 7 - 8 PreHandler (Replica)
+
+                    AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[4]), npcBase, resident);
+
+                    AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
+                    AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[3]), npcBase, resident);
+                    AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[5]), npcBase, resident);
+
+                    AddGilShopItem(_gilShops.GetRow(npcBase.ENpcData[6]), npcBase, resident);
+                    for (int i = 7; i <= 8; i++)
+                    {
+                        PreHandler preHandler = _preHandlers.GetRow(npcBase.ENpcData[i]);
+                        AddItemsInPrehandler(preHandler, npcBase, resident);
+                    }
+
+                    return true;
+
+                // TODO: Add quest reward
+                case 1035012:
+
+
                     return true;
 
                 default:
                     if (_shbFateShopNpc.TryGetValue(npcBase.RowId, out uint value))
                     {
-                        SpecialShopCustom specialShop = _specialShops.GetRow(value);
-                        AddSpecialItem(specialShop, npcBase, resident);
+                        AddSpecialItem(_specialShops.GetRow(value), npcBase, resident);
                         return true;
                     }
 

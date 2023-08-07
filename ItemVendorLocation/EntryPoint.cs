@@ -365,6 +365,7 @@ namespace ItemVendorLocation
         {
             Service.PluginUi.SetItemToDisplay(item);
             Service.PluginUi.IsOpen = true;
+            Service.PluginUi.Collapsed = false;
         }
 
         private static void ShowSingleVendor(ItemInfo item)

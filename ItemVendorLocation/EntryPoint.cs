@@ -21,6 +21,7 @@ using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
 using AgentInterface = FFXIVClientStructs.FFXIV.Component.GUI.AgentInterface;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Keys;
+using ImGuiNET;
 
 namespace ItemVendorLocation
 {
@@ -366,6 +367,7 @@ namespace ItemVendorLocation
             Service.PluginUi.SetItemToDisplay(item);
             Service.PluginUi.IsOpen = true;
             Service.PluginUi.Collapsed = false;
+            Service.PluginUi.CollapsedCondition = ImGuiCond.Once;
         }
 
         private static void ShowSingleVendor(ItemInfo item)

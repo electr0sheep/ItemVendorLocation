@@ -14,6 +14,8 @@ namespace ItemVendorLocation.Models
         GcShop,
         Achievement,
         FcShop,
+        QuestReward,
+        CollectableExchange,
     }
 
     public class ItemInfo

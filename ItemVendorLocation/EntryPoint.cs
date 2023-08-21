@@ -327,6 +327,9 @@ namespace ItemVendorLocation
                     costStr = $"FC Credits x{info.Costs[0].Item1}";
                     itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })), "：", costStr);
                     return;
+                case ItemType.CollectableExchange:
+                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { ':', ':' })), ":Collectables Exchange Reward");
+                    return;
             }
         }
 

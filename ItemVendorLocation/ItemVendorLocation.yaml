@@ -8,13 +8,10 @@ image_urls: [
   https://raw.githubusercontent.com/electr0sheep/ItemVendorLocation/main/Images/ContextMenu.png
 ]
 tags: [
-  vendor
-  plugin
   item
+  location
+  vendor
 ]
 changelog: |
-  - Added Chinese localization (Nuko)
-  - Fix for some Aenc Ose shop data (Nuko)
-  - Removed Garland Tools
-  - GC bug fixes
-  - Add keybinding modifier option
+  - Added support for collectable shops (Nuko)
+  - Added some support for relic weapons (Nuko)

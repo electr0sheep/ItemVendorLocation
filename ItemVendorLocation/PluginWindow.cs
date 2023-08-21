@@ -105,7 +105,14 @@ namespace ItemVendorLocation
                     ImGui.TableSetupColumn("Shop Name");
                 }
                 ImGui.TableSetupColumn("Location");
-                ImGui.TableSetupColumn("Cost");
+                if (_itemToDisplay.Type == ItemType.CollectableExchange)
+                {
+                    ImGui.TableSetupColumn("Exchange Rate");
+                }
+                else
+                {
+                    ImGui.TableSetupColumn("Cost");
+                }
                 if (_itemToDisplay.Type == ItemType.Achievement)
                 {
                     ImGui.TableSetupColumn("Obtain Requirement");
@@ -115,8 +122,16 @@ namespace ItemVendorLocation
 
                 foreach (NpcInfo npcInfo in _itemToDisplay.NpcInfos)
                 {
-                    string costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
-                    costStr = costStr[..^2];
+                    string costStr;
+                    if (_itemToDisplay.Type == ItemType.CollectableExchange)
+                    {
+                        costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} will yield {cost.Item1}\n");
+                    }
+                    else
+                    {
+                        costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
+                        costStr = costStr.Length > 0 ? costStr[..^2] : "";
+                    }
 
                     DrawTableRow(npcInfo, npcInfo.ShopName, npcInfo.Location, costStr);
                 }

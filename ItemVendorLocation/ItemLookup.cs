@@ -39,6 +39,8 @@ namespace ItemVendorLocation
         private readonly ExcelSheet<TopicSelect> _topicSelects;
         private readonly ExcelSheet<CollectablesShop> _collectablesShops;
         private readonly ExcelSheet<CollectablesShopItem> _collectablesShopItems;
+        private readonly ExcelSheet<CollectablesShopRewardItem> _collectablesShopRewardItems;
+        private readonly ExcelSheet<CollectablesShopRefine> _collectablesShopRefines;
         private readonly ExcelSheet<QuestClassJobReward> _questClassJobRewards;
 
         private readonly ExcelSheet<TerritoryType> _territoryType;
@@ -92,6 +94,8 @@ namespace ItemVendorLocation
             _topicSelects = Service.DataManager.GetExcelSheet<TopicSelect>();
             _collectablesShops = Service.DataManager.GetExcelSheet<CollectablesShop>();
             _collectablesShopItems = Service.DataManager.GetExcelSheet<CollectablesShopItem>();
+            _collectablesShopRewardItems = Service.DataManager.GetExcelSheet<CollectablesShopRewardItem>();
+            _collectablesShopRefines = Service.DataManager.GetExcelSheet<CollectablesShopRefine>();
             _questClassJobRewards = Service.DataManager.GetExcelSheet<QuestClassJobReward>();
 
             _achievements = Service.DataManager.GetExcelSheet<Achievement>();
@@ -605,18 +609,29 @@ namespace ItemVendorLocation
                 {
                     try
                     {
-                        CollectablesShopItem item = _collectablesShopItems.GetRow(row, subRow);
+                        CollectablesShopItem exchangeItem = _collectablesShopItems.GetRow(row, subRow);
+                        CollectablesShopRewardItem rewardItem = _collectablesShopRewardItems.GetRow(exchangeItem.CollectablesShopRewardScrip.Row);
+                        CollectablesShopRefine refine = _collectablesShopRefines.GetRow(exchangeItem.CollectablesShopRefine.Row);
                         // filter out junk data
-                        if (item.Item.Value == null || item.Item.Row <= 1000)
+                        if (exchangeItem.Item.Value == null || exchangeItem.Item.Row <= 1000)
                         {
                             continue;
                         }
 
-                        AddItem_Internal(item.Item.Value.RowId, item.Item.Value.Name.RawString, npcBase.RowId,
-                            resident.Singular.RawString, shop.ShopItems[i].Value.CollectablesShopItemGroup?.Value?.Name,
-                            new List<Tuple<uint, string>>(), /* Will build cost later*/
+                        // This may be confusing, because some things are incorrectly labeled in Lumina
+                        // CollectableShopRewardScrip is column 8, which is actually the ID in CollectableShopRewardItem
+                        // The reward item is the item that you exchange the collectalbe for.
+
+
+                        AddItem_Internal(rewardItem.Item.Value.RowId, rewardItem.Item.Value.Name.RawString, npcBase.RowId,
+                            resident.Singular.RawString, exchangeItem.CollectablesShopItemGroup?.Value?.Name,
+                            new List<Tuple<uint, string>>() {
+                                new(rewardItem.RewardLow, $"{exchangeItem.Item.Value.Name} min collectability of {refine.LowCollectability}"),
+                                new(rewardItem.RewardMid, $"{exchangeItem.Item.Value.Name} min collectability of {refine.MidCollectability}"),
+                                new(rewardItem.RewardHigh, $"{exchangeItem.Item.Value.Name} min collectability of {refine.HighCollectability}"),
+                            }, /* Will build cost later*/
                             _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null,
-                            ItemType.SpecialShop /*Yes this is special shop*/);
+                            ItemType.CollectableExchange /*Yes this is special shop*/);
                     }
                     catch
                     {

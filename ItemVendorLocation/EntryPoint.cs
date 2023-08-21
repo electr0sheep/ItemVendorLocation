@@ -67,7 +67,6 @@ namespace ItemVendorLocation
         private readonly ItemLookup _itemLookup;
 #endif
         private readonly WindowSystem _windowSystem;
-        private readonly SettingsWindow _configWindow;
         private readonly XivCommonBase _xivCommon;
 
         private readonly ExcelSheet<Item> _items;
@@ -86,13 +85,13 @@ namespace ItemVendorLocation
 
             // Initialize the UI
             _windowSystem = new WindowSystem(typeof(EntryPoint).AssemblyQualifiedName);
-            _configWindow = new();
-            Service.PluginUi = new PluginWindow();
+            Service.SettingsUi = new();
+            Service.PluginUi = new();
 
             _items = Service.DataManager.GetExcelSheet<Item>();
 
             _windowSystem.AddWindow(Service.PluginUi);
-            _windowSystem.AddWindow(_configWindow = new());
+            _windowSystem.AddWindow(Service.SettingsUi);
 
             _xivCommon.Functions.Tooltips.OnItemTooltip += Tooltips_OnOnItemTooltip;
             Service.ContextMenu.OnOpenInventoryContextMenu += ContextMenu_OnOpenInventoryContextMenu;
@@ -109,7 +108,7 @@ namespace ItemVendorLocation
         {
             if (args.IsNullOrEmpty())
             {
-                _configWindow.IsOpen = true;
+                Service.SettingsUi.IsOpen = true;
             }
             else
             {
@@ -175,7 +174,7 @@ namespace ItemVendorLocation
 
         private void OnOpenConfigUi()
         {
-            _configWindow.IsOpen = true;
+            Service.SettingsUi.IsOpen = true;
         }
 
         public string Name => "ItemVendorLocation";

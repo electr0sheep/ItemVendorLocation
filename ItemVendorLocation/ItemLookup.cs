@@ -37,6 +37,9 @@ namespace ItemVendorLocation
         private readonly ExcelSheet<FccShop> _fccShops;
         private readonly ExcelSheet<PreHandler> _preHandlers;
         private readonly ExcelSheet<TopicSelect> _topicSelects;
+        private readonly ExcelSheet<CollectablesShop> _collectablesShops;
+        private readonly ExcelSheet<CollectablesShopItem> _collectablesShopItems;
+        private readonly ExcelSheet<QuestClassJobReward> _questClassJobRewards;
 
         private readonly ExcelSheet<TerritoryType> _territoryType;
 
@@ -87,6 +90,9 @@ namespace ItemVendorLocation
             _fccShops = Service.DataManager.GetExcelSheet<FccShop>();
             _preHandlers = Service.DataManager.GetExcelSheet<PreHandler>();
             _topicSelects = Service.DataManager.GetExcelSheet<TopicSelect>();
+            _collectablesShops = Service.DataManager.GetExcelSheet<CollectablesShop>();
+            _collectablesShopItems = Service.DataManager.GetExcelSheet<CollectablesShopItem>();
+            _questClassJobRewards = Service.DataManager.GetExcelSheet<QuestClassJobReward>();
 
             _achievements = Service.DataManager.GetExcelSheet<Achievement>();
 
@@ -196,8 +202,6 @@ namespace ItemVendorLocation
 
         private void BuildVendors()
         {
-
-
             foreach (ENpcBase npcBase in _eNpcBases)
             {
                 if (npcBase == null)
@@ -205,7 +209,6 @@ namespace ItemVendorLocation
                     continue;
                 }
                 BuildVendorInfo(npcBase);
-
             }
         }
 
@@ -270,6 +273,7 @@ namespace ItemVendorLocation
                 {
                     GilShop gilShop = _gilShops.GetRow(npcData);
                     AddGilShopItem(gilShop, npcBase, resident);
+                    continue;
                 }
 
                 if (MatchEventHandlerType(npcData, EventHandlerType.CustomTalk))
@@ -573,6 +577,122 @@ namespace ItemVendorLocation
             }
         }
 
+        private void AddCollectablesShop(CollectablesShop shop, ENpcBase npcBase, ENpcResident resident)
+        {
+            if (shop == null)
+            {
+                return;
+            }
+
+            // skip rows without name
+            if (shop.Name.RawString == string.Empty)
+            {
+                return;
+            }
+
+            for (uint i = 0; i < shop.ShopItems.Length; i++)
+            {
+                uint row = shop.ShopItems[i].Value.RowId;
+
+                // 0 is unspecified, we dont need that
+                if (row == 0)
+                {
+                    continue;
+                }
+
+                // 100 should be enough.. unless SE add more subrows in the future
+                for (uint subRow = 0; subRow < 100; subRow++)
+                {
+                    try
+                    {
+                        CollectablesShopItem item = _collectablesShopItems.GetRow(row, subRow);
+                        // filter out junk data
+                        if (item.Item.Value == null || item.Item.Row <= 1000)
+                        {
+                            continue;
+                        }
+
+                        AddItem_Internal(item.Item.Value.RowId, item.Item.Value.Name.RawString, npcBase.RowId,
+                            resident.Singular.RawString, shop.ShopItems[i].Value.CollectablesShopItemGroup?.Value?.Name,
+                            new List<Tuple<uint, string>>(), /* Will build cost later*/
+                            _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null,
+                            ItemType.SpecialShop /*Yes this is special shop*/);
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
+        private void AddQuestReward(QuestClassJobReward questReward, ENpcBase npcBase, ENpcResident resident, List<Tuple<uint, string>> cost = null)
+        {
+            if (questReward == null)
+            {
+                return;
+            }
+
+            if (questReward.ClassJobCategory.Row == 0)
+            {
+                return;
+            }
+
+            if (cost == null)
+            {
+                cost = new List<Tuple<uint, string>>();
+
+                // Build the cost first
+                for (uint i = 0; i < questReward.RequiredItem.Length; i++)
+                {
+                    LazyRow<Item> requireItem = questReward.RequiredItem[i];
+                    if (requireItem.Row == 0)
+                    {
+                        break;
+                    }
+
+                    cost.Add(new Tuple<uint, string>(questReward.RequiredAmount[i], requireItem.Value.Name));
+                }
+            }
+
+            // Add the reward items
+            for (uint i = 0; i < questReward.RewardItem.Length; i++)
+            {
+                LazyRow<Item> rewardItem = questReward.RewardItem[i];
+                if (rewardItem.Row == 0)
+                {
+                    break;
+                }
+
+                AddItem_Internal(rewardItem.Row, rewardItem.Value.Name, npcBase.RowId, resident.Singular.RawString, "",
+                    cost, _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null,
+                    ItemType.QuestReward);
+            }
+        }
+
+        private void AddQuestRewardCost(QuestClassJobReward questReward, ENpcBase npcBase, List<Tuple<uint, string>> cost)
+        {
+            if (questReward == null || cost == null)
+            {
+                return;
+            }
+
+            if (questReward.ClassJobCategory.Row == 0)
+            {
+                return;
+            }
+
+            for (uint i = 0; i < questReward.RewardItem.Length; i++)
+            {
+                LazyRow<Item> rewardItem = questReward.RewardItem[i];
+                if (rewardItem.Row == 0)
+                {
+                    break;
+                }
+                AddItemCost(rewardItem.Row, npcBase.RowId, cost);
+            }
+        }
+
         private bool HackyFix_Npc(ENpcBase npcBase, ENpcResident resident)
         {
             switch (npcBase.RowId)
@@ -597,8 +717,7 @@ namespace ItemVendorLocation
                     return true;
 
                 case 1025763: // doman junkmonger
-                    GilShop gilShop = _gilShops.GetRow(262919);
-                    AddGilShopItem(gilShop, npcBase, resident);
+                    AddGilShopItem(_gilShops.GetRow(262919), npcBase, resident);
                     return true;
 
                 case 1027123: // eureka expedition artisan
@@ -610,23 +729,212 @@ namespace ItemVendorLocation
                     AddSpecialItem(_specialShops.GetRow(1769937), npcBase, resident);
                     return true;
 
-
                 case 1033921: // faux
-                    SpecialShopCustom sShop = _specialShops.GetRow(1770282);
-                    AddSpecialItem(sShop, npcBase, resident);
+                    AddSpecialItem(_specialShops.GetRow(1770282), npcBase, resident);
                     return true;
 
                 case 1034007: // bozja
                 case 1036895:
-                    SpecialShopCustom specShop = _specialShops.GetRow(1770087);
-                    AddSpecialItem(specShop, npcBase, resident);
+                    AddSpecialItem(_specialShops.GetRow(1770087), npcBase, resident);
+                    return true;
+
+                case 1027566: // Limbeth, Resplendent Tool Exchange
+                    // we only need the first three npc data (the last one is CustomTalk, we dont need it here)
+                    // the first one is from CollectablesShopItem and the last one is from SpecialShop
+                    AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[0]), npcBase, resident);
+                    // the second one is obsolete materials, even though they are not craftable, still add them anyway
+                    AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[1]), npcBase, resident);
+                    // after adding all the items, build the cost
+                    AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
+
+                    return true;
+
+                case 1035014: // Spanner, Skysteel Tool Exchange (but it doesnt seem to do anything???)
+                    // NPCData:
+                    // 0 - Story
+                    // 1 - Default talk
+                    // 2 - CollectableShop
+                    // 3 ~ 5 - PreHandler
+                    AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
+
+                    for (int i = 3; i <= 5; i++)
+                    {
+                        PreHandler preHandler = _preHandlers.GetRow(npcBase.ENpcData[i]);
+                        AddItemsInPrehandler(preHandler, npcBase, resident);
+                    }
+
+                    return true;
+
+                case 1032900:
+                    // NPCData:
+                    // 0 - Story id
+                    // 1 - SwitchTalk
+                    // 2 ~ 3 SpecialShop 
+                    // 4 - CollectableShop
+                    // 5 - SpecialShop
+                    // 6 - GilShop
+                    // 7 - 8 PreHandler (Replica)
+
+                    AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[4]), npcBase, resident);
+
+                    AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
+                    AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[3]), npcBase, resident);
+                    AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[5]), npcBase, resident);
+
+                    AddGilShopItem(_gilShops.GetRow(npcBase.ENpcData[6]), npcBase, resident);
+
+                    AddItemsInPrehandler(_preHandlers.GetRow(npcBase.ENpcData[7]), npcBase, resident);
+                    AddItemsInPrehandler(_preHandlers.GetRow(npcBase.ENpcData[8]), npcBase, resident);
+
+                    return true;
+
+                // add quest rewards, like relic weapons, to item list
+                // but this needs to upadte every time when a new patch drops
+                // hopefully someone can find a better way to handle this -- nuko
+                case 1035012: // Emeny
+                    // 14, 15, 19 -- SkySteel tool
+                    for (uint i = 0; i <= 10; i++)
+                    {
+                        QuestClassJobReward questClassJobReward = _questClassJobRewards.GetRow(14, i);
+                        AddQuestReward(questClassJobReward, npcBase, resident);
+                        questClassJobReward = _questClassJobRewards.GetRow(15, i);
+                        AddQuestReward(questClassJobReward, npcBase, resident);
+                        questClassJobReward = _questClassJobRewards.GetRow(19, i);
+                        AddQuestReward(questClassJobReward, npcBase, resident);
+                    }
+
+                    return true;
+
+                case 1016135: // Ardashir
+
+                    List<Tuple<uint, string>> GetCost(uint i)
+                    {
+                        return i switch
+                        {
+                            3 => new List<Tuple<uint, string>>
+                            {
+                                new(1, _items.GetRow(13575).Name), new(1, _items.GetRow(13576).Name),
+                            },
+                            5 => new List<Tuple<uint, string>>
+                            {
+                                new(1, _items.GetRow(13577).Name), new(1, _items.GetRow(13578).Name),new(1, _items.GetRow(13579).Name),new(1, _items.GetRow(13580).Name),
+                            },
+                            6 => new List<Tuple<uint, string>>
+                            {
+                                new(5, _items.GetRow(14899).Name),
+                            },
+                            7 => new List<Tuple<uint, string>>
+                            {
+                                // The amounts are uncertain, so will use the maximum amount
+                                new(60, _items.GetRow(15840).Name),new(60, _items.GetRow(15841).Name),
+                            },
+                            8 => new List<Tuple<uint, string>>
+                            {
+                                new(50, _items.GetRow(16064).Name)
+                            },
+                            9 => new List<Tuple<uint, string>>
+                            {
+                                new(1, _items.GetRow(16932).Name)
+                            },
+                            10 => new List<Tuple<uint, string>>
+                            {
+                                new(1, _items.GetRow(16934).Name)
+                            },
+                            _ => null
+                        };
+                    }
+
+                    // 3 ~ 10 Anima Weapons
+                    for (uint i = 3; i <= 10; i++)
+                    {
+                        for (uint j = 0; j <= 12; j++)
+                        {
+                            QuestClassJobReward questClassJobReward = _questClassJobRewards.GetRow(i, j);
+                            AddQuestReward(questClassJobReward, npcBase, resident);
+                            AddQuestRewardCost(questClassJobReward, npcBase, GetCost(i));
+                        }
+                    }
+
+                    return true;
+
+                case 1032903: // gerolt Resistance Weapons
+                    // Build the cost/required items manually, they dont exist in the sheet
+                    for (uint i = 0; i <= 16; i++)
+                    {
+                        QuestClassJobReward questClassJobReward = _questClassJobRewards.GetRow(12, i);
+                        AddQuestReward(questClassJobReward, npcBase, resident, new List<Tuple<uint, string>>
+                        {
+                            new(4, _items.GetRow(30273).Name),
+                        });
+                    }
+
+                    return true;
+
+                case 1032905: // Zlatan
+                    // Build the cost/required items manually, they dont exist in the sheet
+                    // IL 485
+                    for (uint i = 0; i <= 16; i++)
+                    {
+                        QuestClassJobReward questClassJobReward = _questClassJobRewards.GetRow(13, i);
+                        AddQuestReward(questClassJobReward, npcBase, resident, new List<Tuple<uint, string>>
+                        {
+                            new(4, _items.GetRow(30273).Name),
+                        });
+                    }
+
+                    // build reward items first, then we manually add cost/required items
+                    // code is messy, this could be more optimized and readable, but leave it as it is for now -- nuko
+                    for (uint i = 0; i <= 16; i++)
+                    {
+                        // IL 500
+                        QuestClassJobReward questClassJobReward = _questClassJobRewards.GetRow(17, i);
+                        AddQuestReward(questClassJobReward, npcBase, resident);
+                        AddQuestRewardCost(questClassJobReward, npcBase, new List<Tuple<uint, string>>
+                        {
+                            new(20, _items.GetRow(31573).Name),
+                            new(20, _items.GetRow(31574).Name),
+                            new(20, _items.GetRow(31575).Name),
+                        });
+
+                        // IL 500 #2
+                        questClassJobReward = _questClassJobRewards.GetRow(18, i);
+                        AddQuestReward(questClassJobReward, npcBase, resident);
+                        AddQuestRewardCost(questClassJobReward, npcBase, new List<Tuple<uint, string>>
+                        {
+                            new(6, _items.GetRow(31576).Name)
+                        });
+
+                        // IL 510
+                        questClassJobReward = _questClassJobRewards.GetRow(20, i);
+                        AddQuestReward(questClassJobReward, npcBase, resident);
+                        AddQuestRewardCost(questClassJobReward, npcBase, new List<Tuple<uint, string>>
+                        {
+                            new(15, _items.GetRow(32956).Name)
+                        });
+
+                        // IL 515
+                        questClassJobReward = _questClassJobRewards.GetRow(21, i);
+                        AddQuestReward(questClassJobReward, npcBase, resident);
+                        AddQuestRewardCost(questClassJobReward, npcBase, new List<Tuple<uint, string>>
+                        {
+                            new(15, _items.GetRow(32959).Name)
+                        });
+
+                        // IL 535
+                        questClassJobReward = _questClassJobRewards.GetRow(22, i);
+                        AddQuestReward(questClassJobReward, npcBase, resident);
+                        AddQuestRewardCost(questClassJobReward, npcBase, new List<Tuple<uint, string>>
+                        {
+                            new(15, _items.GetRow(33767).Name)
+                        });
+                    }
+
                     return true;
 
                 default:
                     if (_shbFateShopNpc.TryGetValue(npcBase.RowId, out uint value))
                     {
-                        SpecialShopCustom specialShop = _specialShops.GetRow(value);
-                        AddSpecialItem(specialShop, npcBase, resident);
+                        AddSpecialItem(_specialShops.GetRow(value), npcBase, resident);
                         return true;
                     }
 
@@ -694,6 +1002,29 @@ namespace ItemVendorLocation
             }
 
             itemInfo.NpcInfos = npcs;
+        }
+
+        private void AddItemCost(uint itemId, uint npcId, List<Tuple<uint, string>> cost)
+        {
+            if (itemId == 0)
+            {
+                return;
+            }
+
+            if (!_itemDataMap.TryGetValue(itemId, out ItemInfo itemInfo))
+            {
+                PluginLog.Error($"Failed to get value for ItemId \"{itemId}\" when adding item cost, did you call AddItemCost before the item is added to datamap?");
+                return;
+            }
+
+            var result = itemInfo.NpcInfos.Find(i => i.Id == npcId);
+            if (result == null)
+            {
+                PluginLog.Error($"Failed to find npcId \"{npcId}\" for ItemId \"{itemId}\" when adding item cost, did you call AddItemCost before the item is added to datamap?");
+                return;
+            }
+
+            result.Costs.AddRange(cost);
         }
 
         // https://github.com/ufx/GarlandTools/blob/3b3475bca6f95c800d2454f2c09a3f1eea0a8e4e/Garland.Data/Modules/Territories.cs

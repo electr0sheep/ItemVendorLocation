@@ -18,35 +18,33 @@ namespace ItemVendorLocation
     internal class ItemLookup
 #endif
     {
-        private readonly ExcelSheet<CustomTalk> _customTalks;
         private readonly ExcelSheet<Achievement> _achievements;
+        private readonly ExcelSheet<CustomTalk> _customTalks;
         private readonly ExcelSheet<CustomTalkNestHandlers> _customTalkNestHandlers;
-
-        private readonly ExcelSheet<ENpcBase> _eNpcBases;
-        private readonly ExcelSheet<ENpcResident> _eNpcResidents;
-
-        private readonly ExcelSheet<FateShopCustom> _fateShops;
-        private readonly ExcelSheet<GilShopItem> _gilShopItems;
-        private readonly ExcelSheet<GilShop> _gilShops;
-        private readonly ExcelSheet<SpecialShopCustom> _specialShops;
-        private readonly ExcelSheet<GCShop> _gcShops;
-        private readonly ExcelSheet<GCScripShopItem> _gcScripShopItems;
-        private readonly ExcelSheet<GCScripShopCategory> _gcScripShopCategories;
-        private readonly ExcelSheet<InclusionShop> _inclusionShops;
-        private readonly ExcelSheet<InclusionShopSeriesCustom> _inclusionShopSeries;
-        private readonly ExcelSheet<FccShop> _fccShops;
-        private readonly ExcelSheet<PreHandler> _preHandlers;
-        private readonly ExcelSheet<TopicSelect> _topicSelects;
         private readonly ExcelSheet<CollectablesShop> _collectablesShops;
         private readonly ExcelSheet<CollectablesShopItem> _collectablesShopItems;
-        private readonly ExcelSheet<CollectablesShopRewardItem> _collectablesShopRewardItems;
         private readonly ExcelSheet<CollectablesShopRefine> _collectablesShopRefines;
+        private readonly ExcelSheet<CollectablesShopRewardItem> _collectablesShopRewardItems;
+        private readonly ExcelSheet<ENpcBase> _eNpcBases;
+        private readonly ExcelSheet<ENpcResident> _eNpcResidents;
+        private readonly ExcelSheet<FateShopCustom> _fateShops;
+        private readonly ExcelSheet<FccShop> _fccShops;
+        private readonly ExcelSheet<GCShop> _gcShops;
+        private readonly ExcelSheet<GCScripShopCategory> _gcScripShopCategories;
+        private readonly ExcelSheet<GCScripShopItem> _gcScripShopItems;
+        private readonly ExcelSheet<GilShop> _gilShops;
+        private readonly ExcelSheet<GilShopItem> _gilShopItems;
+        private readonly ExcelSheet<InclusionShop> _inclusionShops;
+        private readonly ExcelSheet<InclusionShopSeriesCustom> _inclusionShopSeries;
+        private readonly ExcelSheet<Item> _items;
+        private readonly ExcelSheet<Map> _maps;
+        private readonly ExcelSheet<PreHandler> _preHandlers;
         private readonly ExcelSheet<QuestClassJobReward> _questClassJobRewards;
-
+        private readonly ExcelSheet<SpecialShopCustom> _specialShops;
         private readonly ExcelSheet<TerritoryType> _territoryType;
+        private readonly ExcelSheet<TopicSelect> _topicSelects;
 
         private readonly Item _gil;
-        private readonly ExcelSheet<Item> _items;
         private readonly List<Item> _gcSeal;
         private readonly Addon _fccName;
 
@@ -73,38 +71,34 @@ namespace ItemVendorLocation
 
         public ItemLookup()
         {
-            _eNpcBases = Service.DataManager.GetExcelSheet<ENpcBase>();
-            _eNpcResidents = Service.DataManager.GetExcelSheet<ENpcResident>();
-            _gilShopItems = Service.DataManager.GetExcelSheet<GilShopItem>();
-            _gilShops = Service.DataManager.GetExcelSheet<GilShop>();
-            _specialShops = Service.DataManager.GetExcelSheet<SpecialShopCustom>();
+            _achievements = Service.DataManager.GetExcelSheet<Achievement>();
             _customTalks = Service.DataManager.GetExcelSheet<CustomTalk>();
             _customTalkNestHandlers = Service.DataManager.GetExcelSheet<CustomTalkNestHandlers>();
-            _fateShops = Service.DataManager.GetExcelSheet<FateShopCustom>();
-            _territoryType = Service.DataManager.GetExcelSheet<TerritoryType>();
-
-            _gcScripShopItems = Service.DataManager.GetExcelSheet<GCScripShopItem>();
-            _gcShops = Service.DataManager.GetExcelSheet<GCShop>();
-            _gcScripShopCategories = Service.DataManager.GetExcelSheet<GCScripShopCategory>();
-
-            _inclusionShops = Service.DataManager.GetExcelSheet<InclusionShop>();
-            _inclusionShopSeries = Service.DataManager.GetExcelSheet<InclusionShopSeriesCustom>();
-            _fccShops = Service.DataManager.GetExcelSheet<FccShop>();
-            _preHandlers = Service.DataManager.GetExcelSheet<PreHandler>();
-            _topicSelects = Service.DataManager.GetExcelSheet<TopicSelect>();
             _collectablesShops = Service.DataManager.GetExcelSheet<CollectablesShop>();
             _collectablesShopItems = Service.DataManager.GetExcelSheet<CollectablesShopItem>();
-            _collectablesShopRewardItems = Service.DataManager.GetExcelSheet<CollectablesShopRewardItem>();
             _collectablesShopRefines = Service.DataManager.GetExcelSheet<CollectablesShopRefine>();
+            _collectablesShopRewardItems = Service.DataManager.GetExcelSheet<CollectablesShopRewardItem>();
+            _eNpcBases = Service.DataManager.GetExcelSheet<ENpcBase>();
+            _eNpcResidents = Service.DataManager.GetExcelSheet<ENpcResident>();
+            _fateShops = Service.DataManager.GetExcelSheet<FateShopCustom>();
+            _fccShops = Service.DataManager.GetExcelSheet<FccShop>();
+            _gcShops = Service.DataManager.GetExcelSheet<GCShop>();
+            _gcScripShopCategories = Service.DataManager.GetExcelSheet<GCScripShopCategory>();
+            _gcScripShopItems = Service.DataManager.GetExcelSheet<GCScripShopItem>();
+            _gilShops = Service.DataManager.GetExcelSheet<GilShop>();
+            _gilShopItems = Service.DataManager.GetExcelSheet<GilShopItem>();
+            _inclusionShops = Service.DataManager.GetExcelSheet<InclusionShop>();
+            _inclusionShopSeries = Service.DataManager.GetExcelSheet<InclusionShopSeriesCustom>();
+            _items = Service.DataManager.GetExcelSheet<Item>();
+            _maps = Service.DataManager.GetExcelSheet<Map>();
+            _preHandlers = Service.DataManager.GetExcelSheet<PreHandler>();
             _questClassJobRewards = Service.DataManager.GetExcelSheet<QuestClassJobReward>();
-
-            _achievements = Service.DataManager.GetExcelSheet<Achievement>();
+            _specialShops = Service.DataManager.GetExcelSheet<SpecialShopCustom>();
+            _territoryType = Service.DataManager.GetExcelSheet<TerritoryType>();
+            _topicSelects = Service.DataManager.GetExcelSheet<TopicSelect>();
 
             _fccName = Service.DataManager.GetExcelSheet<Addon>().GetRow(102233);
-
-            _items = Service.DataManager.GetExcelSheet<Item>();
             _gil = _items.GetRow(1);
-
             _gcSeal = _items.Where(i => i.RowId is >= 20 and <= 22).Select(i => i).ToList();
 
             FirstSpecialShopId = _specialShops.First().RowId;
@@ -1042,6 +1036,103 @@ namespace ItemVendorLocation
             result.Costs.AddRange(cost);
         }
 
+#if DEBUG
+        public void BuildDebugNpcLocation(uint npcId)
+        {
+            foreach (TerritoryType sTerritoryType in _territoryType)
+            {
+                string bg = sTerritoryType.Bg.ToString();
+                if (string.IsNullOrEmpty(bg))
+                {
+                    continue;
+                }
+
+                string lgbFileName = $"bg/{bg[..(bg.IndexOf("/level/", StringComparison.Ordinal) + 1)]}level/planevent.lgb";
+                LgbFile sLgbFile = Service.DataManager.GetFile<LgbFile>(lgbFileName);
+                if (sLgbFile == null)
+                {
+                    continue;
+                }
+
+                ParseLgbFile(sLgbFile, sTerritoryType, npcId);
+            }
+
+            ExcelSheet<Level> levels = Service.DataManager.GetExcelSheet<Level>();
+            foreach (Level level in levels)
+            {
+                // NPC
+                if (level.Type != 8)
+                {
+                    continue;
+                }
+
+                // NPC Id
+                if (level.Object != npcId)
+                {
+                    continue;
+                }
+
+                if (level.Territory.Value == null)
+                {
+                    continue;
+                }
+
+                try
+                {
+                    _npcLocations.Add(level.Object, new NpcLocation(level.X, level.Z, level.Territory.Value));
+                }
+                catch (ArgumentException)
+                {
+                    _npcLocations.TryGetValue(level.Object, out NpcLocation npcLocation);
+                    PluginLog.LogDebug($"This npc has this location: Map {npcLocation.MapId} Territory {npcLocation.TerritoryType}");
+                    // The row should already exist. This is just for debugging.
+                }
+            }
+        }
+#endif
+
+        public void ParseLgbFile(LgbFile lgbFile, TerritoryType sTerritoryType, uint? npcId = null)
+        {
+            foreach (LayerCommon.Layer sLgbGroup in lgbFile.Layers)
+            {
+                foreach (LayerCommon.InstanceObject instanceObject in sLgbGroup.InstanceObjects)
+                {
+                    if (instanceObject.AssetType != LayerEntryType.EventNPC)
+                    {
+                        continue;
+                    }
+
+                    LayerCommon.ENPCInstanceObject eventNpc = (LayerCommon.ENPCInstanceObject)instanceObject.Object;
+                    uint npcRowId = eventNpc.ParentData.ParentData.BaseId;
+                    if (npcRowId == 0)
+                    {
+                        continue;
+                    }
+
+                    if (npcId != null && npcRowId != npcId)
+                    {
+                        continue;
+                    }
+
+                    if (npcId == null && _npcLocations.ContainsKey(npcRowId))
+                    {
+                        continue;
+                    }
+
+                    byte mapId = _eNpcResidents.GetRow(npcRowId).Map;
+                    try
+                    {
+                        Map map = _maps.First(i => i.TerritoryType.Value == sTerritoryType && i.MapIndex == mapId);
+                        _npcLocations.Add(npcRowId, new NpcLocation(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType, map.RowId));
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        _npcLocations.Add(npcRowId, new NpcLocation(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType));
+                    }
+                }
+            }
+        }
+
         // https://github.com/ufx/GarlandTools/blob/3b3475bca6f95c800d2454f2c09a3f1eea0a8e4e/Garland.Data/Modules/Territories.cs
         private void BuildNpcLocation()
         {
@@ -1060,30 +1151,7 @@ namespace ItemVendorLocation
                     continue;
                 }
 
-                foreach (LayerCommon.Layer sLgbGroup in sLgbFile.Layers)
-                {
-                    foreach (LayerCommon.InstanceObject instanceObject in sLgbGroup.InstanceObjects)
-                    {
-                        if (instanceObject.AssetType != LayerEntryType.EventNPC)
-                        {
-                            continue;
-                        }
-
-                        LayerCommon.ENPCInstanceObject eventNpc = (LayerCommon.ENPCInstanceObject)instanceObject.Object;
-                        uint npcRowId = eventNpc.ParentData.ParentData.BaseId;
-                        if (npcRowId == 0)
-                        {
-                            continue;
-                        }
-
-                        if (_npcLocations.ContainsKey(npcRowId))
-                        {
-                            continue;
-                        }
-
-                        _npcLocations.Add(npcRowId, new NpcLocation(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType));
-                    }
-                }
+                ParseLgbFile(sLgbFile, sTerritoryType);
             }
 
             ExcelSheet<Level> levels = Service.DataManager.GetExcelSheet<Level>();

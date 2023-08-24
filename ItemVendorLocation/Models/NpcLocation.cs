@@ -17,14 +17,12 @@ namespace ItemVendorLocation.Models
 
         public float MapX => ToMapCoordinate(X, TerritoryExcel.Map.Value.SizeFactor, TerritoryExcel.Map.Value.OffsetX);
         public float MapY => ToMapCoordinate(Y, TerritoryExcel.Map.Value.SizeFactor, TerritoryExcel.Map.Value.OffsetY);
-        // Garland Tools already sends over "map coordinates", so another option would be to invert ToMapCoordinate(),
-        // or use a constructor that doesn't assume the coordinates aren't already converted or something.
-        // Going with this for now
         public float X { get; }
         public float Y { get; }
         public uint TerritoryType => TerritoryExcel.RowId;
         public uint MapId { get; }
 
+        // TODO: This needs to be removed. This is an exact duplicate of Dalamud/Game/Text/SeStringHandling/Payloads/MapLinkPayload#ConvertRawPositionToMapCoordinate.cs
         private static float ToMapCoordinate(float val, float scale, short offset)
         {
             float c = scale / 100.0f;

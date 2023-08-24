@@ -30,10 +30,14 @@ namespace ItemVendorLocation
                 Service.Configuration.BuildDebugVendorInfo = num;
                 Service.Configuration.Save();
             }
-            ImGui.SameLine();
             if (ImGui.Button("Build Debug Vendor Info"))
             {
                 Service.Plugin._itemLookup.BuildDebugVendorInfo((uint)num);
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Build NPC location"))
+            {
+                Service.Plugin._itemLookup.BuildDebugNpcLocation((uint)num);
             }
 #endif
             bool filterDuplicates = Service.Configuration.FilterDuplicates;

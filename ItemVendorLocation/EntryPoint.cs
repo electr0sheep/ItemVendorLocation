@@ -320,7 +320,11 @@ namespace ItemVendorLocation
                     itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })), "：", costStr);
                     return;
                 case ItemType.SpecialShop:
-                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })), "：Special Vendor");
+                    var pos = origStr.TextValue.IndexOfAny(new[] { '：', ':' });
+                    // Avoid modification for certain seasonal items with no Shop Selling Price line
+                    if (pos != -1) {
+                        itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, pos), "：Special Vendor");
+                    }
                     return;
                 case ItemType.FcShop:
                     info = itemInfo.NpcInfos.First();

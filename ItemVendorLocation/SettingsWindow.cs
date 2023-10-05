@@ -1,12 +1,12 @@
-﻿using Dalamud.Interface.Windowing;
-using ImGuiNET;
-using System;
-using System.Numerics;
+﻿using Dalamud.Game.ClientState.Keys;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.Windowing;
+using ImGuiNET;
 using Lumina.Excel.GeneratedSheets;
-using System.Linq;
+using System;
 using System.Collections.Generic;
-using Dalamud.Game.ClientState.Keys;
+using System.Linq;
+using System.Numerics;
 
 namespace ItemVendorLocation
 {
@@ -141,7 +141,7 @@ Multiple will display the results in a popup window. If you leave it as this the
 
             string[] keyNames = Service.KeyState.GetValidVirtualKeys().Select(i => i.GetFancyName()).ToArray();
             keyNames = keyNames.Prepend("None").ToArray();
-            VirtualKey[] keyValues = Service.KeyState.GetValidVirtualKeys();
+            VirtualKey[] keyValues = (VirtualKey[])Service.KeyState.GetValidVirtualKeys();
             keyValues = keyValues.Prepend(VirtualKey.NO_KEY).ToArray();
             int selectedKey = Array.IndexOf(keyValues, Service.Configuration.SearchDisplayModifier);
             ImGui.SetNextItemWidth(200f);

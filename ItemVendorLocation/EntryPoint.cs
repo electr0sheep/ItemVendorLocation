@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using CheapLoc;
+﻿using CheapLoc;
 using Dalamud.ContextMenu;
+using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
@@ -12,16 +10,18 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using ImGuiNET;
 using ItemVendorLocation.Models;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using XivCommon;
 using XivCommon.Functions.Tooltips;
-using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
 using AgentInterface = FFXIVClientStructs.FFXIV.Component.GUI.AgentInterface;
-using System.Threading.Tasks;
-using Dalamud.Game.ClientState.Keys;
-using ImGuiNET;
+using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
 
 namespace ItemVendorLocation
 {
@@ -80,8 +80,8 @@ namespace ItemVendorLocation
             ButtonName = Loc.Localize("ContextMenuItem", "Vendor location");
             Service.Plugin = this;
             Service.Configuration = pi.GetPluginConfig() as PluginConfiguration ?? new PluginConfiguration();
-            Service.ContextMenu = new DalamudContextMenu();
-            _xivCommon = new(Hooks.Tooltips);
+            Service.ContextMenu = new DalamudContextMenu(Service.Interface);
+            _xivCommon = new(Service.Interface, Hooks.Tooltips);
             _itemLookup = new();
 
             // Initialize the UI
@@ -178,7 +178,7 @@ namespace ItemVendorLocation
             Service.SettingsUi.IsOpen = true;
         }
 
-        public string Name => "ItemVendorLocation";
+        public static string Name => "ItemVendorLocation";
 
         private static uint CorrectitemId(uint itemId)
         {
@@ -322,7 +322,8 @@ namespace ItemVendorLocation
                 case ItemType.SpecialShop:
                     var pos = origStr.TextValue.IndexOfAny(new[] { '：', ':' });
                     // Avoid modification for certain seasonal items with no Shop Selling Price line
-                    if (pos != -1) {
+                    if (pos != -1)
+                    {
                         itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, pos), "：Special Vendor");
                     }
                     return;
@@ -333,6 +334,8 @@ namespace ItemVendorLocation
                     return;
                 case ItemType.CollectableExchange:
                     itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { ':', ':' })), ":Collectables Exchange Reward");
+                    return;
+                default:
                     return;
             }
         }

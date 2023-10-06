@@ -15,4 +15,5 @@ tags: [
 changelog: |
   - Added support for collectable shops (Nuko)
   - Added some support for relic weapons (Nuko)
+  - Fix tooltip error (Nebel)
   - Update to API 9

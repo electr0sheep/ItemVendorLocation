@@ -80,8 +80,8 @@ namespace ItemVendorLocation
             ButtonName = Loc.Localize("ContextMenuItem", "Vendor location");
             Service.Plugin = this;
             Service.Configuration = pi.GetPluginConfig() as PluginConfiguration ?? new PluginConfiguration();
-            Service.ContextMenu = new DalamudContextMenu();
-            _xivCommon = new(Hooks.Tooltips);
+            Service.ContextMenu = new DalamudContextMenu(pi);
+            _xivCommon = new(pi);
             _itemLookup = new();
 
             // Initialize the UI

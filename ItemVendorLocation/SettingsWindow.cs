@@ -139,19 +139,19 @@ Multiple will display the results in a popup window. If you leave it as this the
             ImGui.SameLine();
             ImGuiComponents.HelpMarker(@"The chat text highlight color of the NPC name.");
 
-            string[] keyNames = Service.KeyState.GetValidVirtualKeys().Select(i => i.GetFancyName()).ToArray();
-            keyNames = keyNames.Prepend("None").ToArray();
-            VirtualKey[] keyValues = Service.KeyState.GetValidVirtualKeys();
-            keyValues = keyValues.Prepend(VirtualKey.NO_KEY).ToArray();
-            int selectedKey = Array.IndexOf(keyValues, Service.Configuration.SearchDisplayModifier);
-            ImGui.SetNextItemWidth(200f);
-            if (ImGui.Combo("Results View Type Modifier", ref selectedKey, keyNames, keyNames.Length))
-            {
-                Service.Configuration.SearchDisplayModifier = keyValues[selectedKey];
-                Service.Configuration.Save();
+                string[] keyNames = Service.KeyState.GetValidVirtualKeys().Select(i => i.GetFancyName()).ToArray();
+                keyNames = keyNames.Prepend("None").ToArray();
+                VirtualKey[] keyValues = Service.KeyState.GetValidVirtualKeys().ToArray();
+                keyValues = keyValues.Prepend(VirtualKey.NO_KEY).ToArray();
+                int selectedKey = Array.IndexOf(keyValues, Service.Configuration.SearchDisplayModifier);
+                ImGui.SetNextItemWidth(200f);
+                if (ImGui.Combo("Results View Type Modifier", ref selectedKey, keyNames, keyNames.Length))
+                {
+                    Service.Configuration.SearchDisplayModifier = keyValues[selectedKey];
+                    Service.Configuration.Save();
+                }
+                ImGui.SameLine();
+                ImGuiComponents.HelpMarker(@"Changes the Results View Type when held.");
             }
-            ImGui.SameLine();
-            ImGuiComponents.HelpMarker(@"Changes the Results View Type when held.");
         }
     }
-}

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Dalamud;
-using Dalamud.Logging;
 using ItemVendorLocation.Models;
 using Lumina.Data.Files;
 using Lumina.Data.Parsing.Layer;
@@ -104,13 +103,8 @@ namespace ItemVendorLocation
             FirstSpecialShopId = _specialShops.First().RowId;
             LastSpecialShopId = _specialShops.Last().RowId;
 
-            _ = Task.Run(async () =>
+            _ = Task.Run(() =>
             {
-                while (!Service.DataManager.IsDataReady)
-                {
-                    await Task.Delay(500);
-                }
-
                 BuildNpcLocation();
                 BuildVendors();
                 AddAchievementItem();
@@ -131,25 +125,27 @@ namespace ItemVendorLocation
                         }
                     }
                 }
-                PluginLog.Debug("Data is ready");
-                PluginLog.Debug($"Items sold by NPCs with no location: {noLocationNpcs.Values.Aggregate((sum, i) => sum += i)}");
-                PluginLog.Debug("Named NPCs:");
+                Service.PluginLog.Debug("Data is ready");
+                Service.PluginLog.Debug($"Items sold by NPCs with no location: {noLocationNpcs.Values.Aggregate((sum, i) => sum += i)}");
+                Service.PluginLog.Debug("Named NPCs:");
                 foreach (KeyValuePair<string, uint> npc in noLocationNpcs)
                 {
                     if (char.IsUpper(npc.Key.First()))
                     {
-                        PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
+                        Service.PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
                     }
                 }
-                PluginLog.Debug("Unnamed NPCs:");
+                Service.PluginLog.Debug("Unnamed NPCs:");
                 foreach (KeyValuePair<string, uint> npc in noLocationNpcs)
                 {
                     if (!char.IsUpper(npc.Key.First()))
                     {
-                        PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
+                        Service.PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
                     }
                 }
 #endif
+
+                return Task.CompletedTask;
             });
         }
 
@@ -167,7 +163,7 @@ namespace ItemVendorLocation
                     {
                         if (npcInfo.ShopName == "アイテムの購入")
                         {
-                            PluginLog.Debug($"{_items.GetRow(item.Key).Name} has ShopName \"アイテムの購入\", correcting to correct one.");
+                            Service.PluginLog.Debug($"{_items.GetRow(item.Key).Name} has ShopName \"アイテムの購入\", correcting to correct one.");
                             // This correction is for Aenc Ose, who sells "Sheep Equipment Materials", for example.
                             // A shop is the sub-menu presented at some vendors. Aenc Ose has no such sub-menu, so we simply remove the shop.
                             npcInfo.ShopName = null;
@@ -1022,14 +1018,14 @@ namespace ItemVendorLocation
 
             if (!_itemDataMap.TryGetValue(itemId, out ItemInfo itemInfo))
             {
-                PluginLog.Error($"Failed to get value for ItemId \"{itemId}\" when adding item cost, did you call AddItemCost before the item is added to datamap?");
+                Service.PluginLog.Error($"Failed to get value for ItemId \"{itemId}\" when adding item cost, did you call AddItemCost before the item is added to datamap?");
                 return;
             }
 
-            var result = itemInfo.NpcInfos.Find(i => i.Id == npcId);
+            NpcInfo result = itemInfo.NpcInfos.Find(i => i.Id == npcId);
             if (result == null)
             {
-                PluginLog.Error($"Failed to find npcId \"{npcId}\" for ItemId \"{itemId}\" when adding item cost, did you call AddItemCost before the item is added to datamap?");
+                Service.PluginLog.Error($"Failed to find npcId \"{npcId}\" for ItemId \"{itemId}\" when adding item cost, did you call AddItemCost before the item is added to datamap?");
                 return;
             }
 
@@ -1083,8 +1079,8 @@ namespace ItemVendorLocation
                 }
                 catch (ArgumentException)
                 {
-                    _npcLocations.TryGetValue(level.Object, out NpcLocation npcLocation);
-                    PluginLog.LogDebug($"This npc has this location: Map {npcLocation.MapId} Territory {npcLocation.TerritoryType}");
+                    _ = _npcLocations.TryGetValue(level.Object, out NpcLocation npcLocation);
+                    Service.PluginLog.Debug($"This npc has this location: Map {npcLocation.MapId} Territory {npcLocation.TerritoryType}");
                     // The row should already exist. This is just for debugging.
                 }
             }

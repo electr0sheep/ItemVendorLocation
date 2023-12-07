@@ -936,6 +936,12 @@ namespace ItemVendorLocation
 
                     return true;
 
+                case 1043463: // horrendous hoarder
+                    AddSpecialItem(_specialShops.GetRow(1770659), npcBase, resident);
+                    AddSpecialItem(_specialShops.GetRow(1770660), npcBase, resident);
+
+                    return true;
+
                 default:
                     if (_shbFateShopNpc.TryGetValue(npcBase.RowId, out uint value))
                     {

@@ -278,6 +278,23 @@ namespace ItemVendorLocation
                         continue;
                     }
 
+                    var scriptArgs = customTalk.ScriptArg;
+                    if (npcData == 721068)
+                    {
+                        // scriptArgs[0] -> QuestId
+                        // scriptArgs[2] -> ItemId
+                        // scriptArgs[3] -> Amount of item
+                        // scriptArgs[4] -> Amount of currency
+                        AddItem_Internal(scriptArgs[2], _items.GetRow(scriptArgs[2]).Name.RawString, npcBase.RowId, resident.Singular, "",
+                                         new List<Tuple<uint, string>>
+                                         {
+                                             { new(scriptArgs[4], _items.GetRow(28).Name.RawString) },
+                                         },
+                                         _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null,
+                                         ItemType.SpecialShop);
+                        continue;
+                    }
+
                     if (customTalk.SpecialLinks != 0)
                     {
                         try
@@ -307,7 +324,7 @@ namespace ItemVendorLocation
                         catch { }
                     }
 
-                    foreach (uint arg in customTalk.ScriptArg)
+                    foreach (uint arg in scriptArgs)
                     {
                         if (MatchEventHandlerType(arg, EventHandlerType.GilShop))
                         {

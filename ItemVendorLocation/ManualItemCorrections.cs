@@ -52,6 +52,8 @@ namespace ItemVendorLocation
             _ = _npcLocations.TryAdd(1001016, new NpcLocation(-42.679565f,  119.920654f,    _territoryType.GetRow(128)));
             _ = _npcLocations.TryAdd(1005422, new NpcLocation(-397.6349f,   80.979614f,     _territoryType.GetRow(129)));
             _ = _npcLocations.TryAdd(1000244, new NpcLocation(423.17834f,   -119.95117f,    _territoryType.GetRow(154)));
+            _ = _npcLocations.TryAdd(1000234, new NpcLocation(423.69714f,   -122.08746f,    _territoryType.GetRow(154)));
+            _ = _npcLocations.TryAdd(1000230, new NpcLocation(421.46936f,   -125.993774f,    _territoryType.GetRow(154)));
 
             // merchant & mender
             // East Shroud

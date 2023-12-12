@@ -278,7 +278,7 @@ namespace ItemVendorLocation
                         continue;
                     }
 
-                    var scriptArgs = customTalk.ScriptArg;
+                    uint[] scriptArgs = customTalk.ScriptArg;
                     if (npcData == 721068)
                     {
                         // scriptArgs[0] -> QuestId

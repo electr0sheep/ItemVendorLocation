@@ -285,18 +285,22 @@ namespace ItemVendorLocation
                             for (uint index = 0; index <= 30; index++)
                             {
                                 CustomTalkNestHandlers customTalkNestHandler = _customTalkNestHandlers.GetRow(customTalk.SpecialLinks, index);
-                                if (customTalkNestHandler != null)
+                                if (customTalkNestHandler == null)
+                                {
+                                    continue;
+                                }
+
+                                if (MatchEventHandlerType(customTalkNestHandler.NestHandler, EventHandlerType.SpecialShop))
                                 {
                                     SpecialShopCustom specialShop = _specialShops.GetRow(customTalkNestHandler.NestHandler);
-                                    if (specialShop != null)
-                                    {
-                                        AddSpecialItem(specialShop, npcBase, resident);
-                                    }
+                                    AddSpecialItem(specialShop, npcBase, resident);
+                                    continue;
+                                }
+
+                                if (MatchEventHandlerType(customTalkNestHandler.NestHandler, EventHandlerType.GilShop))
+                                {
                                     GilShop gilShop = _gilShops.GetRow(customTalkNestHandler.NestHandler);
-                                    if (gilShop != null)
-                                    {
-                                        AddGilShopItem(gilShop, npcBase, resident);
-                                    }
+                                    AddGilShopItem(gilShop, npcBase, resident);
                                 }
                             }
                         }
@@ -736,11 +740,6 @@ namespace ItemVendorLocation
 
                 case 1033921: // faux
                     AddSpecialItem(_specialShops.GetRow(1770282), npcBase, resident);
-                    return true;
-
-                case 1034007: // bozja
-                case 1036895:
-                    AddSpecialItem(_specialShops.GetRow(1770087), npcBase, resident);
                     return true;
 
                 case 1027566: // Limbeth, Resplendent Tool Exchange

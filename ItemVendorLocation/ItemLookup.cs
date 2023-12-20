@@ -278,6 +278,23 @@ namespace ItemVendorLocation
                         continue;
                     }
 
+                    uint[] scriptArgs = customTalk.ScriptArg;
+                    if (npcData == 721068)
+                    {
+                        // scriptArgs[0] -> QuestId
+                        // scriptArgs[2] -> ItemId
+                        // scriptArgs[3] -> Amount of item
+                        // scriptArgs[4] -> Amount of currency
+                        AddItem_Internal(scriptArgs[2], _items.GetRow(scriptArgs[2]).Name.RawString, npcBase.RowId, resident.Singular, "",
+                                         new List<Tuple<uint, string>>
+                                         {
+                                             { new(scriptArgs[4], _items.GetRow(28).Name.RawString) },
+                                         },
+                                         _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null,
+                                         ItemType.SpecialShop);
+                        continue;
+                    }
+
                     if (customTalk.SpecialLinks != 0)
                     {
                         try
@@ -285,25 +302,29 @@ namespace ItemVendorLocation
                             for (uint index = 0; index <= 30; index++)
                             {
                                 CustomTalkNestHandlers customTalkNestHandler = _customTalkNestHandlers.GetRow(customTalk.SpecialLinks, index);
-                                if (customTalkNestHandler != null)
+                                if (customTalkNestHandler == null)
+                                {
+                                    continue;
+                                }
+
+                                if (MatchEventHandlerType(customTalkNestHandler.NestHandler, EventHandlerType.SpecialShop))
                                 {
                                     SpecialShopCustom specialShop = _specialShops.GetRow(customTalkNestHandler.NestHandler);
-                                    if (specialShop != null)
-                                    {
-                                        AddSpecialItem(specialShop, npcBase, resident);
-                                    }
+                                    AddSpecialItem(specialShop, npcBase, resident);
+                                    continue;
+                                }
+
+                                if (MatchEventHandlerType(customTalkNestHandler.NestHandler, EventHandlerType.GilShop))
+                                {
                                     GilShop gilShop = _gilShops.GetRow(customTalkNestHandler.NestHandler);
-                                    if (gilShop != null)
-                                    {
-                                        AddGilShopItem(gilShop, npcBase, resident);
-                                    }
+                                    AddGilShopItem(gilShop, npcBase, resident);
                                 }
                             }
                         }
                         catch { }
                     }
 
-                    foreach (uint arg in customTalk.ScriptArg)
+                    foreach (uint arg in scriptArgs)
                     {
                         if (MatchEventHandlerType(arg, EventHandlerType.GilShop))
                         {
@@ -738,11 +759,6 @@ namespace ItemVendorLocation
                     AddSpecialItem(_specialShops.GetRow(1770282), npcBase, resident);
                     return true;
 
-                case 1034007: // bozja
-                case 1036895:
-                    AddSpecialItem(_specialShops.GetRow(1770087), npcBase, resident);
-                    return true;
-
                 case 1027566: // Limbeth, Resplendent Tool Exchange
                     // we only need the first three npc data (the last one is CustomTalk, we dont need it here)
                     // the first one is from CollectablesShopItem and the last one is from SpecialShop
@@ -933,6 +949,12 @@ namespace ItemVendorLocation
                             new(15, _items.GetRow(33767).Name)
                         });
                     }
+
+                    return true;
+
+                case 1043463: // horrendous hoarder
+                    AddSpecialItem(_specialShops.GetRow(1770659), npcBase, resident);
+                    AddSpecialItem(_specialShops.GetRow(1770660), npcBase, resident);
 
                     return true;
 

@@ -43,6 +43,7 @@ namespace ItemVendorLocation
              "ShopExchangeItem",
              "ShopExchangeItemDialog",
              "SubmarinePartsMenu",
+             "Tryon",
         };
 
         public readonly Dictionary<byte, uint> GcVendorIdMap = new()
@@ -81,7 +82,7 @@ namespace ItemVendorLocation
             Service.Plugin = this;
             Service.Configuration = pi.GetPluginConfig() as PluginConfiguration ?? new PluginConfiguration();
             Service.ContextMenu = new DalamudContextMenu(pi);
-            _xivCommon = new(pi);
+            _xivCommon = new(pi, Hooks.Tooltips);
             _itemLookup = new();
 
             // Initialize the UI
@@ -317,19 +318,19 @@ namespace ItemVendorLocation
 
                     string costStr = $"{info.Costs[0].Item2} x{info.Costs[0].Item1}";
 
-                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })), "：", costStr);
+                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })), ": ", costStr);
                     return;
                 case ItemType.SpecialShop:
-                    var pos = origStr.TextValue.IndexOfAny(new[] { '：', ':' });
+                    int pos = origStr.TextValue.IndexOfAny(new[] { '：', ':' });
                     // Avoid modification for certain seasonal items with no Shop Selling Price line
                     if (pos != -1) {
-                        itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, pos), "：Special Vendor");
+                        itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, pos), ": Special Vendor");
                     }
                     return;
                 case ItemType.FcShop:
                     info = itemInfo.NpcInfos.First();
                     costStr = $"FC Credits x{info.Costs[0].Item1}";
-                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })), "：", costStr);
+                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })), ": ", costStr);
                     return;
                 case ItemType.CollectableExchange:
                     itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { ':', ':' })), ":Collectables Exchange Reward");

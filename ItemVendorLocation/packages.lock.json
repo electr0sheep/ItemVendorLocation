@@ -20,11 +20,11 @@
       },
       "Dalamud.DrunkenToad": {
         "type": "Direct",
-        "requested": "[1.7.2, )",
-        "resolved": "1.7.2",
-        "contentHash": "qAkd047H3vWtngB4QalK89Sd5SOZW3lz54MimLv490ojMs1slGDwJBjBjEJ49IQcdhEBo6wirvhwApcq6SUTxg==",
+        "requested": "[1.8.15, )",
+        "resolved": "1.8.15",
+        "contentHash": "biuHkQR0qmIMWEsa14CcWtUH4f6G7sOTQMDZZKws2MhzTYl/3sw2lDS3z6bBOPd17I1UPtmkFBBn0QbQEpO4PA==",
         "dependencies": {
-          "Dalamud.Loc": "1.1.1",
+          "Dalamud.Loc": "1.1.2",
           "Microsoft.Extensions.DependencyInjection": "7.0.0"
         }
       },
@@ -42,8 +42,8 @@
       },
       "Dalamud.Loc": {
         "type": "Transitive",
-        "resolved": "1.1.1",
-        "contentHash": "fPVMmkiK2WaShXfLbl9ow8QTPxpJgcT92u+HqU5eNCskjwpwYWi3fkWMM1IIvPI/x9qCo2UIRUSDybeGVoE2/Q=="
+        "resolved": "1.1.2",
+        "contentHash": "Sy7ooP1+mGtoCCPltgUNATz3UbnRFihVcDfg9wB2rdsfY5FDfCW/k3jpLZiJZc3xXHyttzwttJeVC3tE3JsEGw=="
       },
       "Microsoft.Extensions.DependencyInjection": {
         "type": "Transitive",

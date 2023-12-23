@@ -259,7 +259,7 @@ namespace ItemVendorLocation
                 if (MatchEventHandlerType(npcData, EventHandlerType.SpecialShop))
                 {
                     SpecialShopCustom specialShop = _specialShops.GetRow(npcData);
-                    AddSpecialItem(specialShop, npcBase, resident);
+                    AddSpecialItem(specialShop, npcBase, resident, shop: specialShop?.Name?.RawString);
                     continue;
                 }
 
@@ -326,6 +326,11 @@ namespace ItemVendorLocation
 
                     foreach (uint arg in scriptArgs)
                     {
+                        if (arg < FirstSpecialShopId || arg > LastSpecialShopId)
+                        {
+                            continue;
+                        }
+
                         if (MatchEventHandlerType(arg, EventHandlerType.GilShop))
                         {
                             GilShop gilShop = _gilShops.GetRow(arg);
@@ -340,11 +345,6 @@ namespace ItemVendorLocation
                             continue;
                         }
 
-                        if (arg < FirstSpecialShopId || arg > LastSpecialShopId)
-                        {
-                            continue;
-                        }
-
                         SpecialShopCustom specialShop = _specialShops.GetRow(arg);
                         AddSpecialItem(specialShop, npcBase, resident);
                     }
@@ -352,7 +352,7 @@ namespace ItemVendorLocation
             }
         }
 
-        private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, string shop = null)
+        private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, string shop = null, bool force = false)
         {
             if (specialShop == null)
             {
@@ -387,7 +387,7 @@ namespace ItemVendorLocation
                     }
 
                     AddItem_Internal(result.Item.Value.RowId, result.Item.Value.Name, npcBase.RowId, resident.Singular, shop,
-                        costs, _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null, type, achievementDescription);
+                        costs, _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null, type, achievementDescription, force);
                 }
             }
         }
@@ -723,42 +723,43 @@ namespace ItemVendorLocation
         {
             switch (npcBase.RowId)
             {
+                case 1043463: // horrendous hoarder
+                    AddSpecialItem(_specialShops.GetRow(1770601), npcBase, resident, ItemType.SpecialShop, "Purchase items with seafarer's cowries.\nExclusive wares.");
+                    AddSpecialItem(_specialShops.GetRow(1770659), npcBase, resident, ItemType.SpecialShop, "Purchase items with seafarer's cowries.\nEquipment and furnishings.");
+                    AddSpecialItem(_specialShops.GetRow(1770660), npcBase, resident, ItemType.SpecialShop, "Purchase items with seafarer's cowries.\nMateria and items.");
+                    AddSpecialItem(_specialShops.GetRow(1770602), npcBase, resident, ItemType.SpecialShop, "Purchase items with islander's cowries.", true);
+                    AddSpecialItem(_specialShops.GetRow(1770603), npcBase, resident, ItemType.SpecialShop, "Exchange items for permits.");
+                    AddSpecialItem(_specialShops.GetRow(1770723), npcBase, resident, ItemType.SpecialShop, "Exchange felicitous tokens.");
+                    AddSpecialItem(_specialShops.GetRow(1770734), npcBase, resident, ItemType.SpecialShop, "Exchange vouchers for mounts.");
+                    return true;
                 case 1018655: // disreputable priest
                     AddSpecialItem(_specialShops.GetRow(1769743), npcBase, resident);
                     AddSpecialItem(_specialShops.GetRow(1769744), npcBase, resident);
                     AddSpecialItem(_specialShops.GetRow(1770537), npcBase, resident);
                     return true;
-
                 case 1016289: // syndony
                     AddSpecialItem(_specialShops.GetRow(1769635), npcBase, resident);
                     return true;
-
                 case 1025047: // gerolt but in eureka
                     for (uint i = 1769820; i <= 1769834; i++)
                     {
                         SpecialShopCustom specialShop = _specialShops.GetRow(i);
                         AddSpecialItem(specialShop, npcBase, resident);
                     }
-
                     return true;
-
                 case 1025763: // doman junkmonger
                     AddGilShopItem(_gilShops.GetRow(262919), npcBase, resident);
                     return true;
-
                 case 1027123: // eureka expedition artisan
                     AddSpecialItem(_specialShops.GetRow(1769934), npcBase, resident);
                     AddSpecialItem(_specialShops.GetRow(1769935), npcBase, resident);
                     return true;
-
                 case 1027124: // eureka expedition scholar
                     AddSpecialItem(_specialShops.GetRow(1769937), npcBase, resident);
                     return true;
-
                 case 1033921: // faux
                     AddSpecialItem(_specialShops.GetRow(1770282), npcBase, resident);
                     return true;
-
                 case 1027566: // Limbeth, Resplendent Tool Exchange
                     // we only need the first three npc data (the last one is CustomTalk, we dont need it here)
                     // the first one is from CollectablesShopItem and the last one is from SpecialShop
@@ -767,9 +768,7 @@ namespace ItemVendorLocation
                     AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[1]), npcBase, resident);
                     // after adding all the items, build the cost
                     AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
-
                     return true;
-
                 case 1035014: // Spanner, Skysteel Tool Exchange (but it doesnt seem to do anything???)
                     // NPCData:
                     // 0 - Story
@@ -777,15 +776,12 @@ namespace ItemVendorLocation
                     // 2 - CollectableShop
                     // 3 ~ 5 - PreHandler
                     AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
-
                     for (int i = 3; i <= 5; i++)
                     {
                         PreHandler preHandler = _preHandlers.GetRow(npcBase.ENpcData[i]);
                         AddItemsInPrehandler(preHandler, npcBase, resident);
                     }
-
                     return true;
-
                 case 1032900:
                     // NPCData:
                     // 0 - Story id
@@ -797,16 +793,12 @@ namespace ItemVendorLocation
                     // 7 - 8 PreHandler (Replica)
 
                     AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[4]), npcBase, resident);
-
                     AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
                     AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[3]), npcBase, resident);
                     AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[5]), npcBase, resident);
-
                     AddGilShopItem(_gilShops.GetRow(npcBase.ENpcData[6]), npcBase, resident);
-
                     AddItemsInPrehandler(_preHandlers.GetRow(npcBase.ENpcData[7]), npcBase, resident);
                     AddItemsInPrehandler(_preHandlers.GetRow(npcBase.ENpcData[8]), npcBase, resident);
-
                     return true;
 
                 // add quest rewards, like relic weapons, to item list
@@ -823,9 +815,7 @@ namespace ItemVendorLocation
                         questClassJobReward = _questClassJobRewards.GetRow(19, i);
                         AddQuestReward(questClassJobReward, npcBase, resident);
                     }
-
                     return true;
-
                 case 1016135: // Ardashir
 
                     List<Tuple<uint, string>> GetCost(uint i)
@@ -875,9 +865,7 @@ namespace ItemVendorLocation
                             AddQuestRewardCost(questClassJobReward, npcBase, GetCost(i));
                         }
                     }
-
                     return true;
-
                 case 1032903: // gerolt Resistance Weapons
                     // Build the cost/required items manually, they dont exist in the sheet
                     for (uint i = 0; i <= 16; i++)
@@ -888,7 +876,6 @@ namespace ItemVendorLocation
                             new(4, _items.GetRow(30273).Name),
                         });
                     }
-
                     return true;
 
                 case 1032905: // Zlatan
@@ -951,13 +938,6 @@ namespace ItemVendorLocation
                     }
 
                     return true;
-
-                case 1043463: // horrendous hoarder
-                    AddSpecialItem(_specialShops.GetRow(1770659), npcBase, resident);
-                    AddSpecialItem(_specialShops.GetRow(1770660), npcBase, resident);
-
-                    return true;
-
                 default:
                     if (_shbFateShopNpc.TryGetValue(npcBase.RowId, out uint value))
                     {
@@ -984,7 +964,7 @@ namespace ItemVendorLocation
         }
 
         private void AddItem_Internal(uint itemId, string itemName, uint npcId, string npcName, string shopName, List<Tuple<uint, string>> cost, NpcLocation npcLocation, ItemType type,
-            string achievementDesc = "")
+            string achievementDesc = "", bool force = false)
         {
             if (itemId == 0)
             {
@@ -1010,7 +990,7 @@ namespace ItemVendorLocation
                 {
                     Id = itemId,
                     Name = itemName,
-                    NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Costs = cost, Name = npcName } },
+                    NpcInfos = new List<NpcInfo> { new() { Id = npcId, Location = npcLocation, Costs = cost, Name = npcName, ShopName = shopName } },
                     Type = type,
                     AchievementDescription = achievementDesc,
                 });
@@ -1022,13 +1002,11 @@ namespace ItemVendorLocation
                 itemInfo.AchievementDescription = achievementDesc;
             }
 
-            List<NpcInfo> npcs = itemInfo.NpcInfos;
-            if (npcs.Find(j => j.Id == npcId) == null)
-            {
-                npcs.Add(new NpcInfo { Id = npcId, Location = npcLocation, Name = npcName, Costs = cost, ShopName = shopName });
-            }
 
-            itemInfo.NpcInfos = npcs;
+            if (itemInfo.NpcInfos.Find(j => j.Id == npcId) == null)
+            {
+                itemInfo.NpcInfos.Add(new NpcInfo { Id = npcId, Location = npcLocation, Name = npcName, Costs = cost, ShopName = shopName });
+            }
         }
 
         private void AddItemCost(uint itemId, uint npcId, List<Tuple<uint, string>> cost)

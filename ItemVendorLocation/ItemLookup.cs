@@ -285,7 +285,7 @@ namespace ItemVendorLocation
                         // scriptArgs[2] -> ItemId
                         // scriptArgs[3] -> Amount of item
                         // scriptArgs[4] -> Amount of currency
-                        AddItem_Internal(scriptArgs[2], _items.GetRow(scriptArgs[2]).Name.RawString, npcBase.RowId, resident.Singular, "",
+                        AddItem_Internal(scriptArgs[2], _items.GetRow(scriptArgs[2]).Name.RawString, npcBase.RowId, resident.Singular, "Mysterious Map Exchange",
                                          new List<Tuple<uint, string>>
                                          {
                                              { new(scriptArgs[4], _items.GetRow(28).Name.RawString) },

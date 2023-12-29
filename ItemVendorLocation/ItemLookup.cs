@@ -64,10 +64,6 @@ namespace ItemVendorLocation
             { 1027766, 1769964 },
         };
 
-        private readonly uint FirstSpecialShopId;
-        private readonly uint LastSpecialShopId;
-
-
         public ItemLookup()
         {
             _achievements = Service.DataManager.GetExcelSheet<Achievement>();
@@ -99,9 +95,6 @@ namespace ItemVendorLocation
             _fccName = Service.DataManager.GetExcelSheet<Addon>().GetRow(102233);
             _gil = _items.GetRow(1);
             _gcSeal = _items.Where(i => i.RowId is >= 20 and <= 22).Select(i => i).ToList();
-
-            FirstSpecialShopId = _specialShops.First().RowId;
-            LastSpecialShopId = _specialShops.Last().RowId;
 
             _ = Task.Run(() =>
             {
@@ -144,7 +137,6 @@ namespace ItemVendorLocation
                     }
                 }
 #endif
-
                 return Task.CompletedTask;
             });
         }
@@ -172,7 +164,6 @@ namespace ItemVendorLocation
                 }
             }
         }
-
 
         // https://discord.com/channels/581875019861328007/653504487352303619/860865002721247261
         // https://github.com/SapphireServer/Sapphire/blob/a5c15f321f7e795ed7362ae15edaada99ca7d9be/src/world/Manager/EventMgr.cpp#L14
@@ -228,7 +219,6 @@ namespace ItemVendorLocation
                     SpecialShopCustom specialShopCustom = _specialShops.GetRow(specialShop.Row);
                     AddSpecialItem(specialShopCustom, npcBase, resident);
                 }
-
                 return;
             }
 
@@ -236,18 +226,36 @@ namespace ItemVendorLocation
             {
                 if (npcData == 0)
                 {
+                    break;
+                }
+
+                if (MatchEventHandlerType(npcData, EventHandlerType.InclusionShop))
+                {
+                    InclusionShop inclusionShop = _inclusionShops.GetRow(npcData);
+                    AddInclusionShop(inclusionShop, npcBase, resident);
                     continue;
                 }
 
-                InclusionShop inclusionShop = _inclusionShops.GetRow(npcData);
-                FccShop fccShop = _fccShops.GetRow(npcData);
-                PreHandler preHandler = _preHandlers.GetRow(npcData);
-                TopicSelect topicSelect = _topicSelects.GetRow(npcData);
+                if (MatchEventHandlerType(npcData, EventHandlerType.InclusionShop))
+                {
+                    FccShop fccShop = _fccShops.GetRow(npcData);
+                    AddFccShop(fccShop, npcBase, resident);
+                    continue;
+                }
 
-                AddInclusionShop(inclusionShop, npcBase, resident);
-                AddFccShop(fccShop, npcBase, resident);
-                AddItemsInPrehandler(preHandler, npcBase, resident);
-                AddItemsInTopicSelect(topicSelect, npcBase, resident);
+                if (MatchEventHandlerType(npcData, EventHandlerType.PreHandler))
+                {
+                    PreHandler preHandler = _preHandlers.GetRow(npcData);
+                    AddItemsInPrehandler(preHandler, npcBase, resident);
+                    continue;
+                }
+
+                if (MatchEventHandlerType(npcData, EventHandlerType.TopicSelect))
+                {
+                    TopicSelect topicSelect = _topicSelects.GetRow(npcData);
+                    AddItemsInTopicSelect(topicSelect, npcBase, resident);
+                    continue;
+                }
 
                 if (MatchEventHandlerType(npcData, EventHandlerType.GcShop))
                 {
@@ -275,7 +283,7 @@ namespace ItemVendorLocation
                     CustomTalk customTalk = _customTalks.GetRow(npcData);
                     if (customTalk == null)
                     {
-                        continue;
+                        break;
                     }
 
                     uint[] scriptArgs = customTalk.ScriptArg;
@@ -285,11 +293,12 @@ namespace ItemVendorLocation
                         // scriptArgs[2] -> ItemId
                         // scriptArgs[3] -> Amount of item
                         // scriptArgs[4] -> Amount of currency
-                        AddItem_Internal(scriptArgs[2], _items.GetRow(scriptArgs[2]).Name.RawString, npcBase.RowId, resident.Singular, "Mysterious Map Exchange",
+                        AddItem_Internal(scriptArgs[2], _items.GetRow(scriptArgs[2]).Name.RawString, npcBase.RowId, resident.Singular, customTalk.MainOption.RawString,
                                          new List<Tuple<uint, string>>
                                          {
-                                             { new(scriptArgs[4], _items.GetRow(28).Name.RawString) },
+                                             new(scriptArgs[4], _items.GetRow(28).Name.RawString),
                                          },
+
                                          _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null,
                                          ItemType.SpecialShop);
                         continue;
@@ -304,7 +313,7 @@ namespace ItemVendorLocation
                                 CustomTalkNestHandlers customTalkNestHandler = _customTalkNestHandlers.GetRow(customTalk.SpecialLinks, index);
                                 if (customTalkNestHandler == null)
                                 {
-                                    continue;
+                                    break;
                                 }
 
                                 if (MatchEventHandlerType(customTalkNestHandler.NestHandler, EventHandlerType.SpecialShop))
@@ -321,14 +330,17 @@ namespace ItemVendorLocation
                                 }
                             }
                         }
-                        catch { }
+                        catch
+                        {
+                            // ignored
+                        }
                     }
 
                     foreach (uint arg in scriptArgs)
                     {
-                        if (arg < FirstSpecialShopId || arg > LastSpecialShopId)
+                        if (arg == 0)
                         {
-                            continue;
+                            break;
                         }
 
                         if (MatchEventHandlerType(arg, EventHandlerType.GilShop))
@@ -345,14 +357,17 @@ namespace ItemVendorLocation
                             continue;
                         }
 
-                        SpecialShopCustom specialShop = _specialShops.GetRow(arg);
-                        AddSpecialItem(specialShop, npcBase, resident);
+                        if (MatchEventHandlerType(arg, EventHandlerType.SpecialShop))
+                        {
+                            SpecialShopCustom specialShop = _specialShops.GetRow(arg);
+                            AddSpecialItem(specialShop, npcBase, resident);
+                        }
                     }
                 }
             }
         }
 
-        private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, string shop = null, bool force = false)
+        private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, string shop = null)
         {
             if (specialShop == null)
             {
@@ -387,7 +402,7 @@ namespace ItemVendorLocation
                     }
 
                     AddItem_Internal(result.Item.Value.RowId, result.Item.Value.Name, npcBase.RowId, resident.Singular, shop,
-                        costs, _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null, type, achievementDescription, force);
+                        costs, _npcLocations.TryGetValue(npcBase.RowId, out NpcLocation value) ? value : null, type, achievementDescription);
                 }
             }
         }
@@ -724,13 +739,34 @@ namespace ItemVendorLocation
             switch (npcBase.RowId)
             {
                 case 1043463: // horrendous hoarder
-                    AddSpecialItem(_specialShops.GetRow(1770601), npcBase, resident, ItemType.SpecialShop, "Purchase items with seafarer's cowries.\nExclusive wares.");
-                    AddSpecialItem(_specialShops.GetRow(1770659), npcBase, resident, ItemType.SpecialShop, "Purchase items with seafarer's cowries.\nEquipment and furnishings.");
-                    AddSpecialItem(_specialShops.GetRow(1770660), npcBase, resident, ItemType.SpecialShop, "Purchase items with seafarer's cowries.\nMateria and items.");
-                    AddSpecialItem(_specialShops.GetRow(1770602), npcBase, resident, ItemType.SpecialShop, "Purchase items with islander's cowries.", true);
-                    AddSpecialItem(_specialShops.GetRow(1770603), npcBase, resident, ItemType.SpecialShop, "Exchange items for permits.");
-                    AddSpecialItem(_specialShops.GetRow(1770723), npcBase, resident, ItemType.SpecialShop, "Exchange felicitous tokens.");
-                    AddSpecialItem(_specialShops.GetRow(1770734), npcBase, resident, ItemType.SpecialShop, "Exchange vouchers for mounts.");
+                    // very ugly code and i dont like it, because se inserted new data between rows in patch 6.5 see here(https://github.com/xivapi/ffxiv-datamining/commit/fd1e8189682d52ee239b9037815a54d54b17a7bc#diff-983b68d9961598b3f0a8cecfc05d0f76f93afd0fd31b6a0cfea188ec12a729a1)
+                    // who knows if they will do it again when they add new stuffs to sanctuary -- nuko
+
+                    RawExcelSheet rawExcel = Service.DataManager.GameData.Excel.GetSheetRaw("custom/007/CtsMjiSpecialShop_00789");
+                    Dictionary<string, string> mjiSpecialShopNames = new();
+
+                    string GetNameFromKey(string key)
+                    {
+                        return mjiSpecialShopNames.TryGetValue(key, out string str) ? str : string.Empty;
+                    }
+
+                    foreach (RowParser parser in rawExcel.GetRowParsers())
+                    {
+                        string key = parser.ReadColumn<string>(0);
+                        string name = parser.ReadColumn<string>(1);
+                        mjiSpecialShopNames[key] = name;
+                    }
+
+                    AddSpecialItem(_specialShops.GetRow(1770601), npcBase, resident, ItemType.SpecialShop,
+                                   $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")}\n{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_000")}");
+                    AddSpecialItem(_specialShops.GetRow(1770659), npcBase, resident, ItemType.SpecialShop,
+                                   $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")} \n {GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_005")}");
+                    AddSpecialItem(_specialShops.GetRow(1770660), npcBase, resident, ItemType.SpecialShop,
+                                   $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")}\n{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_010")}");
+                    AddSpecialItem(_specialShops.GetRow(1770602), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_005")}");
+                    AddSpecialItem(_specialShops.GetRow(1770603), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_010")}");
+                    AddSpecialItem(_specialShops.GetRow(1770723), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_025")}");
+                    AddSpecialItem(_specialShops.GetRow(1770734), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_030")}");
                     return true;
                 case 1018655: // disreputable priest
                     AddSpecialItem(_specialShops.GetRow(1769743), npcBase, resident);
@@ -964,7 +1000,7 @@ namespace ItemVendorLocation
         }
 
         private void AddItem_Internal(uint itemId, string itemName, uint npcId, string npcName, string shopName, List<Tuple<uint, string>> cost, NpcLocation npcLocation, ItemType type,
-            string achievementDesc = "", bool force = false)
+            string achievementDesc = "")
         {
             if (itemId == 0)
             {
@@ -1199,6 +1235,9 @@ namespace ItemVendorLocation
             GcShop = 0x0016,
             SpecialShop = 0x001B,
             FcShop = 0x002A,    // not sure how these numbers were obtained by the folks at sapphire. This works for my isolated use case though I guess.
+            TopicSelect = 0x32,
+            PreHandler = 0x36,
+            InclusionShop = 0x3a, // 0x38 seems to work too?
         }
     }
 }

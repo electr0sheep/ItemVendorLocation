@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Dalamud;
+using Dalamud.Logging;
 using ItemVendorLocation.Models;
 using Lumina.Data.Files;
 using Lumina.Data.Parsing.Layer;
@@ -12,9 +14,9 @@ using Lumina.Excel.GeneratedSheets;
 namespace ItemVendorLocation
 {
 #if DEBUG
-    public class ItemLookup
+    public partial class ItemLookup
 #else
-    internal class ItemLookup
+    internal partial class ItemLookup
 #endif
     {
         private readonly ExcelSheet<Achievement> _achievements;
@@ -52,6 +54,8 @@ namespace ItemVendorLocation
 
         private bool _isDataReady;
 
+        private readonly EventHandlerType[] _eventHandlerTypes;
+
         private readonly Dictionary<uint, uint> _shbFateShopNpc = new()
         {
             { 1027998, 1769957 },
@@ -66,6 +70,11 @@ namespace ItemVendorLocation
 
         public ItemLookup()
         {
+            _eventHandlerTypes = Enum.GetValues<EventHandlerType>();
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
             _achievements = Service.DataManager.GetExcelSheet<Achievement>();
             _customTalks = Service.DataManager.GetExcelSheet<CustomTalk>();
             _customTalkNestHandlers = Service.DataManager.GetExcelSheet<CustomTalkNestHandlers>();
@@ -96,45 +105,56 @@ namespace ItemVendorLocation
             _gil = _items.GetRow(1);
             _gcSeal = _items.Where(i => i.RowId is >= 20 and <= 22).Select(i => i).ToList();
 
+            stopwatch.Stop();
+            Service.PluginLog.Debug($"{stopwatch.Elapsed}");
+            stopwatch.Start();
             _ = Task.Run(() =>
             {
+                stopwatch.Restart();
                 BuildNpcLocation();
+                stopwatch.Stop();
+                Service.PluginLog.Debug($"BuildNpcLocation: {stopwatch.Elapsed}");
+
+                stopwatch.Restart();
                 BuildVendors();
+                stopwatch.Stop();
+
+                Service.PluginLog.Debug($"BuildVendors {stopwatch.Elapsed}");
                 AddAchievementItem();
-                PostProcess();
                 _isDataReady = true;
+                PostProcess();
 #if DEBUG
                 Dictionary<string, uint> noLocationNpcs = new();
                 foreach (KeyValuePair<uint, ItemInfo> items in _itemDataMap)
                 {
                     foreach (NpcInfo npc in items.Value.NpcInfos)
                     {
-                        if (npc.Location == null)
+                        if (npc.Location != null)
                         {
-                            if (!noLocationNpcs.TryAdd(npc.Name, 1))
-                            {
-                                noLocationNpcs[npc.Name]++;
-                            }
+                            continue;
                         }
+
+                        if (noLocationNpcs.TryAdd(npc.Name, 1))
+                        {
+                            continue;
+                        }
+
+                        noLocationNpcs[npc.Name]++;
                     }
                 }
                 Service.PluginLog.Debug("Data is ready");
                 Service.PluginLog.Debug($"Items sold by NPCs with no location: {noLocationNpcs.Values.Aggregate((sum, i) => sum += i)}");
                 Service.PluginLog.Debug("Named NPCs:");
-                foreach (KeyValuePair<string, uint> npc in noLocationNpcs)
+
+                foreach (var npc in noLocationNpcs.Where(npc => char.IsUpper(npc.Key.First())))
                 {
-                    if (char.IsUpper(npc.Key.First()))
-                    {
-                        Service.PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
-                    }
+                    Service.PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
                 }
+
                 Service.PluginLog.Debug("Unnamed NPCs:");
-                foreach (KeyValuePair<string, uint> npc in noLocationNpcs)
+                foreach (var npc in noLocationNpcs.Where(npc => !char.IsUpper(npc.Key.First())))
                 {
-                    if (!char.IsUpper(npc.Key.First()))
-                    {
-                        Service.PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
-                    }
+                    Service.PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
                 }
 #endif
                 return Task.CompletedTask;
@@ -146,21 +166,20 @@ namespace ItemVendorLocation
         {
             // This fix is for non-japanese client
             // SE is just being lazy on this, hence we have this bug lol
-            if (Service.ClientState.ClientLanguage != ClientLanguage.Japanese)
+            if (Service.ClientState.ClientLanguage == ClientLanguage.Japanese)
             {
-                // Look for items that can be purchased from this npc
-                foreach (KeyValuePair<uint, ItemInfo> item in _itemDataMap)
+                return;
+            }
+
+            // Look for items that can be purchased from this npc
+            foreach (KeyValuePair<uint, ItemInfo> item in _itemDataMap)
+            {
+                foreach (NpcInfo npcInfo in item.Value.NpcInfos.Where(npcInfo => npcInfo.ShopName == "アイテムの購入"))
                 {
-                    foreach (NpcInfo npcInfo in item.Value.NpcInfos)
-                    {
-                        if (npcInfo.ShopName == "アイテムの購入")
-                        {
-                            Service.PluginLog.Debug($"{_items.GetRow(item.Key).Name} has ShopName \"アイテムの購入\", correcting to correct one.");
-                            // This correction is for Aenc Ose, who sells "Sheep Equipment Materials", for example.
-                            // A shop is the sub-menu presented at some vendors. Aenc Ose has no such sub-menu, so we simply remove the shop.
-                            npcInfo.ShopName = null;
-                        }
-                    }
+                    Service.PluginLog.Debug($"{_items.GetRow(item.Key).Name} has ShopName \"アイテムの購入\", correcting to correct one.");
+                    // This correction is for Aenc Ose, who sells "Sheep Equipment Materials", for example.
+                    // A shop is the sub-menu presented at some vendors. Aenc Ose has no such sub-menu, so we simply remove the shop.
+                    npcInfo.ShopName = null;
                 }
             }
         }
@@ -425,7 +444,6 @@ namespace ItemVendorLocation
                         break;
                     }
 
-
                     AddItem_Internal(item.Item.Value.RowId, item.Item.Value.Name, npcBase.RowId, resident.Singular,
                         shop != null ? $"{shop}\n{gilShop.Name}" : gilShop.Name,
                         new List<Tuple<uint, string>> { new(item.Item.Value.PriceMid, _gil.Name) },
@@ -445,19 +463,13 @@ namespace ItemVendorLocation
                 return;
             }
 
-            List<GCScripShopCategory> categories = _gcScripShopCategories.Where(i => i.GrandCompany.Row == gcId.GrandCompany.Row).ToList();
-            if (categories.Count == 0)
-            {
-                return;
-            }
-
             Item seal = _gcSeal.Find(i => i.Description.RawString.EndsWith($"{gcId.GrandCompany.Value.Name.RawString}."));
             if (seal == null)
             {
                 return;
             }
 
-            foreach (GCScripShopCategory category in categories)
+            foreach (GCScripShopCategory category in _gcScripShopCategories.Where(i => i.GrandCompany.Row == gcId.GrandCompany.Row))
             {
                 for (uint i = 0u; ; i++)
                 {
@@ -1141,23 +1153,42 @@ namespace ItemVendorLocation
                         continue;
                     }
 
+#if DEBUG
                     if (npcId != null && npcRowId != npcId)
                     {
                         continue;
                     }
-
-                    if (npcId == null && _npcLocations.ContainsKey(npcRowId))
+#endif
+                    if (_npcLocations.ContainsKey(npcRowId))
                     {
                         continue;
                     }
 
-                    byte mapId = _eNpcResidents.GetRow(npcRowId).Map;
+                    ENpcBase npcBase = _eNpcBases.GetRow(npcRowId);
+                    if (npcBase == null)
+                    {
+                        continue;
+                    }
+
+                    ENpcResident resident = _eNpcResidents.GetRow(npcRowId);
+                    if (resident == null)
+                    {
+                        continue;
+                    }
+
+                    bool match = npcBase.ENpcData.Any(data => _eventHandlerTypes.Any(i => MatchEventHandlerType(data, i)));
+                    if (!match)
+                    {
+                        continue;
+                    }
+
+                    byte mapId = resident.Map;
                     try
                     {
-                        Map map = _maps.First(i => i.TerritoryType.Value == sTerritoryType && i.MapIndex == mapId);
+                        Map map = _maps.First(i => i.TerritoryType.Row == sTerritoryType.RowId && i.MapIndex == mapId);
                         _npcLocations.Add(npcRowId, new NpcLocation(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType, map.RowId));
                     }
-                    catch (InvalidOperationException)
+                    catch (InvalidOperationException ex)
                     {
                         _npcLocations.Add(npcRowId, new NpcLocation(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType));
                     }
@@ -1168,57 +1199,70 @@ namespace ItemVendorLocation
         // https://github.com/ufx/GarlandTools/blob/3b3475bca6f95c800d2454f2c09a3f1eea0a8e4e/Garland.Data/Modules/Territories.cs
         private void BuildNpcLocation()
         {
-            foreach (TerritoryType sTerritoryType in _territoryType)
+            LgbFile GetLgbFileFromBg(string bg)
             {
-                string bg = sTerritoryType.Bg.ToString();
-                if (string.IsNullOrEmpty(bg))
-                {
-                    continue;
-                }
-
                 string lgbFileName = "bg/" + bg[..(bg.IndexOf("/level/", StringComparison.Ordinal) + 1)] + "level/planevent.lgb";
-                LgbFile sLgbFile = Service.DataManager.GetFile<LgbFile>(lgbFileName);
-                if (sLgbFile == null)
+                return Service.DataManager.GetFile<LgbFile>(lgbFileName);
+            }
+
+            List<uint> addedAetheryte = new();
+            ExcelSheet<Aetheryte> aetheryteSheet = Service.DataManager.GetExcelSheet<Aetheryte>();
+            foreach (var territory in aetheryteSheet!.Where(i => i.Territory.Value != null && i.Territory.Row != 1).Select(i => i.Territory.Value))
+            {
+                if (addedAetheryte.Contains(territory.RowId))
                 {
                     continue;
                 }
 
-                ParseLgbFile(sLgbFile, sTerritoryType);
+                ParseLgbFile(GetLgbFileFromBg(territory.Bg), territory);
+                addedAetheryte.Add(territory.RowId);
+            }
+
+            foreach (TerritoryType territory in _territoryType.Where(type =>
+            {
+                ContentFinderCondition condition = type.ContentFinderCondition.Value;
+                // eureka, bozja, gathering
+                return condition?.ContentType.Row is 26 or 29 or 16;
+            }))
+            {
+                ParseLgbFile(GetLgbFileFromBg(territory.Bg), territory);
             }
 
             ExcelSheet<Level> levels = Service.DataManager.GetExcelSheet<Level>();
-            foreach (Level level in levels)
+            foreach (Level level in levels!.Where(i => i.Type == 8 && i.Territory.Value != null))
             {
-                // NPC
-                if (level.Type != 8)
-                {
-                    continue;
-                }
-
-                // NPC Id
                 if (_npcLocations.ContainsKey(level.Object))
                 {
                     continue;
                 }
 
-                if (level.Territory.Value == null)
+                ENpcBase npcBase = _eNpcBases.GetRow(level.Object);
+                if (npcBase == null)
                 {
                     continue;
                 }
 
+                bool match = npcBase.ENpcData.Any(data => _eventHandlerTypes.Any(i => MatchEventHandlerType(data, i)));
+
+                if (!match)
+                    continue;
+
+                Service.PluginLog.Debug($"{level.X}, {level.Z}, {level.Territory.Row}, {level.Object}");
+
                 _npcLocations.Add(level.Object, new NpcLocation(level.X, level.Z, level.Territory.Value));
             }
 
-            // https://github.com/ufx/GarlandTools/blob/7b38def8cf0ab553a2c3679aec86480c0e4e9481/Garland.Data/Modules/NPCs.cs#L59-L66
-            TerritoryType corrected = _territoryType.GetRow(698);
-            _npcLocations[1004418].TerritoryExcel = corrected;
-            _npcLocations[1006747].TerritoryExcel = corrected;
-            _npcLocations[1002299].TerritoryExcel = corrected;
-            _npcLocations[1002281].TerritoryExcel = corrected;
-            _npcLocations[1001766].TerritoryExcel = corrected;
-            _npcLocations[1001945].TerritoryExcel = corrected;
-            _npcLocations[1001821].TerritoryExcel = corrected;
+            // housing vendors
+            ExcelSheet<HousingEmploymentNpcList> employmentNpcLists = Service.DataManager.GetExcelSheet<HousingEmploymentNpcList>();
+            TerritoryType housingTerrotry = _territoryType.GetRow(282);
 
+            foreach (HousingEmploymentNpcList npc in employmentNpcLists!)
+            {
+                foreach (LazyRow<ENpcBase> id in npc.ENpcBase.Where(i => i.Row != 0))
+                {
+                    _npcLocations.Add(id.Row, new NpcLocation(0, 0, housingTerrotry));
+                }
+            }
             ManualItemCorrections.ApplyCorrections(_npcLocations);
         }
 

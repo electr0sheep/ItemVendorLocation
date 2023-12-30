@@ -82,6 +82,7 @@ namespace ItemVendorLocation
             Service.Plugin = this;
             Service.Configuration = pi.GetPluginConfig() as PluginConfiguration ?? new PluginConfiguration();
             Service.ContextMenu = new DalamudContextMenu(pi);
+            Service.Ipc = new Ipc(pi);
             _xivCommon = new(pi, Hooks.Tooltips);
             _itemLookup = new();
 
@@ -94,6 +95,9 @@ namespace ItemVendorLocation
 
             _windowSystem.AddWindow(Service.PluginUi);
             _windowSystem.AddWindow(Service.SettingsUi);
+
+            Service.Ipc.OnOpenChatTwoItemContextMenu += OnOpenChatTwoItemContextMenu;
+            Service.Ipc.Enable();
 
             _xivCommon.Functions.Tooltips.OnItemTooltip += Tooltips_OnOnItemTooltip;
             Service.ContextMenu.OnOpenInventoryContextMenu += ContextMenu_OnOpenInventoryContextMenu;
@@ -350,6 +354,21 @@ namespace ItemVendorLocation
             OnItemTooltip(itemtooltip, itemid);
         }
 
+        private void OnOpenChatTwoItemContextMenu(uint itemId)
+        {
+            ItemInfo itemInfo = _itemLookup.GetItemInfo(itemId);
+            if (itemInfo == null)
+            {
+                return;
+            }
+
+            if (ImGui.Selectable(ButtonName))
+            {
+                ContextMenuCallback(itemInfo);
+            }
+        }
+
+
         private static void ContextMenuCallback(ItemInfo itemInfo)
         {
             // filteredResults allows us to apply filters without modifying core data,
@@ -428,6 +447,9 @@ namespace ItemVendorLocation
             {
                 return;
             }
+
+            Service.Ipc.OnOpenChatTwoItemContextMenu -= OnOpenChatTwoItemContextMenu;
+            Service.Ipc.Disable();
 
             _ = Service.CommandManager.RemoveHandler(Service.Configuration.CommandName);
             _xivCommon.Functions.Tooltips.OnItemTooltip -= Tooltips_OnOnItemTooltip;

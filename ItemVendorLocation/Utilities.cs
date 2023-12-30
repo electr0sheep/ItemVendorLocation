@@ -11,10 +11,7 @@ namespace ItemVendorLocation
             SeStringBuilder sb = new();
             _ = sb.AddUiForeground("[Item Vendor Location] ", 45);
             _ = sb.Append(message);
-            Service.ChatGui.Print(new XivChatEntry
-            {
-                Message = sb.BuiltString
-            });
+            Service.ChatGui.Print(sb.BuiltString);
         }
     }
 }

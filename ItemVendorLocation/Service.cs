@@ -12,7 +12,9 @@ namespace ItemVendorLocation
         internal static PluginWindow PluginUi { get; set; } = null!;
         internal static SettingsWindow SettingsUi { get; set; } = null!;
         internal static PluginConfiguration Configuration { get; set; } = null!;
-        internal static DalamudContextMenu ContextMenu { get; set; } = null!;
+        internal static DalamudContextMenu ContextMenu { get; set; } = null!; 
+        internal static Ipc Ipc { get; set; } = null!;
+
 
         [PluginService] public static IChatGui ChatGui { get; set; } = null!;
         [PluginService] public static IClientState ClientState { get; set; } = null!;

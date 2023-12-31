@@ -29,21 +29,21 @@ namespace ItemVendorLocation
     {
         private static readonly List<string> GameAddonWhitelist = new()
         {
-             "ChatLog",
-             "ColorantColoring",
-             "ContentsInfoDetail",
-             "DailyQuestSupply",
-             "HousingCatalogPreview",
-             "HousingGoods",
-             "ItemSearch",
-             "Journal",
-             "RecipeMaterialList",
-             "RecipeNote",
-             "RecipeTree",
-             "ShopExchangeItem",
-             "ShopExchangeItemDialog",
-             "SubmarinePartsMenu",
-             "Tryon",
+            "ChatLog",
+            "ColorantColoring",
+            "ContentsInfoDetail",
+            "DailyQuestSupply",
+            "HousingCatalogPreview",
+            "HousingGoods",
+            "ItemSearch",
+            "Journal",
+            "RecipeMaterialList",
+            "RecipeNote",
+            "RecipeTree",
+            "ShopExchangeItem",
+            "ShopExchangeItemDialog",
+            "SubmarinePartsMenu",
+            "Tryon",
         };
 
         public readonly Dictionary<byte, uint> GcVendorIdMap = new()
@@ -62,7 +62,7 @@ namespace ItemVendorLocation
             { GrandCompany.None, 0 },
         };
 
-        private readonly string ButtonName = "";
+        private readonly string _buttonName;
 #if DEBUG
         public readonly ItemLookup _itemLookup;
 #else
@@ -78,13 +78,14 @@ namespace ItemVendorLocation
             _ = pi.Create<Service>();
 
             Localization.SetupLocalization(Service.ClientState.ClientLanguage);
-            ButtonName = Loc.Localize("ContextMenuItem", "Vendor location");
+            _buttonName = Loc.Localize("ContextMenuItem", "Vendor location");
+            _itemLookup = new();
             Service.Plugin = this;
             Service.Configuration = pi.GetPluginConfig() as PluginConfiguration ?? new PluginConfiguration();
             Service.ContextMenu = new DalamudContextMenu(pi);
             Service.Ipc = new Ipc(pi);
+            Service.Ipc.Enable();
             _xivCommon = new(pi, Hooks.Tooltips);
-            _itemLookup = new();
 
             // Initialize the UI
             _windowSystem = new WindowSystem(typeof(EntryPoint).AssemblyQualifiedName);
@@ -97,8 +98,6 @@ namespace ItemVendorLocation
             _windowSystem.AddWindow(Service.SettingsUi);
 
             Service.Ipc.OnOpenChatTwoItemContextMenu += OnOpenChatTwoItemContextMenu;
-            Service.Ipc.Enable();
-
             _xivCommon.Functions.Tooltips.OnItemTooltip += Tooltips_OnOnItemTooltip;
             Service.ContextMenu.OnOpenInventoryContextMenu += ContextMenu_OnOpenInventoryContextMenu;
             Service.ContextMenu.OnOpenGameObjectContextMenu += ContextMenu_OnOpenGameObjectContextMenu;
@@ -115,67 +114,63 @@ namespace ItemVendorLocation
             if (args.IsNullOrEmpty())
             {
                 Service.SettingsUi.IsOpen = true;
+                return;
             }
-            else
+
+            _ = Task.Run(() =>
             {
-                _ = Task.Run(() =>
+                if (_items.Any(i => string.Equals(i.Name.RawString, args, StringComparison.OrdinalIgnoreCase)))
                 {
-                    if (_items.Any(i => i.Name.RawString.ToLower() == args.ToLower()))
+                    foreach (ItemInfo itemDetails in _items.Where(i => string.Equals(i.Name.RawString, args, StringComparison.OrdinalIgnoreCase))
+                                                           .Select(item => _itemLookup.GetItemInfo(item.RowId)).Where(itemDetails => itemDetails != null))
                     {
-                        List<Item> items = _items.Where(i => i.Name.RawString.ToLower() == args.ToLower()).ToList();
-                        foreach (Item item in items)
-                        {
-                            ItemInfo itemDetails = _itemLookup.GetItemInfo(item.RowId);
-                            if (itemDetails == null)
-                            {
-                                continue;
-                            }
-                            ShowSingleVendor(itemDetails);
-                        }
+                        ShowSingleVendor(itemDetails);
                     }
-                    else
+
+                    return;
+                }
+
+                List<Item> items = _items.Where(i => i.Name.RawString.ToLower().Contains(args.ToLower())).ToList();
+                if (items.Count == 0)
+                {
+                    Utilities.OutputChatLine($" No items found for \"{args}\"");
+                    return;
+                }
+
+                if (items.Count > 20)
+                {
+                    Utilities.OutputChatLine("You may want to refine your search");
+                }
+
+                uint results = 0;
+                foreach (Item item in items)
+                {
+                    if (results == Service.Configuration.MaxSearchResults)
                     {
-                        List<Item> items = _items.Where(i => i.Name.RawString.ToLower().Contains(args.ToLower())).ToList();
-                        if (items.Count == 0)
+                        Utilities.OutputChatLine($"Displayed {Service.Configuration.MaxSearchResults}/{items.Count} matches.");
+                        if (items.Count > Service.Configuration.MaxSearchResults)
                         {
-                            Utilities.OutputChatLine($" No items found for \"{args}\"");
+                            Utilities.OutputChatLine("You may want to be more specific.");
                         }
-                        else
-                        {
-                            if (items.Count > 20)
-                            {
-                                Utilities.OutputChatLine("You may want to refine your search");
-                            }
-                            uint results = 0;
-                            foreach (Item item in items)
-                            {
-                                if (results == Service.Configuration.MaxSearchResults)
-                                {
-                                    Utilities.OutputChatLine($"Displayed {Service.Configuration.MaxSearchResults}/{items.Count} matches.");
-                                    if (items.Count > Service.Configuration.MaxSearchResults)
-                                    {
-                                        Utilities.OutputChatLine("You may want to be more specific.");
-                                    }
 
-
-                                    break;
-                                }
-                                ItemInfo itemDetails = _itemLookup.GetItemInfo(item.RowId);
-                                if (itemDetails == null)
-                                {
-                                    continue;
-                                }
-                                results++;
-                                ShowSingleVendor(itemDetails);
-                            }
-                            if (results == 0)
-                            {
-                                Utilities.OutputChatLine($"No vendors found for \"{args}\"");
-                            }
-                        }
+                        break;
                     }
-                });
-            }
+
+                    ItemInfo itemDetails = _itemLookup.GetItemInfo(item.RowId);
+                    if (itemDetails == null)
+                    {
+                        continue;
+                    }
+
+                    results++;
+                    ShowSingleVendor(itemDetails);
+                }
+
+                if (results == 0)
+                {
+                    Utilities.OutputChatLine($"No vendors found for \"{args}\"");
+                }
+            });
         }
 
         private void OnOpenConfigUi()
@@ -204,20 +199,25 @@ namespace ItemVendorLocation
             {
                 return;
             }
-            args.AddCustomItem(new GameObjectContextMenuItem(ButtonName, _ => { ContextMenuCallback(itemInfo); }, true));
-            return;
+
+            args.AddCustomItem(new GameObjectContextMenuItem(_buttonName, _ => { ContextMenuCallback(itemInfo); }, true));
         }
 
-        /// <summary>
-        /// Function called when a user right-clicks various things in game UI.
-        /// </summary>
-        /// <remarks>
-        /// This function needs to be very quick, as the user will experience a delay
-        /// in right-clicking an item and seeing the context menu if we do expensive things
-        /// here.
-        /// </remarks>
-        /// <param name="args"></param>
-        private void ContextMenu_OnOpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args)
+        private void OnOpenChatTwoItemContextMenu(uint itemId)
+        {
+            ItemInfo itemInfo = _itemLookup.GetItemInfo(itemId);
+            if (itemInfo == null)
+            {
+                return;
+            }
+
+            if (ImGui.Selectable(_buttonName))
+            {
+                ContextMenuCallback(itemInfo);
+            }
+        }
+
+        private unsafe void ContextMenu_OnOpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args)
         {
             // I think players have a world and items never will??
             // Hopefully this removes the vendor menu for players in the chat log
@@ -233,41 +233,38 @@ namespace ItemVendorLocation
 
             // thank you ottermandias for the offsets
             uint itemId;
-            if (args.ParentAddonName == "RecipeNote")
+            switch (args.ParentAddonName)
             {
-                nint recipeNoteAgent = Service.GameGui.FindAgentInterface(args.ParentAddonName);
-                unsafe
+                case "RecipeNote":
                 {
+                    nint recipeNoteAgent = Service.GameGui.FindAgentInterface(args.ParentAddonName);
                     itemId = *(uint*)(recipeNoteAgent + 0x398);
+                    break;
                 }
-            }
-            else if (args.ParentAddonName is "RecipeTree" or "RecipeMaterialList")
-            {
-                unsafe
+                case "RecipeTree" or "RecipeMaterialList":
                 {
                     UIModule* uiModule = (UIModule*)Service.GameGui.GetUIModule();
                     AgentModule* agents = uiModule->GetAgentModule();
                     AgentInterface* agent = agents->GetAgentByInternalId(AgentId.RecipeItemContext);
 
                     itemId = *(uint*)((nint)agent + 0x28);
+                    break;
                 }
-            }
-            else if (args.ParentAddonName == "ColorantColoring")
-            {
-                nint colorantColoringAgent = Service.GameGui.FindAgentInterface(args.ParentAddonName);
-                unsafe
+                case "ColorantColoring":
                 {
+                    nint colorantColoringAgent = Service.GameGui.FindAgentInterface(args.ParentAddonName);
                     itemId = *(uint*)(colorantColoringAgent + 0x34);
+                    break;
                 }
+                default:
+                    itemId = CorrectitemId((uint)Service.GameGui.HoveredItem);
+                    break;
             }
-            else
-            {
-                itemId = CorrectitemId((uint)Service.GameGui.HoveredItem);
-            }
+
             OnOpenGameObjectContextMenu(args, itemId);
         }
 
-        private void OnOpenInventoryContextMenu(InventoryContextMenuOpenArgs args)
+        private void ContextMenu_OnOpenInventoryContextMenu(InventoryContextMenuOpenArgs args)
         {
             uint itemId = CorrectitemId(args.ItemId);
             ItemInfo itemInfo = _itemLookup.GetItemInfo(itemId);
@@ -276,24 +273,10 @@ namespace ItemVendorLocation
                 return;
             }
 
-            args.AddCustomItem(new InventoryContextMenuItem(ButtonName, _ => { ContextMenuCallback(itemInfo); }, true));
+            args.AddCustomItem(new InventoryContextMenuItem(_buttonName, _ => { ContextMenuCallback(itemInfo); }, true));
         }
 
-        /// <summary>
-        /// Function called when user right-clicks an inventory item.
-        /// here.
-        /// </summary>
-        /// <remarks>
-        /// This function needs to be very quick, as the user will experience a delay
-        /// in right-clicking an item and seeing the context menu if we do expensive things
-        /// here.
-        /// </remarks>
-        private void ContextMenu_OnOpenInventoryContextMenu(InventoryContextMenuOpenArgs args)
-        {
-            OnOpenInventoryContextMenu(args);
-        }
-
-        private void OnItemTooltip(ItemTooltip itemtooltip, ulong itemid)
+        private unsafe void Tooltips_OnOnItemTooltip(ItemTooltip itemtooltip, ulong itemid)
         {
             ItemInfo itemInfo = _itemLookup.GetItemInfo(CorrectitemId((uint)itemid));
             if (itemInfo == null)
@@ -302,74 +285,46 @@ namespace ItemVendorLocation
             }
 
             SeString origStr = itemtooltip[ItemTooltipString.ShopSellingPrice];
+            int colonIndex = origStr.TextValue.IndexOfAny(new[] { '：', ':' });
 
             switch (itemInfo.Type)
             {
                 case ItemType.GcShop:
                     List<NpcInfo> npcInfos = itemInfo.NpcInfos;
-                    List<uint> otherGcVendorIds = new();
-                    unsafe
-                    {
-                        byte playerGC = UIState.Instance()->PlayerState.GrandCompany;
-                        otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[playerGC]).ToList();
-                    }
+                    byte playerGC = UIState.Instance()->PlayerState.GrandCompany;
+                    IEnumerable<uint> otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[playerGC]);
                     // Only remove items if doing so doesn't remove all the results
                     if (npcInfos.Any(i => !otherGcVendorIds.Contains(i.Id)))
                     {
                         _ = npcInfos.RemoveAll(i => otherGcVendorIds.Contains(i.Id));
                     }
+
                     NpcInfo info = npcInfos.First();
 
                     string costStr = $"{info.Costs[0].Item2} x{info.Costs[0].Item1}";
 
-                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })), ": ", costStr);
+                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, colonIndex), ": ", costStr);
                     return;
                 case ItemType.SpecialShop:
-                    int pos = origStr.TextValue.IndexOfAny(new[] { '：', ':' });
                     // Avoid modification for certain seasonal items with no Shop Selling Price line
-                    if (pos != -1) {
-                        itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, pos), ": Special Vendor");
+                    if (colonIndex != -1)
+                    {
+                        itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, colonIndex), ": Special Vendor");
                     }
                     return;
                 case ItemType.FcShop:
                     info = itemInfo.NpcInfos.First();
                     costStr = $"FC Credits x{info.Costs[0].Item1}";
-                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { '：', ':' })), ": ", costStr);
+                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, colonIndex), ": ", costStr);
                     return;
                 case ItemType.CollectableExchange:
-                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, origStr.TextValue.IndexOfAny(new[] { ':', ':' })), ":Collectables Exchange Reward");
+                    itemtooltip[ItemTooltipString.ShopSellingPrice] =
+                        string.Concat(origStr.TextValue.AsSpan(0, colonIndex), ": Collectables Exchange Reward");
                     return;
             }
         }
 
-        /// <summary>
-        /// Function called when an in-game tooltip is generated.
-        /// </summary>
-        /// <remarks>
-        /// This function needs to be very quick, as the user will experience a delay
-        /// when any tooltip is generated if we do expensive things here.
-        /// </remarks>
-        private void Tooltips_OnOnItemTooltip(ItemTooltip itemtooltip, ulong itemid)
-        {
-            OnItemTooltip(itemtooltip, itemid);
-        }
-
-        private void OnOpenChatTwoItemContextMenu(uint itemId)
-        {
-            ItemInfo itemInfo = _itemLookup.GetItemInfo(itemId);
-            if (itemInfo == null)
-            {
-                return;
-            }
-
-            if (ImGui.Selectable(ButtonName))
-            {
-                ContextMenuCallback(itemInfo);
-            }
-        }
-
-
-        private static void ContextMenuCallback(ItemInfo itemInfo)
+        private void ContextMenuCallback(ItemInfo itemInfo)
         {
             // filteredResults allows us to apply filters without modifying core data,
             // itemInfo is initialized once upon plugin load, so a filter would not
@@ -398,7 +353,7 @@ namespace ItemVendorLocation
 
         private static void ShowSingleVendor(ItemInfo item)
         {
-            NpcInfo vendor = null;
+            NpcInfo vendor;
             SeStringBuilder sb = new();
             try
             {
@@ -440,7 +395,8 @@ namespace ItemVendorLocation
             }
         }
 
-        #region IDisposable Support     
+        #region IDisposable Support
+
         protected virtual void Dispose(bool disposing)
         {
             if (!disposing)

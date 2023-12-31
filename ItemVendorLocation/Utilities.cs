@@ -1,6 +1,4 @@
 ﻿using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text;
-
 
 namespace ItemVendorLocation
 {

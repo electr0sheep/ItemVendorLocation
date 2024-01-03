@@ -1,8 +1,7 @@
-﻿namespace ItemVendorLocation
+﻿namespace ItemVendorLocation;
+
+public enum ResultsViewType : byte
 {
-    public enum ResultsViewType : byte
-    {
-        Single = 1,
-        Multiple = 2,
-    }
+    Single = 1,
+    Multiple = 2,
 }

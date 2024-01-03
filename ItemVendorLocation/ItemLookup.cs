@@ -12,7 +12,7 @@ namespace ItemVendorLocation;
 #if DEBUG
 public partial class ItemLookup
 #else
-    internal partial class ItemLookup
+internal partial class ItemLookup
 #endif
 {
     private readonly ExcelSheet<Achievement> _achievements;
@@ -432,10 +432,10 @@ public partial class ItemLookup
                     continue;
                 }
 #else
-                    if (_npcLocations.ContainsKey(npcRowId))
-                    {
-                        continue;
-                    }
+                if (_npcLocations.ContainsKey(npcRowId))
+                {
+                    continue;
+                }
 #endif
 
                 var npcBase = _eNpcBases.GetRow(npcRowId);
@@ -474,7 +474,7 @@ public partial class ItemLookup
 #if DEBUG
     public void BuildNpcLocation()
 #else
-        private void BuildNpcLocation()
+    private void BuildNpcLocation()
 #endif
     {
         HashSet<uint> addedAetheryte = new();

@@ -9,7 +9,7 @@ namespace ItemVendorLocation;
 #if DEBUG
 public partial class ItemLookup
 #else
-    internal partial class ItemLookup
+internal partial class ItemLookup
 #endif
 {
     private void FixJapaneseShopName()

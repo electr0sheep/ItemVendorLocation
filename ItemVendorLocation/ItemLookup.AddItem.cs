@@ -9,7 +9,7 @@ namespace ItemVendorLocation;
 #if DEBUG
 public partial class ItemLookup
 #else
-    internal partial class ItemLookup
+internal partial class ItemLookup
 #endif
 {
     private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, string shop = null)

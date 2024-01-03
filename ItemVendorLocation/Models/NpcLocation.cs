@@ -25,7 +25,7 @@ namespace ItemVendorLocation.Models
         // TODO: This needs to be removed. This is an exact duplicate of Dalamud/Game/Text/SeStringHandling/Payloads/MapLinkPayload#ConvertRawPositionToMapCoordinate.cs
         private static float ToMapCoordinate(float val, float scale, short offset)
         {
-            float c = scale / 100.0f;
+            var c = scale / 100.0f;
 
             val = (val + offset) * c;
 

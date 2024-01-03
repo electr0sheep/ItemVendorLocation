@@ -40,14 +40,14 @@ namespace ItemVendorLocation.Models
 
             Entries = new Entry[60];
 
-            TomestonesItem[] tomestonesItems = Service.DataManager.GetExcelSheet<TomestonesItem>().Where(i => i.Tomestones.Row > 0).OrderBy(i => i.Tomestones.Row).ToArray();
+            var tomestonesItems = Service.DataManager.GetExcelSheet<TomestonesItem>().Where(i => i.Tomestones.Row > 0).OrderBy(i => i.Tomestones.Row).ToArray();
 
-            for (int i = 0; i < tomestonesItems.Length; i++)
+            for (var i = 0; i < tomestonesItems.Length; i++)
             {
                 Tomestones[i + 1] = (int)tomestonesItems[i].Item.Row;
             }
 
-            for (int i = 0; i < Entries.Length; i++)
+            for (var i = 0; i < Entries.Length; i++)
             {
                 Entries[i] = new Entry
                 {

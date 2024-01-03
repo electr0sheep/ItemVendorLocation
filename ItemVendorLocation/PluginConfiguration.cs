@@ -2,28 +2,27 @@
 using Dalamud.Game.ClientState.Keys;
 using System;
 
-namespace ItemVendorLocation
-{
-    [Serializable]
-    public class PluginConfiguration : IPluginConfiguration
-    {
-        public int Version { get; set; } = 1;
+namespace ItemVendorLocation;
 
-        public string CommandName = "/xlvendor";
-        public ResultsViewType ResultsViewType { get; set; } = ResultsViewType.Multiple;
-        public ushort NPCNameChatColor { get; set; } = 67;
-        public bool FilterGCResults { get; set; } = false;
-        public bool FilterNPCsWithNoLocation { get; set; } = false;
-        public bool FilterDuplicates { get; set; } = true;
-        public bool ShowShopName { get; set; } = false;
-        public ushort MaxSearchResults { get; set; } = 5;
-        public VirtualKey SearchDisplayModifier { get; set; } = VirtualKey.NO_KEY;
+[Serializable]
+public class PluginConfiguration : IPluginConfiguration
+{
+    public int Version { get; set; } = 1;
+
+    public string CommandName = "/xlvendor";
+    public ResultsViewType ResultsViewType { get; set; } = ResultsViewType.Multiple;
+    public ushort NPCNameChatColor { get; set; } = 67;
+    public bool FilterGCResults { get; set; } = false;
+    public bool FilterNPCsWithNoLocation { get; set; } = false;
+    public bool FilterDuplicates { get; set; } = true;
+    public bool ShowShopName { get; set; } = false;
+    public ushort MaxSearchResults { get; set; } = 5;
+    public VirtualKey SearchDisplayModifier { get; set; } = VirtualKey.NO_KEY;
 #if DEBUG
-        public int BuildDebugVendorInfo { get; set; } = 0;
+    public int BuildDebugVendorInfo { get; set; } = 0;
 #endif
-        public void Save()
-        {
-            Service.Interface.SavePluginConfig(this);
-        }
+    public void Save()
+    {
+        Service.Interface.SavePluginConfig(this);
     }
 }

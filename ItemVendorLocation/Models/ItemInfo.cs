@@ -48,7 +48,7 @@ namespace ItemVendorLocation.Models
             // filter gc vendors that accept gc seals
             // we remove non player affiliated gc vendors rather thank keeping player affiliated gc vendors
             // because there could be other vendors in the list
-            byte playerGC = UIState.Instance()->PlayerState.GrandCompany;
+            var playerGC = UIState.Instance()->PlayerState.GrandCompany;
             var otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[playerGC]);
             // Only remove items if doing so doesn't remove all the results
             if (NpcInfos.Any(i => !otherGcVendorIds.Contains(i.Id)))
@@ -57,15 +57,15 @@ namespace ItemVendorLocation.Models
             }
 
             // filter fc gc vendors
-            InfoProxyInterface* infoProxy = Framework.Instance()->UIModule->GetInfoModule()->GetInfoProxyById(InfoProxyId.FreeCompany);
+            var infoProxy = Framework.Instance()->UIModule->GetInfoModule()->GetInfoProxyById(InfoProxyId.FreeCompany);
             if (infoProxy == null)
             {
                 return;
             }
 
-            InfoProxyFreeCompany* freeCompanyInfoProxy = (InfoProxyFreeCompany*)infoProxy;
-            GrandCompany playerFreeCompanyGC = freeCompanyInfoProxy->GrandCompany;
-            IEnumerable<uint> otherOicVendorIds = Service.Plugin.OicVendorIdMap.Values.Where(i => i != Service.Plugin.OicVendorIdMap[playerFreeCompanyGC]);
+            var freeCompanyInfoProxy = (InfoProxyFreeCompany*)infoProxy;
+            var playerFreeCompanyGC = freeCompanyInfoProxy->GrandCompany;
+            var otherOicVendorIds = Service.Plugin.OicVendorIdMap.Values.Where(i => i != Service.Plugin.OicVendorIdMap[playerFreeCompanyGC]);
 
             if (otherOicVendorIds != null && NpcInfos.Any(i => !otherOicVendorIds.Contains(i.Id)))
             {

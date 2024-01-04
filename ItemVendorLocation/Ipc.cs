@@ -4,6 +4,8 @@ using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin;
 
+//https://git.anna.lgbt/anna/ChatTwo/src/branch/main/ipc.md
+
 namespace ItemVendorLocation;
 
 internal class Ipc
@@ -50,7 +52,8 @@ internal class Ipc
     private void RegisterIpc()
     {
         // Register and save the registration ID.
-        _id = Register.InvokeFunc();
+        try { _id = Register.InvokeFunc(); }
+        catch (Dalamud.Plugin.Ipc.Exceptions.IpcNotReadyError) { Service.PluginLog.Debug("Chat2 is not available"); }
     }
 
     public void Disable()

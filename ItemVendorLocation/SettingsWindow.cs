@@ -79,6 +79,7 @@ public class SettingsWindow : Window
         if (ImGui.Checkbox("Highlight selected npc", ref highlightSelectedNpc))
         {
             Service.Configuration.HighlightSelectedNpc = highlightSelectedNpc;
+            Service.Framework.Run(() => Service.HighlightObject.ToggleHighlight(highlightSelectedNpc));
             Service.Configuration.Save();
         }
         ImGui.SameLine();

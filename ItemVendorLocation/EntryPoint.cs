@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using CheapLoc;
-using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
@@ -21,7 +20,6 @@ using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.Gui.ContextMenu;
 using Dalamud.Game.Text;
-using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using ImGuiNET;
 using ItemInfo = ItemVendorLocation.Models.ItemInfo;
 
@@ -46,6 +44,7 @@ public class EntryPoint : IDalamudPlugin
         "ShopExchangeItemDialog",
         "SubmarinePartsMenu",
         "Tryon",
+        "GrandCompanyExchange",
     };
 
     public readonly Dictionary<byte, uint> GcVendorIdMap = new()
@@ -156,6 +155,31 @@ public class EntryPoint : IDalamudPlugin
                     itemId = *(uint*)(colorantColoringAgent + 0x34);
                     break;
                 }
+                case "GrandCompanyExchange":
+                {
+                    var grandCompanyExchangeAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                    itemId = *(uint*)(grandCompanyExchangeAgent + 0x54);
+                    break;
+                }
+                case "ChatLog":
+                {
+                    var chatlogAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                    itemId = *(uint*)(chatlogAgent + 0x948);
+                    break;
+                }
+                case "ContentsInfoDetail":
+                {
+                    var contentsInfoDetailAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                    itemId = *(uint*)(contentsInfoDetailAgent + 0x17CC);
+                    break;
+                }
+                case "ShopExchangeItem":
+                {
+                    var shopExchangeItemAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                    itemId = *(uint*)(shopExchangeItemAgent + 0x54);
+                    break;
+                }
+                // TODO: Find itemId offset in AgentInterface, HoveredItem is inaccurate sometimes
                 default:
                     itemId = CorrectitemId((uint)Service.GameGui.HoveredItem);
                     break;

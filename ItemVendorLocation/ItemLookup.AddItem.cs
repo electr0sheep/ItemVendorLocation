@@ -90,7 +90,9 @@ internal partial class ItemLookup
             return;
         }
 
-        var seal = _gcSeal.Find(i => i.Description.RawString.EndsWith($"{gcId.GrandCompany.Value.Name.RawString}."));
+        // cannot use EndsWith here because the description for each gc seal is different in every language
+        // but they all have the grandcompany name in it so Contains is needed
+        var seal = _gcSeal.Find(i => i.Description.RawString.Contains($"{gcId.GrandCompany.Value.Name.RawString}"));
         if (seal == null)
         {
             return;

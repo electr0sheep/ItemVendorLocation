@@ -14,7 +14,7 @@ namespace ItemVendorLocation.Models
         {
             base.PopulateData(parser, gameData, language);
 
-            SpecialShopCustoms = new LazyRow<SpecialShopCustom>(gameData, parser.ReadColumn<uint>(0), language);
+            SpecialShopCustoms = new(gameData, parser.ReadColumn<uint>(0), language);
         }
     }
 }

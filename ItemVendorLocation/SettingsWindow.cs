@@ -75,6 +75,15 @@ public class SettingsWindow : Window
         ImGui.SameLine();
         ImGuiComponents.HelpMarker(@"If checked, will show shop name info e.g. 'Purchase Disciple of Magic Gear - Purchase Gear (Lv. 20-29)'");
 
+        var highlightSelectedNpc = Service.Configuration.HighlightSelectedNpc;
+        if (ImGui.Checkbox("Highlight selected npc", ref highlightSelectedNpc))
+        {
+            Service.Configuration.HighlightSelectedNpc = highlightSelectedNpc;
+            Service.Configuration.Save();
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(@"If checked, will highlight the selected npc in red once it is in object list");
+
         ImGui.SetNextItemWidth(200f);
         int maxSearchResults = Service.Configuration.MaxSearchResults;
         if (ImGui.InputInt("Max Search Results", ref maxSearchResults))

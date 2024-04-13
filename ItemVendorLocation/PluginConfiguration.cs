@@ -17,6 +17,7 @@ public class PluginConfiguration : IPluginConfiguration
     public bool FilterDuplicates { get; set; } = true;
     public bool ShowShopName { get; set; } = false;
     public ushort MaxSearchResults { get; set; } = 5;
+    public bool HighlightSelectedNpc { get; set; } = false;
     public VirtualKey SearchDisplayModifier { get; set; } = VirtualKey.NO_KEY;
 #if DEBUG
     public int BuildDebugVendorInfo { get; set; } = 0;

@@ -57,6 +57,7 @@ public class PluginWindow : Window
                 // need to use an ID here, the armorer/blacksmith vendors have the same location, resulting in a problem otherwise
                 if (ImGui.Button($"{placeString}###{npcInfo.Id}"))
                 {
+                    Service.HighlightObject.SetNpcInfo(npcInfo);
                     _ = Service.GameGui.OpenMapWithMapLink(new(location.TerritoryType, location.MapId, location.MapX, location.MapY, 0f));
                 }
 
@@ -124,7 +125,7 @@ public class PluginWindow : Window
 
         if (ImGui.BeginChild("VendorListChild"))
         {
-            if (ImGui.BeginTable("Vendors", columnCount, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp, new Vector2(-1, -1)))
+            if (ImGui.BeginTable("Vendors", columnCount, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp, new(-1, -1)))
             {
 #if DEBUG
             ImGui.TableSetupColumn("NPC ID");

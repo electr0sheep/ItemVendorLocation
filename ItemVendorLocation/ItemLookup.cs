@@ -269,7 +269,7 @@ internal partial class ItemLookup
                     // scriptArgs[3] -> Amount of item
                     // scriptArgs[4] -> Amount of currency
                     AddItem_Internal(scriptArgs[2], _items.GetRow(scriptArgs[2]).Name.RawString, npcBase.RowId, resident.Singular, customTalk.MainOption.RawString,
-                                     new List<Tuple<uint, string>>
+                                     new()
                                      {
                                          new(scriptArgs[4], _items.GetRow(28).Name.RawString),
                                      },
@@ -460,11 +460,11 @@ internal partial class ItemLookup
                 try
                 {
                     var map = _maps.First(i => i.TerritoryType.Row == sTerritoryType.RowId && i.MapIndex == mapId);
-                    _npcLocations.Add(npcRowId, new NpcLocation(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType, map.RowId));
+                    _npcLocations.Add(npcRowId, new(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType, map.RowId));
                 }
                 catch (InvalidOperationException)
                 {
-                    _npcLocations.Add(npcRowId, new NpcLocation(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType));
+                    _npcLocations.Add(npcRowId, new(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType));
                 }
             }
         }
@@ -521,7 +521,7 @@ internal partial class ItemLookup
                 continue;
             }
 
-            _npcLocations.Add(level.Object, new NpcLocation(level.X, level.Z, level.Territory.Value));
+            _npcLocations.Add(level.Object, new(level.X, level.Z, level.Territory.Value));
         }
 
         // housing vendors
@@ -532,7 +532,7 @@ internal partial class ItemLookup
         {
             foreach (var id in npc.ENpcBase.Where(i => i.Row != 0))
             {
-                _npcLocations.Add(id.Row, new NpcLocation(0, 0, housingTerrotry));
+                _npcLocations.Add(id.Row, new(0, 0, housingTerrotry));
             }
         }
     }

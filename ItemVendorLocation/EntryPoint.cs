@@ -21,6 +21,7 @@ using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.Gui.ContextMenu;
 using Dalamud.Game.Text;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using ImGuiNET;
 using ItemInfo = ItemVendorLocation.Models.ItemInfo;
 
@@ -71,7 +72,6 @@ public class EntryPoint : IDalamudPlugin
 #endif
     private readonly WindowSystem _windowSystem;
     private readonly XivCommonBase _xivCommon;
-
     private readonly ExcelSheet<Item> _items;
 
     public EntryPoint([RequiredVersion("1.0")] DalamudPluginInterface pi)
@@ -83,9 +83,10 @@ public class EntryPoint : IDalamudPlugin
         _itemLookup = new();
         Service.Plugin = this;
         Service.Configuration = pi.GetPluginConfig() as PluginConfiguration ?? new PluginConfiguration();
-        Service.Ipc = new Ipc(pi);
+        Service.Ipc = new(pi);
         Service.Ipc.Enable();
         _xivCommon = new(pi, Hooks.Tooltips);
+        Service.HighlightObject = new();
 
         // Initialize the UI
         _windowSystem = new(typeof(EntryPoint).AssemblyQualifiedName);
@@ -99,16 +100,17 @@ public class EntryPoint : IDalamudPlugin
 
         Service.Ipc.OnOpenChatTwoItemContextMenu += OnOpenChatTwoItemContextMenu;
         _xivCommon.Functions.Tooltips.OnItemTooltip += Tooltips_OnOnItemTooltip;
-        Service.ContextMenu.OnMenuOpened += ContextMenu_OnOnMenuOpened;
+        Service.ContextMenu.OnMenuOpened += ContextMenu_OnMenuOpened;
         Service.Interface.UiBuilder.Draw += _windowSystem.Draw;
         Service.Interface.UiBuilder.OpenConfigUi += OnOpenConfigUi;
-        _ = Service.CommandManager.AddHandler(Service.Configuration.CommandName, new CommandInfo(OnCommand)
+        _ = Service.CommandManager.AddHandler(Service.Configuration.CommandName, new(OnCommand)
         {
             HelpMessage = "Displays the Item Vendor Location config window",
         });
+
     }
 
-    private unsafe void ContextMenu_OnOnMenuOpened(MenuOpenedArgs args)
+    private unsafe void ContextMenu_OnMenuOpened(MenuOpenedArgs args)
     {
         ItemInfo itemInfo;
         uint itemId;
@@ -372,6 +374,7 @@ public class EntryPoint : IDalamudPlugin
         _ = sb.AddText(" at ");
         _ = sb.Append(SeString.CreateMapLink(vendor.Location.TerritoryType, vendor.Location.MapId, vendor.Location.MapX, vendor.Location.MapY));
         Utilities.OutputChatLine(sb.BuiltString);
+        Service.HighlightObject.SetNpcInfo(vendor);
     }
 
     private static void ResultDisplayHandler(ItemInfo item)
@@ -403,10 +406,11 @@ public class EntryPoint : IDalamudPlugin
 
         Service.Ipc.OnOpenChatTwoItemContextMenu -= OnOpenChatTwoItemContextMenu;
         Service.Ipc.Disable();
+        Service.HighlightObject.Dispose();
 
         _ = Service.CommandManager.RemoveHandler(Service.Configuration.CommandName);
         _xivCommon.Functions.Tooltips.OnItemTooltip -= Tooltips_OnOnItemTooltip;
-        Service.ContextMenu.OnMenuOpened -= ContextMenu_OnOnMenuOpened;
+        Service.ContextMenu.OnMenuOpened -= ContextMenu_OnMenuOpened;
 
         Service.Interface.UiBuilder.Draw -= _windowSystem.Draw;
         Service.Interface.UiBuilder.OpenConfigUi -= OnOpenConfigUi;

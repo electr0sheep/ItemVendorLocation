@@ -11,6 +11,7 @@ internal class Service
     internal static SettingsWindow SettingsUi { get; set; } = null!;
     internal static PluginConfiguration Configuration { get; set; } = null!;
     internal static Ipc Ipc { get; set; } = null!;
+    internal static HighlightObject HighlightObject { get; set; } = null!;
 
 
     [PluginService] public static IChatGui ChatGui { get; set; } = null!;
@@ -23,4 +24,6 @@ internal class Service
     [PluginService] public static IPluginLog PluginLog { get; set; } = null!;
     [PluginService] public static IContextMenu ContextMenu { get; set; } = null!;
     [PluginService] public static INotificationManager NotificationManager { get; set; } = null!;
+    [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
+    [PluginService] internal static IFramework Framework { get; private set; } = null!;
 }

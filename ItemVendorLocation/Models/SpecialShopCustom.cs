@@ -49,22 +49,22 @@ namespace ItemVendorLocation.Models
 
             for (var i = 0; i < Entries.Length; i++)
             {
-                Entries[i] = new Entry
+                Entries[i] = new()
                 {
                     Result = new[]
                     {
                         new ResultEntry
                         {
-                            Item = new LazyRow<Item>(lumina, parser.ReadColumn<int>(1 + i), language),
+                            Item = new(lumina, parser.ReadColumn<int>(1 + i), language),
                             Count = parser.ReadColumn<uint>(61 + i),
-                            SpecialShopItemCategory = new LazyRow<SpecialShopItemCategory>(lumina, parser.ReadColumn<int>(121 + i), language),
+                            SpecialShopItemCategory = new(lumina, parser.ReadColumn<int>(121 + i), language),
                             Hq = parser.ReadColumn<bool>(181 + i),
                         },
                         new ResultEntry
                         {
-                            Item = new LazyRow<Item>(lumina, parser.ReadColumn<int>(241 + i), language),
+                            Item = new(lumina, parser.ReadColumn<int>(241 + i), language),
                             Count = parser.ReadColumn<uint>(301 + i),
-                            SpecialShopItemCategory = new LazyRow<SpecialShopItemCategory>(lumina, parser.ReadColumn<int>(361 + i), language),
+                            SpecialShopItemCategory = new(lumina, parser.ReadColumn<int>(361 + i), language),
                             Hq = parser.ReadColumn<bool>(421 + i),
                         },
                     },
@@ -72,21 +72,21 @@ namespace ItemVendorLocation.Models
                     {
                         new CostEntry
                         {
-                            Item = new LazyRow<Item>(lumina, ConvertCurrency(parser.ReadColumn<int>(481 + i), UseCurrencyType), language),
+                            Item = new(lumina, ConvertCurrency(parser.ReadColumn<int>(481 + i), UseCurrencyType), language),
                             Count = parser.ReadColumn<uint>(541 + i),
                             Hq = parser.ReadColumn<bool>(601 + i),
                             Collectability = parser.ReadColumn<ushort>(661 + i),
                         },
                         new CostEntry
                         {
-                            Item = new LazyRow<Item>(lumina, ConvertCurrency(parser.ReadColumn<int>(721 + i), UseCurrencyType), language),
+                            Item = new(lumina, ConvertCurrency(parser.ReadColumn<int>(721 + i), UseCurrencyType), language),
                             Count = parser.ReadColumn<uint>(781 + i),
                             Hq = parser.ReadColumn<bool>(841 + i),
                             Collectability = parser.ReadColumn<ushort>(901 + i),
                         },
                         new CostEntry
                         {
-                            Item = new LazyRow<Item>(lumina, ConvertCurrency(parser.ReadColumn<int>(961 + i), UseCurrencyType), language),
+                            Item = new(lumina, ConvertCurrency(parser.ReadColumn<int>(961 + i), UseCurrencyType), language),
                             Count = parser.ReadColumn<uint>(1021 + i),
                             Hq = parser.ReadColumn<bool>(1081 + i),
                             Collectability = parser.ReadColumn<ushort>(1141 + i),

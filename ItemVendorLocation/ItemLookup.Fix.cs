@@ -54,12 +54,12 @@ internal partial class ItemLookup
         // some are missing from my test, so we gotta hardcode them
         _ = _npcLocations.TryAdd(1006004, new(5.355835f, 155.22998f, _territoryType.GetRow(128)));
         _ = _npcLocations.TryAdd(1017613, new(2.822865f, 153.521f, _territoryType.GetRow(128)));
-        _ = _npcLocations.TryAdd(1003077, new(-259.32715f, 37.491333f, _territoryType.GetRow(129)));
+        _ = _npcLocations.TryAdd(1003633, new(-259.32715f, 37.491333f, _territoryType.GetRow(129)));
 
         _ = _npcLocations.TryAdd(1008145, new(-31.265808f, -245.38031f, _territoryType.GetRow(133)));
         _ = _npcLocations.TryAdd(1006005, new(-61.234497f, -141.31384f, _territoryType.GetRow(133)));
         _ = _npcLocations.TryAdd(1017614, new(-58.79309f, -142.1073f, _territoryType.GetRow(133)));
-        _ = _npcLocations.TryAdd(1003633, new(145.83044f, -106.767456f, _territoryType.GetRow(133)));
+        _ = _npcLocations.TryAdd(1003077, new(145.83044f, -106.767456f, _territoryType.GetRow(133)));
 
         // more locations missing
         _ = _npcLocations.TryAdd(1000215, new(155.35205f, -70.26782f, _territoryType.GetRow(133)));

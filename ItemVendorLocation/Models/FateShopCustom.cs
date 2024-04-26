@@ -18,7 +18,7 @@ namespace ItemVendorLocation.Models
 
             for (var i = 0; i < 2; i++)
             {
-                SpecialShopCustoms[i] = new LazyRow<SpecialShopCustom>(gameData, parser.ReadColumn<uint>(0 + i), language);
+                SpecialShopCustoms[i] = new(gameData, parser.ReadColumn<uint>(0 + i), language);
             }
         }
     }

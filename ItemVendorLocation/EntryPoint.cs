@@ -2,8 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using CheapLoc;
-using Dalamud.ContextMenu;
-using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
@@ -18,10 +16,12 @@ using Lumina.Excel.GeneratedSheets;
 using XivCommon;
 using XivCommon.Functions.Tooltips;
 using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
-using AgentInterface = FFXIVClientStructs.FFXIV.Component.GUI.AgentInterface;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Keys;
+using Dalamud.Game.Gui.ContextMenu;
+using Dalamud.Game.Text;
 using ImGuiNET;
+using ItemInfo = ItemVendorLocation.Models.ItemInfo;
 
 namespace ItemVendorLocation;
 
@@ -44,6 +44,7 @@ public class EntryPoint : IDalamudPlugin
         "ShopExchangeItemDialog",
         "SubmarinePartsMenu",
         "Tryon",
+        "GrandCompanyExchange",
     };
 
     public readonly Dictionary<byte, uint> GcVendorIdMap = new()
@@ -70,7 +71,6 @@ public class EntryPoint : IDalamudPlugin
 #endif
     private readonly WindowSystem _windowSystem;
     private readonly XivCommonBase _xivCommon;
-
     private readonly ExcelSheet<Item> _items;
 
     public EntryPoint([RequiredVersion("1.0")] DalamudPluginInterface pi)
@@ -82,13 +82,13 @@ public class EntryPoint : IDalamudPlugin
         _itemLookup = new();
         Service.Plugin = this;
         Service.Configuration = pi.GetPluginConfig() as PluginConfiguration ?? new PluginConfiguration();
-        Service.ContextMenu = new DalamudContextMenu(pi);
-        Service.Ipc = new Ipc(pi);
+        Service.Ipc = new(pi);
         Service.Ipc.Enable();
         _xivCommon = new(pi, Hooks.Tooltips);
+        Service.HighlightObject = new();
 
         // Initialize the UI
-        _windowSystem = new WindowSystem(typeof(EntryPoint).AssemblyQualifiedName);
+        _windowSystem = new(typeof(EntryPoint).AssemblyQualifiedName);
         Service.SettingsUi = new();
         Service.PluginUi = new();
 
@@ -99,13 +99,107 @@ public class EntryPoint : IDalamudPlugin
 
         Service.Ipc.OnOpenChatTwoItemContextMenu += OnOpenChatTwoItemContextMenu;
         _xivCommon.Functions.Tooltips.OnItemTooltip += Tooltips_OnOnItemTooltip;
-        Service.ContextMenu.OnOpenInventoryContextMenu += ContextMenu_OnOpenInventoryContextMenu;
-        Service.ContextMenu.OnOpenGameObjectContextMenu += ContextMenu_OnOpenGameObjectContextMenu;
+        Service.ContextMenu.OnMenuOpened += ContextMenu_OnMenuOpened;
         Service.Interface.UiBuilder.Draw += _windowSystem.Draw;
         Service.Interface.UiBuilder.OpenConfigUi += OnOpenConfigUi;
-        _ = Service.CommandManager.AddHandler(Service.Configuration.CommandName, new CommandInfo(OnCommand)
+        _ = Service.CommandManager.AddHandler(Service.Configuration.CommandName, new(OnCommand)
         {
             HelpMessage = "Displays the Item Vendor Location config window",
+        });
+
+    }
+
+    private unsafe void ContextMenu_OnMenuOpened(MenuOpenedArgs args)
+    {
+        ItemInfo itemInfo;
+        uint itemId;
+
+        if (args.MenuType == ContextMenuType.Inventory)
+        {
+            var inventoryTarget = (MenuTargetInventory)args.Target;
+            if (!inventoryTarget.TargetItem.HasValue)
+            {
+                return;
+            }
+
+            itemId = CorrectitemId(inventoryTarget.TargetItem.Value.ItemId);
+            itemInfo = _itemLookup.GetItemInfo(itemId);
+        }
+        else
+        {
+            if (!GameAddonWhitelist.Contains(args.AddonName))
+            {
+                return;
+            }
+
+            switch (args.AddonName)
+            {
+                case "RecipeNote":
+                {
+                    var recipeNoteAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                    itemId = *(uint*)(recipeNoteAgent + 0x398);
+                    break;
+                }
+                case "RecipeTree" or "RecipeMaterialList":
+                {
+                    var uiModule = (UIModule*)Service.GameGui.GetUIModule();
+                    var agents = uiModule->GetAgentModule();
+                    var agent = agents->GetAgentByInternalId(AgentId.RecipeItemContext);
+
+                    itemId = *(uint*)((nint)agent + 0x28);
+                    break;
+                }
+                case "ColorantColoring":
+                {
+                    var colorantColoringAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                    itemId = *(uint*)(colorantColoringAgent + 0x34);
+                    break;
+                }
+                case "GrandCompanyExchange":
+                {
+                    var grandCompanyExchangeAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                    itemId = *(uint*)(grandCompanyExchangeAgent + 0x54);
+                    break;
+                }
+                case "ChatLog":
+                {
+                    var chatlogAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                    itemId = *(uint*)(chatlogAgent + 0x948);
+                    break;
+                }
+                case "ContentsInfoDetail":
+                {
+                    var contentsInfoDetailAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                    itemId = *(uint*)(contentsInfoDetailAgent + 0x17CC);
+                    break;
+                }
+                case "ShopExchangeItem":
+                {
+                    var shopExchangeItemAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                    itemId = *(uint*)(shopExchangeItemAgent + 0x54);
+                    break;
+                }
+                // TODO: Find itemId offset in AgentInterface, HoveredItem is inaccurate sometimes
+                default:
+                    itemId = CorrectitemId((uint)Service.GameGui.HoveredItem);
+                    break;
+            }
+
+            itemInfo = _itemLookup.GetItemInfo(itemId);
+        }
+
+        if (itemInfo == null)
+            return;
+
+        args.AddMenuItem(new()
+        {
+            IsEnabled = true,
+            IsReturn = false,
+            IsSubmenu = false,
+            Name = _buttonName,
+            OnClicked = _ => { ContextMenuCallback(itemInfo); },
+            Prefix = SeIconChar.BoxedLetterV,
+            PrefixColor = 518,
         });
     }
 
@@ -183,24 +277,11 @@ public class EntryPoint : IDalamudPlugin
     private static uint CorrectitemId(uint itemId)
     {
         return itemId switch
-        {
-            > 1000000 => itemId - 1000000, // hq
-            /*
-             > 500000 and < 1000000 => itemId - 500000, // collectible, doesnt seem to work
-             */
-            _ => itemId
-        };
-    }
-
-    private void OnOpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args, uint itemId)
-    {
-        var itemInfo = _itemLookup.GetItemInfo(itemId);
-        if (itemInfo == null)
-        {
-            return;
-        }
-
-        args.AddCustomItem(new GameObjectContextMenuItem(_buttonName, _ => { ContextMenuCallback(itemInfo); }, true));
+               {
+                   > 1000000 => itemId - 1000000, // hq
+                   > 500000 and < 1000000 => itemId - 500000, // collectible, doesnt seem to work
+                   _ => itemId,
+               };
     }
 
     private void OnOpenChatTwoItemContextMenu(uint itemId)
@@ -215,65 +296,6 @@ public class EntryPoint : IDalamudPlugin
         {
             ContextMenuCallback(itemInfo);
         }
-    }
-
-    private unsafe void ContextMenu_OnOpenGameObjectContextMenu(GameObjectContextMenuOpenArgs args)
-    {
-        // I think players have a world and items never will??
-        // Hopefully this removes the vendor menu for players in the chat log
-        if (args.ObjectWorld != 0)
-        {
-            return;
-        }
-
-        if (!GameAddonWhitelist.Contains(args.ParentAddonName))
-        {
-            return;
-        }
-
-        // thank you ottermandias for the offsets
-        uint itemId;
-        switch (args.ParentAddonName)
-        {
-            case "RecipeNote":
-            {
-                var recipeNoteAgent = Service.GameGui.FindAgentInterface(args.ParentAddonName);
-                itemId = *(uint*)(recipeNoteAgent + 0x398);
-                break;
-            }
-            case "RecipeTree" or "RecipeMaterialList":
-            {
-                var uiModule = (UIModule*)Service.GameGui.GetUIModule();
-                var agents = uiModule->GetAgentModule();
-                var agent = agents->GetAgentByInternalId(AgentId.RecipeItemContext);
-
-                itemId = *(uint*)((nint)agent + 0x28);
-                break;
-            }
-            case "ColorantColoring":
-            {
-                var colorantColoringAgent = Service.GameGui.FindAgentInterface(args.ParentAddonName);
-                itemId = *(uint*)(colorantColoringAgent + 0x34);
-                break;
-            }
-            default:
-                itemId = CorrectitemId((uint)Service.GameGui.HoveredItem);
-                break;
-        }
-
-        OnOpenGameObjectContextMenu(args, itemId);
-    }
-
-    private void ContextMenu_OnOpenInventoryContextMenu(InventoryContextMenuOpenArgs args)
-    {
-        var itemId = CorrectitemId(args.ItemId);
-        var itemInfo = _itemLookup.GetItemInfo(itemId);
-        if (itemInfo == null)
-        {
-            return;
-        }
-
-        args.AddCustomItem(new InventoryContextMenuItem(_buttonName, _ => { ContextMenuCallback(itemInfo); }, true));
     }
 
     private unsafe void Tooltips_OnOnItemTooltip(ItemTooltip itemtooltip, ulong itemid)
@@ -311,6 +333,7 @@ public class EntryPoint : IDalamudPlugin
                 {
                     itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, colonIndex), ": Special Vendor");
                 }
+
                 return;
             case ItemType.FcShop:
                 info = itemInfo.NpcInfos.First();
@@ -375,6 +398,7 @@ public class EntryPoint : IDalamudPlugin
         _ = sb.AddText(" at ");
         _ = sb.Append(SeString.CreateMapLink(vendor.Location.TerritoryType, vendor.Location.MapId, vendor.Location.MapX, vendor.Location.MapY));
         Utilities.OutputChatLine(sb.BuiltString);
+        Service.HighlightObject.SetNpcInfo(vendor);
     }
 
     private static void ResultDisplayHandler(ItemInfo item)
@@ -406,12 +430,11 @@ public class EntryPoint : IDalamudPlugin
 
         Service.Ipc.OnOpenChatTwoItemContextMenu -= OnOpenChatTwoItemContextMenu;
         Service.Ipc.Disable();
+        Service.HighlightObject.Dispose();
 
         _ = Service.CommandManager.RemoveHandler(Service.Configuration.CommandName);
         _xivCommon.Functions.Tooltips.OnItemTooltip -= Tooltips_OnOnItemTooltip;
-        Service.ContextMenu.OnOpenInventoryContextMenu -= ContextMenu_OnOpenInventoryContextMenu;
-        Service.ContextMenu.OnOpenGameObjectContextMenu -= ContextMenu_OnOpenGameObjectContextMenu;
-        Service.ContextMenu.Dispose();
+        Service.ContextMenu.OnMenuOpened -= ContextMenu_OnMenuOpened;
 
         Service.Interface.UiBuilder.Draw -= _windowSystem.Draw;
         Service.Interface.UiBuilder.OpenConfigUi -= OnOpenConfigUi;
@@ -423,5 +446,6 @@ public class EntryPoint : IDalamudPlugin
         Dispose(true);
         GC.SuppressFinalize(this);
     }
+
     #endregion
 }

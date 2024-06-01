@@ -27,7 +27,7 @@ namespace ItemVendorLocation;
 
 public class EntryPoint : IDalamudPlugin
 {
-    private static readonly List<string> GameAddonWhitelist = new()
+    private static readonly HashSet<string> GameAddonWhitelist = new()
     {
         "ChatLog",
         "ColorantColoring",
@@ -45,6 +45,7 @@ public class EntryPoint : IDalamudPlugin
         "SubmarinePartsMenu",
         "Tryon",
         "GrandCompanyExchange",
+        "Shop",
     };
 
     public readonly Dictionary<byte, uint> GcVendorIdMap = new()

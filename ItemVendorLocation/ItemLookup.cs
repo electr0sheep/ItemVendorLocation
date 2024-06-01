@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Dalamud.Game.Text.SeStringHandling;
 using ItemVendorLocation.Models;
 using Lumina.Data.Files;
 using Lumina.Data.Parsing.Layer;
@@ -52,6 +53,8 @@ internal partial class ItemLookup
 
     private readonly EventHandlerType[] _eventHandlerTypes;
 
+    private DateTime _nextPrintTime = DateTime.Now;
+
     private readonly Dictionary<uint, uint> _shbFateShopNpc = new()
     {
         { 1027998, 1769957 },
@@ -98,51 +101,47 @@ internal partial class ItemLookup
         _gil = _items.GetRow(1);
         _gcSeal = _items.Where(i => i.RowId is >= 20 and <= 22).Select(i => i).ToList();
 
-        _ = Task.Run(() =>
-        {
-            BuildNpcLocation();
-            ApplyNpcLocationCorrections();
-            BuildVendors();
-            AddAchievementItem();
-            FixJapaneseShopName();
-            _isDataReady = true;
+        BuildNpcLocation();
+        ApplyNpcLocationCorrections();
+        BuildVendors();
+        AddAchievementItem();
+        FixJapaneseShopName();
+        _isDataReady = true;
 #if DEBUG
-            Dictionary<string, uint> noLocationNpcs = new();
-            foreach (var items in _itemDataMap)
+        Dictionary<string, uint> noLocationNpcs = new();
+        foreach (var items in _itemDataMap)
+        {
+            foreach (var npc in items.Value.NpcInfos)
             {
-                foreach (var npc in items.Value.NpcInfos)
+                if (npc.Location != null)
                 {
-                    if (npc.Location != null)
-                    {
-                        continue;
-                    }
-
-                    if (noLocationNpcs.TryAdd(npc.Name, 1))
-                    {
-                        continue;
-                    }
-
-                    noLocationNpcs[npc.Name]++;
+                    continue;
                 }
-            }
 
-            Service.PluginLog.Debug("Data is ready");
-            Service.PluginLog.Debug($"Items sold by NPCs with no location: {noLocationNpcs.Values.Aggregate((sum, i) => sum += i)}");
-            Service.PluginLog.Debug("Named NPCs:");
+                if (noLocationNpcs.TryAdd(npc.Name, 1))
+                {
+                    continue;
+                }
 
-            foreach (var npc in noLocationNpcs.Where(npc => char.IsUpper(npc.Key.First())))
-            {
-                Service.PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
+                noLocationNpcs[npc.Name]++;
             }
+        }
 
-            Service.PluginLog.Debug("Unnamed NPCs:");
-            foreach (var npc in noLocationNpcs.Where(npc => !char.IsUpper(npc.Key.First())))
-            {
-                Service.PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
-            }
+        Service.PluginLog.Debug("Data is ready");
+        Service.PluginLog.Debug($"Items sold by NPCs with no location: {noLocationNpcs.Values.Aggregate((sum, i) => sum += i)}");
+        Service.PluginLog.Debug("Named NPCs:");
+
+        foreach (var npc in noLocationNpcs.Where(npc => char.IsUpper(npc.Key.First())))
+        {
+            Service.PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
+        }
+
+        Service.PluginLog.Debug("Unnamed NPCs:");
+        foreach (var npc in noLocationNpcs.Where(npc => !char.IsUpper(npc.Key.First())))
+        {
+            Service.PluginLog.Debug($"{npc.Key} sells {npc.Value} items");
+        }
 #endif
-            return Task.CompletedTask;
-        });
     }
 
 #if DEBUG
@@ -486,7 +485,14 @@ internal partial class ItemLookup
                 continue;
             }
 
-            ParseLgbFile(GetLgbFileFromBg(territory.Bg), territory);
+            var file = GetLgbFileFromBg(territory.Bg);
+            if (file == null)
+            {
+                Service.PluginLog.Debug($"[Aetheryte] LgbFile is null. territory: ({territory.PlaceName.Value.Name}){territory.RowId}, Bg: {territory.Bg}");
+                continue;
+            }
+
+            ParseLgbFile(file, territory);
             addedAetheryte.Add(territory.RowId);
         }
 
@@ -497,7 +503,14 @@ internal partial class ItemLookup
                      return condition?.ContentType.Row is 26 or 29 or 16;
                  }))
         {
-            ParseLgbFile(GetLgbFileFromBg(territory.Bg), territory);
+            var file = GetLgbFileFromBg(territory.Bg);
+            if (file == null)
+            {
+                Service.PluginLog.Debug($"[TerritoryType] LgbFile is null. territory: ({territory.PlaceName.Value.Name}){territory.RowId}, Bg: {territory.Bg}");
+                continue;
+            }
+
+            ParseLgbFile(file, territory);
         }
 
         var levels = Service.DataManager.GetExcelSheet<Level>();
@@ -537,15 +550,26 @@ internal partial class ItemLookup
         }
     }
 
-    private LgbFile GetLgbFileFromBg(string bg)
+    private LgbFile? GetLgbFileFromBg(string bg)
     {
         var lgbFileName = "bg/" + bg[..(bg.IndexOf("/level/", StringComparison.Ordinal) + 1)] + "level/planevent.lgb";
         return Service.DataManager.GetFile<LgbFile>(lgbFileName);
     }
 
-    public ItemInfo GetItemInfo(uint itemId)
+    public ItemInfo? GetItemInfo(uint itemId)
     {
-        return !_isDataReady ? null : _itemDataMap.TryGetValue(itemId, out var itemInfo) ? itemInfo : null;
+        if (_isDataReady)
+        {
+            return _itemDataMap.TryGetValue(itemId, out var itemInfo) ? itemInfo : null;
+        }
+
+        if (DateTime.Now > _nextPrintTime)
+        {
+            Utilities.OutputChatLine("Data isn't ready yet. If this still persists after a while, please make an issue with your log on GitHub.");
+            _nextPrintTime = DateTime.Now.AddSeconds(5);
+        }
+
+        return null;
     }
 
     // https://discord.com/channels/581875019861328007/653504487352303619/860865002721247261

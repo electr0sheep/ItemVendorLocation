@@ -5,7 +5,7 @@
 		<TargetFramework>net8.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Description>XIV Launcher plugin for item vendors</Description>
-		<Version>2.6.0.0</Version>
+		<Version>2.6.0.1</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -25,6 +25,7 @@
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>

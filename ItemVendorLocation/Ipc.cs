@@ -52,17 +52,20 @@ internal class Ipc
     private void RegisterIpc()
     {
         // Register and save the registration ID.
-        try { _id = Register.InvokeFunc(); }
-        catch (Dalamud.Plugin.Ipc.Exceptions.IpcNotReadyError) { Service.PluginLog.Debug("Chat2 is not available"); }
+        try
+        {
+            _id = Register.InvokeFunc();
+        }
+        catch (Dalamud.Plugin.Ipc.Exceptions.IpcNotReadyError)
+        {
+            Service.PluginLog.Debug("Chat2 is not available");
+        }
     }
 
     public void Disable()
     {
-        if (_id != null)
-        {
+        if (!string.IsNullOrEmpty(_id)) 
             Unregister.InvokeAction(_id);
-            _id = null;
-        }
 
         Invoke?.Unsubscribe(Integration);
     }

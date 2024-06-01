@@ -64,7 +64,7 @@ internal class Ipc
             _id = null;
         }
 
-        Invoke.Unsubscribe(Integration);
+        Invoke?.Unsubscribe(Integration);
     }
 
     private void Integration(string id, PlayerPayload? sender, ulong contentId, Payload? payload, SeString? senderString, SeString? content)

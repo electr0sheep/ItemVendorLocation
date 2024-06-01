@@ -49,11 +49,7 @@ internal partial class ItemLookup
     private readonly Dictionary<uint, ItemInfo> _itemDataMap = new();
     private readonly Dictionary<uint, NpcLocation> _npcLocations = new();
 
-    private bool _isDataReady;
-
     private readonly EventHandlerType[] _eventHandlerTypes;
-
-    private DateTime _nextPrintTime = DateTime.Now;
 
     private readonly Dictionary<uint, uint> _shbFateShopNpc = new()
     {
@@ -106,7 +102,6 @@ internal partial class ItemLookup
         BuildVendors();
         AddAchievementItem();
         FixJapaneseShopName();
-        _isDataReady = true;
 #if DEBUG
         Dictionary<string, uint> noLocationNpcs = new();
         foreach (var items in _itemDataMap)
@@ -558,18 +553,7 @@ internal partial class ItemLookup
 
     public ItemInfo? GetItemInfo(uint itemId)
     {
-        if (_isDataReady)
-        {
-            return _itemDataMap.TryGetValue(itemId, out var itemInfo) ? itemInfo : null;
-        }
-
-        if (DateTime.Now > _nextPrintTime)
-        {
-            Utilities.OutputChatLine("Data isn't ready yet. If this still persists after a while, please make an issue with your log on GitHub.");
-            _nextPrintTime = DateTime.Now.AddSeconds(5);
-        }
-
-        return null;
+        return _itemDataMap.TryGetValue(itemId, out var itemInfo) ? itemInfo : null;
     }
 
     // https://discord.com/channels/581875019861328007/653504487352303619/860865002721247261

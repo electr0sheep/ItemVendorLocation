@@ -63,8 +63,6 @@ public class PluginWindow : Window
 
                 bool isHoveringButton = ImGui.IsItemHovered();
 
-                ImGuiComponents.HelpMarker("You can right-click the button to copy vendor info to clipboard");
-
                 if (isHoveringButton)
                 {
                     if (ImGui.IsMouseReleased(ImGuiMouseButton.Right))
@@ -109,6 +107,8 @@ public class PluginWindow : Window
     public override void Draw()
     {
         ImGui.Text($"{_itemToDisplay.Name} Vendor list:");
+        ImGuiComponents.HelpMarker("You can right-click the button to copy vendor info to clipboard");
+
         var columnCount = 3;
 #if DEBUG
         columnCount++;

@@ -31,12 +31,12 @@ public class SettingsWindow : Window
         }
         if (ImGui.Button("Build Debug Vendor Info"))
         {
-            Service.Plugin._itemLookup.BuildDebugVendorInfo((uint)num);
+            Service.Plugin.ItemLookup.BuildDebugVendorInfo((uint)num);
         }
         ImGui.SameLine();
         if (ImGui.Button("Build NPC location"))
         {
-            Service.Plugin._itemLookup.BuildDebugNpcLocation((uint)num);
+            Service.Plugin.ItemLookup.BuildDebugNpcLocation((uint)num);
         }
 #endif
         var filterDuplicates = Service.Configuration.FilterDuplicates;

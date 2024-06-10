@@ -9,31 +9,9 @@ namespace ItemVendorLocation;
 #if DEBUG
 public partial class ItemLookup
 #else
-internal partial class ItemLookup
+public partial class ItemLookup
 #endif
 {
-    private void FixJapaneseShopName()
-    {
-        // This fix is for non-japanese client
-        // SE is just being lazy on this, hence we have this bug lol
-        if (Service.ClientState.ClientLanguage == ClientLanguage.Japanese)
-        {
-            return;
-        }
-
-        // Look for items that can be purchased from this npc
-        foreach (var item in _itemDataMap)
-        {
-            foreach (var npcInfo in item.Value.NpcInfos.Where(npcInfo => npcInfo.ShopName == "アイテムの購入"))
-            {
-                Service.PluginLog.Debug($"{_items.GetRow(item.Key).Name} has ShopName \"アイテムの購入\", correcting to correct one.");
-                // This correction is for Aenc Ose, who sells "Sheep Equipment Materials", for example.
-                // A shop is the sub-menu presented at some vendors. Aenc Ose has no such sub-menu, so we simply remove the shop.
-                npcInfo.ShopName = null;
-            }
-        }
-    }
-
     private void ApplyNpcLocationCorrections()
     {
 #pragma warning disable format

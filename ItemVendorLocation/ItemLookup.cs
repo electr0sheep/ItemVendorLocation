@@ -13,7 +13,7 @@ namespace ItemVendorLocation;
 #if DEBUG
 public partial class ItemLookup
 #else
-internal partial class ItemLookup
+public partial class ItemLookup
 #endif
 {
     private readonly ExcelSheet<Achievement> _achievements;
@@ -101,7 +101,6 @@ internal partial class ItemLookup
         ApplyNpcLocationCorrections();
         BuildVendors();
         AddAchievementItem();
-        FixJapaneseShopName();
 #if DEBUG
         Dictionary<string, uint> noLocationNpcs = new();
         foreach (var items in _itemDataMap)

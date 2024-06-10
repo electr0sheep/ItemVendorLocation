@@ -4,12 +4,13 @@ using Lumina.Excel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Dalamud;
 
 namespace ItemVendorLocation;
 #if DEBUG
 public partial class ItemLookup
 #else
-internal partial class ItemLookup
+public partial class ItemLookup
 #endif
 {
     private void AddSpecialItem(SpecialShopCustom specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, string shop = null)
@@ -424,6 +425,9 @@ internal partial class ItemLookup
         {
             return;
         }
+        
+        if (Service.ClientState.ClientLanguage != ClientLanguage.Japanese && shopName == "アイテムの購入")
+            shopName = string.Empty;
 
         if (!_itemDataMap.ContainsKey(itemId))
         {

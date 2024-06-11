@@ -197,6 +197,13 @@ public partial class ItemLookup
                 break;
             }
 
+            if (MatchEventHandlerType(npcData, EventHandlerType.CollectablesShop))
+            {
+                var collectablesShop = _collectablesShops.GetRow(npcData);
+                AddCollectablesShop(collectablesShop, npcBase, resident);
+                continue;
+            }
+
             if (MatchEventHandlerType(npcData, EventHandlerType.InclusionShop))
             {
                 var inclusionShop = _inclusionShops.GetRow(npcData);
@@ -204,7 +211,7 @@ public partial class ItemLookup
                 continue;
             }
 
-            if (MatchEventHandlerType(npcData, EventHandlerType.InclusionShop))
+            if (MatchEventHandlerType(npcData, EventHandlerType.FcShop))
             {
                 var fccShop = _fccShops.GetRow(npcData);
                 AddFccShop(fccShop, npcBase, resident);
@@ -305,11 +312,6 @@ public partial class ItemLookup
 
                 foreach (var arg in scriptArgs)
                 {
-                    if (arg == 0)
-                    {
-                        break;
-                    }
-
                     if (MatchEventHandlerType(arg, EventHandlerType.GilShop))
                     {
                         var gilShop = _gilShops.GetRow(arg);
@@ -572,6 +574,7 @@ public partial class ItemLookup
         FcShop = 0x002A, // not sure how these numbers were obtained by the folks at sapphire. This works for my isolated use case though I guess.
         TopicSelect = 0x32,
         PreHandler = 0x36,
-        InclusionShop = 0x3a, // 0x38 seems to work too?
+        InclusionShop = 0x3a,
+        CollectablesShop = 0x003B,
     }
 }

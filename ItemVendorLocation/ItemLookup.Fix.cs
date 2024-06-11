@@ -152,48 +152,6 @@ public partial class ItemLookup
             case 1033921: // faux
                 AddSpecialItem(_specialShops.GetRow(1770282), npcBase, resident);
                 return true;
-            case 1027566: // Limbeth, Resplendent Tool Exchange
-                // we only need the first three npc data (the last one is CustomTalk, we dont need it here)
-                // the first one is from CollectablesShopItem and the last one is from SpecialShop
-                AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[0]), npcBase, resident);
-                // the second one is obsolete materials, even though they are not craftable, still add them anyway
-                AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[1]), npcBase, resident);
-                // after adding all the items, build the cost
-                AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
-                return true;
-            case 1035014: // Spanner, Skysteel Tool Exchange (but it doesnt seem to do anything???)
-                // NPCData:
-                // 0 - Story
-                // 1 - Default talk
-                // 2 - CollectableShop
-                // 3 ~ 5 - PreHandler
-                AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
-                for (var i = 3; i <= 5; i++)
-                {
-                    var preHandler = _preHandlers.GetRow(npcBase.ENpcData[i]);
-                    AddItemsInPrehandler(preHandler, npcBase, resident);
-                }
-
-                return true;
-            case 1032900:
-                // NPCData:
-                // 0 - Story id
-                // 1 - SwitchTalk
-                // 2 ~ 3 SpecialShop 
-                // 4 - CollectableShop
-                // 5 - SpecialShop
-                // 6 - GilShop
-                // 7 - 8 PreHandler (Replica)
-
-                AddCollectablesShop(_collectablesShops.GetRow(npcBase.ENpcData[4]), npcBase, resident);
-                AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[2]), npcBase, resident);
-                AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[3]), npcBase, resident);
-                AddSpecialItem(_specialShops.GetRow(npcBase.ENpcData[5]), npcBase, resident);
-                AddGilShopItem(_gilShops.GetRow(npcBase.ENpcData[6]), npcBase, resident);
-                AddItemsInPrehandler(_preHandlers.GetRow(npcBase.ENpcData[7]), npcBase, resident);
-                AddItemsInPrehandler(_preHandlers.GetRow(npcBase.ENpcData[8]), npcBase, resident);
-                return true;
-
             // add quest rewards, like relic weapons, to item list
             // but this needs to upadte every time when a new patch drops
             // hopefully someone can find a better way to handle this -- nuko

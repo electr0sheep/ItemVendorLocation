@@ -93,17 +93,17 @@ public class EntryPoint : IDalamudPlugin
             return;
         }
 
-        var menuItem = new MenuItem
-        {
-            IsEnabled = true,
-            IsReturn = false,
-            IsSubmenu = false,
-            Prefix = SeIconChar.BoxedLetterV,
-            PrefixColor = 518,
-        };
-
         foreach (var (itemInfo, isGlamour) in itemInfos)
         {
+            var menuItem = new MenuItem
+            {
+                IsEnabled = true,
+                IsReturn = false,
+                IsSubmenu = false,
+                Prefix = SeIconChar.BoxedLetterV,
+                PrefixColor = 518,
+            };
+
             if (isGlamour)
                 menuItem.Name = _buttonName + "(Glamour)";
             else

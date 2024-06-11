@@ -12,14 +12,19 @@ internal class Utilities
 {
     private static readonly HashSet<string> GameAddonWhitelist = new()
     {
+        "CharacterInspect",
         "ChatLog",
         "ColorantColoring",
         "ContentsInfoDetail",
         "DailyQuestSupply",
+        "FreeCompanyCreditShop",
+        "GrandCompanyExchange",
         "HousingCatalogPreview",
         "HousingGoods",
+        "InclusionShop",
         "ItemSearch",
         "Journal",
+        "MateriaAttach",
         "RecipeMaterialList",
         "RecipeNote",
         "RecipeTree",
@@ -28,12 +33,7 @@ internal class Utilities
         "ShopExchangeCurrency",
         "SubmarinePartsMenu",
         "Tryon",
-        "GrandCompanyExchange",
         "Shop",
-        "CharacterInspect",
-        "InclusionShop",
-        "FreeCompanyCreditShop",
-        "MateriaAttach",
     };
 
     internal static void OutputChatLine(SeString message)

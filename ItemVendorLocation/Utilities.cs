@@ -77,12 +77,14 @@ internal class Utilities
             return results;
         }
 
-        if (string.IsNullOrEmpty(args.AddonName))
+        var addonName = args.AddonName;
+
+        if (string.IsNullOrEmpty(addonName))
         {
             return results;
         }
 
-        if (!GameAddonWhitelist.Contains(args.AddonName))
+        if (!GameAddonWhitelist.Contains(addonName))
         {
             return results;
         }
@@ -94,14 +96,14 @@ internal class Utilities
             return results;
         }
 
-        uint itemId;
+        uint itemId = 0;
         uint glamorItemId = 0;
 
-        switch (args.AddonName)
+        switch (addonName)
         {
             case "RecipeNote":
             {
-                var recipeNoteAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                var recipeNoteAgent = Service.GameGui.FindAgentInterface(addonName);
                 // sig: 89 91 ? ? ? ? 48 8B D9 E8 ? ? ? ? 48 8B C8 48 8B F8 E8 ? ? ? ? 40 F6 C6 (offset is still the same in dt benchmark)
                 itemId = *(uint*)(recipeNoteAgent + 0x398);
                 break;
@@ -117,7 +119,7 @@ internal class Utilities
             }
             case "ColorantColoring":
             {
-                var colorantColoringAgent = Service.GameGui.FindAgentInterface(args.AddonName);
+                var colorantColoringAgent = Service.GameGui.FindAgentInterface(addonName);
                 // 89 47 ? 39 5F ? 74
                 itemId = *(uint*)(colorantColoringAgent + 0x34);
                 break;
@@ -125,7 +127,7 @@ internal class Utilities
             case "GrandCompanyExchange":
             case "ShopExchangeItem":
             {
-                var agent = Service.GameGui.FindAgentInterface(args.AddonName);
+                var agent = Service.GameGui.FindAgentInterface(addonName);
                 // base sig:
                 //     dt benchmark: 48 8D 4F ? C6 44 24 ? ? 41 83 CF
                 //     6.58: 48 8D 4E ? 44 0F B6 4D
@@ -135,7 +137,7 @@ internal class Utilities
             }
             case "ChatLog":
             {
-                var agent = Service.GameGui.FindAgentInterface(args.AddonName);
+                var agent = Service.GameGui.FindAgentInterface(addonName);
                 Service.PluginLog.Debug($"{agent:X}");
                 // 6.58 sig: 89 83 ? ? ? ? E8 ? ? ? ? 66 89 83 ? ? ? ? 66 85 C0
                 // DT benchmark sig: 41 89 86 ? ? ? ? E8 ? ? ? ? 66 41 89 86 ? ? ? ? 66 85 C0 (offset changes in dt benchmark)
@@ -144,7 +146,7 @@ internal class Utilities
             }
             case "ContentsInfoDetail":
             {
-                var agent = Service.GameGui.FindAgentInterface(args.AddonName);
+                var agent = Service.GameGui.FindAgentInterface("ContentsInfo");
                 // sig: 8B 97 ? ? ? ? 48 8B C8 E8 ? ? ? ? E9 ? ? ? ? 48 83 FB ? 75 ? 8B 91 (offset is still the same in dt benchmark)
                 itemId = *(uint*)(agent + 0x17CC);
                 break;
@@ -157,7 +159,7 @@ internal class Utilities
             case "CharacterInspect":
             {
                 var container = InventoryManager.Instance()->GetInventoryContainer(InventoryType.Examine);
-                var agent = Service.GameGui.FindAgentInterface(args.AddonName);
+                var agent = Service.GameGui.FindAgentInterface(addonName);
 
                 // signature: 89 AB ? ? ? ? E8 ? ? ? ? 48 8B C8 48 8B F8 (offset changes in dt benchmark)
                 var selectedSlot = *(int*)(agent + 0x4B4);

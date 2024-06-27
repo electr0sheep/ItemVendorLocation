@@ -120,7 +120,6 @@ internal class Utilities
             case "ColorantColoring":
             {
                 var colorantColoringAgent = Service.GameGui.FindAgentInterface(addonName);
-                // 89 47 ? 39 5F ? 74
                 itemId = *(uint*)(colorantColoringAgent + 0x34);
                 break;
             }
@@ -141,7 +140,7 @@ internal class Utilities
                 Service.PluginLog.Debug($"{agent:X}");
                 // 6.58 sig: 89 83 ? ? ? ? E8 ? ? ? ? 66 89 83 ? ? ? ? 66 85 C0
                 // DT benchmark sig: 41 89 86 ? ? ? ? E8 ? ? ? ? 66 41 89 86 ? ? ? ? 66 85 C0 (offset changes in dt benchmark)
-                itemId = *(uint*)(agent + 0x948);
+                itemId = *(uint*)(agent + 0x950);
                 break;
             }
             case "ContentsInfoDetail":
@@ -162,7 +161,7 @@ internal class Utilities
                 var agent = Service.GameGui.FindAgentInterface(addonName);
 
                 // signature: 89 AB ? ? ? ? E8 ? ? ? ? 48 8B C8 48 8B F8 (offset changes in dt benchmark)
-                var selectedSlot = *(int*)(agent + 0x4B4);
+                var selectedSlot = *(int*)(agent + 0x44C);
 
                 var item = container->GetInventorySlot(selectedSlot);
                 itemId = CorrectItemId(item->GetItemId());

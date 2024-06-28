@@ -82,7 +82,7 @@ internal class HighlightObject : IDisposable
             if (!i.IsValid())
                 return false;
             var obj = (GameObject*)i.Address;
-            var found = obj->DataID == _targetNpcDataId;
+            var found = obj->BaseId == _targetNpcDataId;
             return found;
         });
 

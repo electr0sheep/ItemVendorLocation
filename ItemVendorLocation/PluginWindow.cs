@@ -3,8 +3,8 @@ using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using ItemVendorLocation.Models;
 using System.Numerics;
-using Dalamud.Interface.Internal.Notifications;
 using Dalamud.Interface.Components;
+using Dalamud.Interface.ImGuiNotification;
 
 namespace ItemVendorLocation;
 

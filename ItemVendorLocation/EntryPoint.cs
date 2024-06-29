@@ -50,10 +50,10 @@ public class EntryPoint : IDalamudPlugin
     private readonly XivCommonBase _xivCommon;
     private readonly ExcelSheet<Item> _items;
 
-    public EntryPoint([RequiredVersion("1.0")] DalamudPluginInterface pi)
+    public EntryPoint(DalamudPluginInterface pi)
     {
         _ = pi.Create<Service>();
-
+        
         Localization.SetupLocalization(Service.ClientState.ClientLanguage);
         _buttonName = Loc.Localize("ContextMenuItem", "Vendor location");
         ItemLookup = new();
@@ -85,7 +85,7 @@ public class EntryPoint : IDalamudPlugin
         });
     }
 
-    private void ContextMenu_OnMenuOpened(MenuOpenedArgs args)
+    private void ContextMenu_OnMenuOpened(IMenuOpenedArgs args)
     {
         var itemInfos = Utilities.GetItemInfoFromContextMenu(args);
         if (itemInfos.Count == 0)

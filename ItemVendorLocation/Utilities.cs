@@ -54,7 +54,7 @@ internal class Utilities
                };
     }
 
-    internal static unsafe List<(ItemInfo, bool)> GetItemInfoFromContextMenu(MenuOpenedArgs args)
+    internal static unsafe List<(ItemInfo, bool)> GetItemInfoFromContextMenu(IMenuOpenedArgs args)
     {
         var results = new List<(ItemInfo, bool)>();
 
@@ -165,7 +165,7 @@ internal class Utilities
 
                 var item = container->GetInventorySlot(selectedSlot);
                 itemId = CorrectItemId(item->GetItemId());
-                glamorItemId = CorrectItemId(item->GlamourID);
+                glamorItemId = CorrectItemId(item->GlamourId);
                 break;
             }
             // TODO: Find itemId offset in AgentInterface, HoveredItem is inaccurate sometimes (maybe?)

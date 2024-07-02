@@ -123,7 +123,8 @@ public class EntryPoint : IDalamudPlugin
     {
         if (args.IsNullOrEmpty())
         {
-            Service.ItemSearchUi.IsOpen = true;
+            //Service.ItemSearchUi.IsOpen = true;
+            Service.SettingsUi.IsOpen = true;
             return;
         }
 

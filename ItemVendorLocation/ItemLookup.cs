@@ -557,6 +557,11 @@ public partial class ItemLookup
         return _itemDataMap.TryGetValue(itemId, out var itemInfo) ? itemInfo : null;
     }
 
+    public Dictionary<uint, ItemInfo> GetItems()
+    {
+        return _itemDataMap;
+    }
+
     // https://discord.com/channels/581875019861328007/653504487352303619/860865002721247261
     // https://github.com/SapphireServer/Sapphire/blob/a5c15f321f7e795ed7362ae15edaada99ca7d9be/src/world/Manager/EventMgr.cpp#L14
     private static bool MatchEventHandlerType(uint data, EventHandlerType type)

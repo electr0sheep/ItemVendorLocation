@@ -1,8 +1,8 @@
 # ItemVendorLocation
 Adds a context menu to find vendor locations for items that can be purchased from a vendor.
 Also adds a chat command that can be used to search for items
-`xlvendor` opens the configuration window
-`xlvendor ceruleum tank` searches for an item with "ceruleum tank" in the name. This is not case-sensitive and results are limited
+`pvendor` opens the configuration window
+`pvendor ceruleum tank` searches for an item with "ceruleum tank" in the name. This is not case-sensitive and results are limited
 to a maximum of 50.
 
 The plugin provides the following indicators to know if an item is sold by a vendor:
@@ -35,11 +35,11 @@ results in one of two possible formats.
 
 ![Alt text](/Images/ChatVendorLocation.png?raw=true "Vendor Location")
 
-In addition, there is a chat command that can be used i.e. `/xlvendor bronze chaser hammer`
+In addition, there is a chat command that can be used i.e. `/pvendor bronze chaser hammer`
 
 # Contributors
 I appreciate everyone who has contributed, visible over there to the right.
 
 It would be remiss of me to not give special mention to [Nuko](https://github.com/NukoOoOoOoO) for a near complete rewrite.
-They reworked the plugin to completly remove Garland Tools as the data source. This must have taken
-a ton of work, and is much appreciated!
+They reworked the plugin to completly remove Garland Tools as the data source. This must have taken a ton of work, and is
+much appreciated! In addition to this, Nuko continues to maintain and add features to the plugin regularly. Thanks a ton Nuko!

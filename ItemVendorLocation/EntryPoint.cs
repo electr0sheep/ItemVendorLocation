@@ -46,11 +46,13 @@ public class EntryPoint : IDalamudPlugin
     public ItemLookup ItemLookup = null!;
     public string Name => "ItemVendorLocation";
 
+    public const string _commandName = "/pvendor";
+
     private readonly WindowSystem _windowSystem;
     private readonly XivCommonBase _xivCommon;
     private readonly ExcelSheet<Item> _items;
 
-    public EntryPoint(DalamudPluginInterface pi)
+    public EntryPoint(IDalamudPluginInterface pi)
     {
         _ = pi.Create<Service>();
         
@@ -67,21 +69,24 @@ public class EntryPoint : IDalamudPlugin
         // Initialize the UI
         _windowSystem = new(typeof(EntryPoint).AssemblyQualifiedName);
         Service.SettingsUi = new();
-        Service.PluginUi = new();
+        Service.VendorResultsUi = new();
+        Service.ItemSearchUi = new();
 
         _items = Service.DataManager.GetExcelSheet<Item>()!;
 
-        _windowSystem.AddWindow(Service.PluginUi);
+        _windowSystem.AddWindow(Service.VendorResultsUi);
         _windowSystem.AddWindow(Service.SettingsUi);
+        _windowSystem.AddWindow(Service.ItemSearchUi);
 
         Service.Ipc.OnOpenChatTwoItemContextMenu += OnOpenChatTwoItemContextMenu;
         _xivCommon.Functions.Tooltips.OnItemTooltip += Tooltips_OnOnItemTooltip;
         Service.ContextMenu.OnMenuOpened += ContextMenu_OnMenuOpened;
         Service.Interface.UiBuilder.Draw += _windowSystem.Draw;
         Service.Interface.UiBuilder.OpenConfigUi += OnOpenConfigUi;
-        _ = Service.CommandManager.AddHandler(Service.Configuration.CommandName, new(OnCommand)
+        _ = Service.CommandManager.AddHandler(_commandName, new(OnCommand)
         {
             HelpMessage = "Displays the Item Vendor Location config window",
+
         });
     }
 
@@ -117,6 +122,12 @@ public class EntryPoint : IDalamudPlugin
     private void OnCommand(string command, string args)
     {
         if (args.IsNullOrEmpty())
+        {
+            Service.ItemSearchUi.IsOpen = true;
+            return;
+        }
+
+        if (args == "config")
         {
             Service.SettingsUi.IsOpen = true;
             return;
@@ -266,10 +277,10 @@ public class EntryPoint : IDalamudPlugin
 
     private static void ShowMultipleVendors(ItemInfo item)
     {
-        Service.PluginUi.SetItemToDisplay(item);
-        Service.PluginUi.IsOpen = true;
-        Service.PluginUi.Collapsed = false;
-        Service.PluginUi.CollapsedCondition = ImGuiCond.Once;
+        Service.VendorResultsUi.SetItemToDisplay(item);
+        Service.VendorResultsUi.IsOpen = true;
+        Service.VendorResultsUi.Collapsed = false;
+        Service.VendorResultsUi.CollapsedCondition = ImGuiCond.Once;
     }
 
     private static void ShowSingleVendor(ItemInfo item)
@@ -330,8 +341,9 @@ public class EntryPoint : IDalamudPlugin
         Service.Ipc.Disable();
         Service.HighlightObject.Dispose();
 
-        _ = Service.CommandManager.RemoveHandler(Service.Configuration.CommandName);
+        _ = Service.CommandManager.RemoveHandler(_commandName);
         _xivCommon.Functions.Tooltips.OnItemTooltip -= Tooltips_OnOnItemTooltip;
+        _xivCommon.Dispose();
         Service.ContextMenu.OnMenuOpened -= ContextMenu_OnMenuOpened;
 
         Service.Interface.UiBuilder.Draw -= _windowSystem.Draw;

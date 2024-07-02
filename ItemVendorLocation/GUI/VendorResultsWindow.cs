@@ -6,13 +6,13 @@ using System.Numerics;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.ImGuiNotification;
 
-namespace ItemVendorLocation;
+namespace ItemVendorLocation.GUI;
 
-public class PluginWindow : Window
+public class VendorResultsWindow : Window
 {
     private ItemInfo _itemToDisplay;
 
-    public PluginWindow() : base("Item Vendor Location")
+    public VendorResultsWindow() : base("Item Vendor Location")
     {
         SizeConstraints = new WindowSizeConstraints()
         {
@@ -61,7 +61,7 @@ public class PluginWindow : Window
                     _ = Service.GameGui.OpenMapWithMapLink(new(location.TerritoryType, location.MapId, location.MapX, location.MapY, 0f));
                 }
 
-                bool isHoveringButton = ImGui.IsItemHovered();
+                var isHoveringButton = ImGui.IsItemHovered();
 
                 if (isHoveringButton)
                 {
@@ -128,7 +128,7 @@ public class PluginWindow : Window
             if (ImGui.BeginTable("Vendors", columnCount, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp, new(-1, -1)))
             {
 #if DEBUG
-            ImGui.TableSetupColumn("NPC ID");
+                ImGui.TableSetupColumn("NPC ID");
 #endif
                 ImGui.TableSetupColumn("NPC Name");
                 if (Service.Configuration.ShowShopName && _itemToDisplay.HasShopNames())

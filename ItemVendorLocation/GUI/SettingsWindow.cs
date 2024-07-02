@@ -7,7 +7,7 @@ using Lumina.Excel.GeneratedSheets;
 using System.Linq;
 using Dalamud.Game.ClientState.Keys;
 
-namespace ItemVendorLocation;
+namespace ItemVendorLocation.GUI;
 
 public class SettingsWindow : Window
 {

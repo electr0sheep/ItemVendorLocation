@@ -5,7 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Dalamud;
-using Dalamud.Common;
+using Dalamud.Game;
 
 namespace ItemVendorLocation;
 #if DEBUG

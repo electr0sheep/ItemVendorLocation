@@ -17,7 +17,6 @@
 		<PackageReference Include="CheapLoc" Version="1.1.8" />
 		<PackageReference Include="Dalamud.DrunkenToad" Version="1.9.2" />
 		<PackageReference Include="DalamudPackager" Version="2.1.13" />
-		<PackageReference Include="XivCommon" Version="9.0.0" />
 	</ItemGroup>
 
 	<PropertyGroup>
@@ -32,9 +31,6 @@
 		<Reference Include="Dalamud">
 			<HintPath>$(DalamudLibPath)\Dalamud.dll</HintPath>
 			<Private>false</Private>
-		</Reference>
-		<Reference Include="Dalamud.Common">
-		  <HintPath>$(DalamudLibPath)\Dalamud.Common.dll</HintPath>
 		</Reference>
 		<Reference Include="ImGui.NET">
 			<HintPath>$(DalamudLibPath)\ImGui.NET.dll</HintPath>
@@ -55,6 +51,9 @@
 		<Reference Include="FFXIVClientStructs">
 			<HintPath>$(DalamudLibPath)\FFXIVClientStructs.dll</HintPath>
 			<Private>false</Private>
+		</Reference>
+		<Reference Include="XivCommon">
+		  <HintPath>..\..\XivCommon\XivCommon\bin\Debug\net8-windows\XivCommon.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 

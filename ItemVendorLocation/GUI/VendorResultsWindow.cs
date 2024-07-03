@@ -123,49 +123,48 @@ public class VendorResultsWindow : Window
             columnCount++;
         }
 
-        if (ImGui.BeginChild("VendorListChild"))
-        {
-            if (ImGui.BeginTable("Vendors", columnCount, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp, new(-1, -1)))
-            {
+        if (!ImGui.BeginChild("VendorListChild"))
+            return;
+        if (!ImGui.BeginTable("Vendors", columnCount, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchProp | ImGuiTableFlags.RowBg | ImGuiTableFlags.ScrollY, new(-1, -1)))
+            return;
+        ImGui.TableSetupScrollFreeze(0, 1);
 #if DEBUG
-                ImGui.TableSetupColumn("NPC ID");
+        ImGui.TableSetupColumn("NPC ID");
 #endif
-                ImGui.TableSetupColumn("NPC Name");
-                if (Service.Configuration.ShowShopName && _itemToDisplay.HasShopNames())
-                {
-                    ImGui.TableSetupColumn("Shop Name");
-                }
-
-                ImGui.TableSetupColumn("Location");
-                ImGui.TableSetupColumn(_itemToDisplay.Type == ItemType.CollectableExchange ? "Exchange Rate" : "Cost");
-
-                if (_itemToDisplay.Type == ItemType.Achievement)
-                {
-                    ImGui.TableSetupColumn("Obtain Requirement");
-                }
-
-                ImGui.TableHeadersRow();
-
-                foreach (var npcInfo in _itemToDisplay.NpcInfos)
-                {
-                    string costStr;
-                    if (_itemToDisplay.Type == ItemType.CollectableExchange)
-                    {
-                        costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} will yield {cost.Item1}\n");
-                    }
-                    else
-                    {
-                        costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
-                        costStr = costStr.Length > 0 ? costStr[..^2] : "";
-                    }
-
-                    DrawTableRow(npcInfo, npcInfo.ShopName, npcInfo.Location, costStr);
-                }
-
-                ImGui.EndTable();
-            }
-            ImGui.EndChild();
+        ImGui.TableSetupColumn("NPC Name");
+        if (Service.Configuration.ShowShopName && _itemToDisplay.HasShopNames())
+        {
+            ImGui.TableSetupColumn("Shop Name");
         }
+
+        ImGui.TableSetupColumn("Location");
+        ImGui.TableSetupColumn(_itemToDisplay.Type == ItemType.CollectableExchange ? "Exchange Rate" : "Cost");
+
+        if (_itemToDisplay.Type == ItemType.Achievement)
+        {
+            ImGui.TableSetupColumn("Obtain Requirement");
+        }
+
+        ImGui.TableHeadersRow();
+
+        foreach (var npcInfo in _itemToDisplay.NpcInfos)
+        {
+            string costStr;
+            if (_itemToDisplay.Type == ItemType.CollectableExchange)
+            {
+                costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} will yield {cost.Item1}\n");
+            }
+            else
+            {
+                costStr = npcInfo.Costs.Aggregate("", (current, cost) => current + $"{cost.Item2} x{cost.Item1}, ");
+                costStr = costStr.Length > 0 ? costStr[..^2] : "";
+            }
+
+            DrawTableRow(npcInfo, npcInfo.ShopName, npcInfo.Location, costStr);
+        }
+
+        ImGui.EndTable();
+        ImGui.EndChild();
     }
 
     public void SetItemToDisplay(ItemInfo item)

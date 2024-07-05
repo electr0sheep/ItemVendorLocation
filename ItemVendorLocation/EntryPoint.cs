@@ -4,15 +4,14 @@ using System.Linq;
 using CheapLoc;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
-using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ItemVendorLocation.Models;
 using Lumina.Excel;
 using Lumina.Excel.GeneratedSheets;
-using XivCommon;
-using XivCommon.Functions.Tooltips;
+using ItemVendorLocation.XIVCommon;
+using ItemVendorLocation.XIVCommon.Functions.Tooltips;
 using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Keys;
@@ -44,7 +43,7 @@ public class EntryPoint : IDalamudPlugin
     private readonly string _buttonName;
 
     public ItemLookup ItemLookup = null!;
-    public string Name => "ItemVendorLocation";
+    public static string Name => "ItemVendorLocation";
 
     public const string _commandName = "/pvendor";
 
@@ -55,7 +54,6 @@ public class EntryPoint : IDalamudPlugin
     public EntryPoint(IDalamudPluginInterface pi)
     {
         _ = pi.Create<Service>();
-        
         Localization.SetupLocalization(Service.ClientState.ClientLanguage);
         _buttonName = Loc.Localize("ContextMenuItem", "Vendor location");
         ItemLookup = new();
@@ -63,7 +61,7 @@ public class EntryPoint : IDalamudPlugin
         Service.Configuration = pi.GetPluginConfig() as PluginConfiguration ?? new PluginConfiguration();
         Service.Ipc = new(pi);
         Service.Ipc.Enable();
-        _xivCommon = new(pi, Hooks.Tooltips);
+        _xivCommon = new();
         Service.HighlightObject = new();
 
         // Initialize the UI
@@ -217,7 +215,7 @@ public class EntryPoint : IDalamudPlugin
         }
 
         var origStr = itemtooltip[ItemTooltipString.ShopSellingPrice];
-        var colonIndex = origStr.TextValue.IndexOfAny(new[] { '：', ':' });
+        var colonIndex = origStr.TextValue.IndexOfAny(['：', ':']);
 
         switch (itemInfo.Type)
         {
@@ -257,7 +255,7 @@ public class EntryPoint : IDalamudPlugin
         }
     }
 
-    private void ContextMenuCallback(ItemInfo itemInfo)
+    private static void ContextMenuCallback(ItemInfo itemInfo)
     {
         // filteredResults allows us to apply filters without modifying core data,
         // itemInfo is initialized once upon plugin load, so a filter would not

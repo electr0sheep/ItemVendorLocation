@@ -10,7 +10,7 @@ namespace ItemVendorLocation;
 
 internal class Ipc
 {
-    public Ipc(DalamudPluginInterface pi)
+    public Ipc(IDalamudPluginInterface pi)
     {
         Register = pi.GetIpcSubscriber<string>("ChatTwo.Register");
         Unregister = pi.GetIpcSubscriber<string, object?>("ChatTwo.Unregister");

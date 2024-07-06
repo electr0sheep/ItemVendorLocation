@@ -1,5 +1,5 @@
 ﻿using CheapLoc;
-using Dalamud;
+using Dalamud.Game;
 
 namespace ItemVendorLocation;
 

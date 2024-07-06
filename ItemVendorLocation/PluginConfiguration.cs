@@ -9,7 +9,6 @@ public class PluginConfiguration : IPluginConfiguration
 {
     public int Version { get; set; } = 1;
 
-    public string CommandName = "/xlvendor";
     public ResultsViewType ResultsViewType { get; set; } = ResultsViewType.Multiple;
     public ushort NPCNameChatColor { get; set; } = 67;
     public bool FilterGCResults { get; set; } = false;

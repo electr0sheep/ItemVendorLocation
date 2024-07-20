@@ -16,10 +16,10 @@ namespace ItemVendorLocation.Models
         private readonly Dictionary<int, uint> currencies = new()
         {
             { 1, 28 },
-            { 2, 25199 },
-            { 4, 25200 },
-            { 6, 33913 },
-            { 7, 33914 },
+            { 2, 33913 },
+            { 4, 33914 },
+            { 6, 41784 },
+            { 7, 41785 },
         };
 
         private readonly Dictionary<int, int> Tomestones = new();

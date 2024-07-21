@@ -42,7 +42,7 @@ public class EntryPoint : IDalamudPlugin
 
     private readonly string _buttonName;
 
-    public ItemLookup ItemLookup = null!;
+    public ItemLookup ItemLookup;
     public static string Name => "ItemVendorLocation";
 
     public const string _commandName = "/pvendor";
@@ -54,13 +54,16 @@ public class EntryPoint : IDalamudPlugin
     public EntryPoint(IDalamudPluginInterface pi)
     {
         _ = pi.Create<Service>();
+
         Localization.SetupLocalization(Service.ClientState.ClientLanguage);
         _buttonName = Loc.Localize("ContextMenuItem", "Vendor location");
         ItemLookup = new();
         Service.Plugin = this;
         Service.Configuration = pi.GetPluginConfig() as PluginConfiguration ?? new PluginConfiguration();
-        Service.Ipc = new(pi);
-        Service.Ipc.Enable();
+        Service.ChatTwoIpc = new(pi);
+        Service.ChatTwoIpc.Enable();
+        Service.ItemVendorLocationIpc = new();
+
         _xivCommon = new();
         Service.HighlightObject = new();
 
@@ -76,7 +79,7 @@ public class EntryPoint : IDalamudPlugin
         _windowSystem.AddWindow(Service.SettingsUi);
         _windowSystem.AddWindow(Service.ItemSearchUi);
 
-        Service.Ipc.OnOpenChatTwoItemContextMenu += OnOpenChatTwoItemContextMenu;
+        Service.ChatTwoIpc.OnOpenChatTwoItemContextMenu += OnOpenChatTwoItemContextMenu;
         _xivCommon.Functions.Tooltips.OnItemTooltip += Tooltips_OnOnItemTooltip;
         Service.ContextMenu.OnMenuOpened += ContextMenu_OnMenuOpened;
         Service.Interface.UiBuilder.Draw += _windowSystem.Draw;
@@ -336,8 +339,9 @@ public class EntryPoint : IDalamudPlugin
             return;
         }
 
-        Service.Ipc.OnOpenChatTwoItemContextMenu -= OnOpenChatTwoItemContextMenu;
-        Service.Ipc.Disable();
+        Service.ChatTwoIpc.OnOpenChatTwoItemContextMenu -= OnOpenChatTwoItemContextMenu;
+        Service.ChatTwoIpc.Disable();
+        Service.ItemVendorLocationIpc.Dispose();
         Service.HighlightObject.Dispose();
 
         _ = Service.CommandManager.RemoveHandler(_commandName);

@@ -3,6 +3,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using ItemVendorLocation.GUI;
+using ItemVendorLocation.IPC;
 
 namespace ItemVendorLocation;
 
@@ -13,7 +14,8 @@ internal class Service
     internal static SettingsWindow SettingsUi { get; set; } = null!;
     internal static ItemSearchWindow ItemSearchUi { get; set; } = null!;
     internal static PluginConfiguration Configuration { get; set; } = null!;
-    internal static Ipc Ipc { get; set; } = null!;
+    internal static ChatTwoIPC ChatTwoIpc { get; set; } = null!;
+    internal static ItemVendorLocationIpc ItemVendorLocationIpc{ get; set; } = null!;
     internal static HighlightObject HighlightObject { get; set; } = null!;
 
 

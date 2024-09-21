@@ -19,6 +19,9 @@ using Dalamud.Game.Gui.ContextMenu;
 using Dalamud.Game.Text;
 using ImGuiNET;
 using ItemInfo = ItemVendorLocation.Models.ItemInfo;
+using FFXIVClientStructs.FFXIV.Component.GUI;
+using FFXIVClientStructs.FFXIV.Client.UI.Agent;
+using FFXIVClientStructs.FFXIV.Client.UI;
 
 namespace ItemVendorLocation;
 
@@ -86,6 +89,28 @@ public class EntryPoint : IDalamudPlugin
             HelpMessage = "Displays the Item Vendor Location config window",
 
         });
+        Service.Framework.Update += Framework_Update;
+    }
+
+    private unsafe void Framework_Update(Dalamud.Plugin.Services.IFramework framework)
+    {
+        var addonPtr = Service.GameGui.GetAddonByName("MiragePrismPrismItemDetail");
+        if (addonPtr == nint.Zero)
+        {
+            return;
+        }
+        var addon = (AtkUnitBase*)addonPtr;
+        var textNode = addon->GetComponentByNodeId(16)->GetTextNodeById(2)->GetAsAtkTextNode();
+        var text = textNode->NodeText;
+        if (text.ToString().Contains("Shop Selling Price"))
+        {
+            return;
+        }
+        var uiModule = (UIModule*)Service.GameGui.GetUIModule();
+        var agents = uiModule->GetAgentModule();
+        var agent = (AgentMiragePrismPrismItemDetail*)agents->GetAgentByInternalId(AgentId.MiragePrismPrismItemDetail);
+        var itemId = Utilities.CorrectItemId(agent->ItemId);
+        textNode->SetText($"{text}    {Utilities.GetToolTipString(itemId)}");
     }
 
     private void ContextMenu_OnMenuOpened(IMenuOpenedArgs args)

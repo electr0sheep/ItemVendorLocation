@@ -5,6 +5,10 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using ItemInfo = ItemVendorLocation.Models.ItemInfo;
+using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using ItemVendorLocation.Models;
+using ItemVendorLocation.XIVCommon.Functions.Tooltips;
+using System.Linq;
 
 namespace ItemVendorLocation;
 
@@ -25,6 +29,7 @@ internal class Utilities
         "ItemSearch",
         "Journal",
         "MateriaAttach",
+        "MiragePrismPrismBoxCrystallize",
         "RecipeMaterialList",
         "RecipeNote",
         "RecipeTree",
@@ -168,6 +173,14 @@ internal class Utilities
                 glamorItemId = CorrectItemId(item->GlamourId);
                 break;
             }
+            case "MiragePrismPrismBoxCrystallize":
+                {
+                    var uiModule = (UIModule*)Service.GameGui.GetUIModule();
+                    var agents = uiModule->GetAgentModule();
+                    var agent = (AgentMiragePrismPrismBox*)agents->GetAgentByInternalId(AgentId.MiragePrismPrismBox);
+                    itemId = CorrectItemId(agent->Data->TempContextItem.ItemId);
+                    break;
+                }
             // TODO: Find itemId offset in AgentInterface, HoveredItem is inaccurate sometimes (maybe?)
             default:
             {
@@ -189,5 +202,48 @@ internal class Utilities
         }
 
         return results;
+    }
+    
+    internal static unsafe SeString GetToolTipString(uint itemId)
+    {
+        var itemInfo = Service.Plugin.ItemLookup.GetItemInfo(Utilities.CorrectItemId(itemId));
+
+        if (itemInfo == null)
+        {
+            return "Shop Selling Price: None";
+        }
+
+        switch (itemInfo.Type)
+        {
+            case ItemType.GilShop:
+                var costStr = itemInfo.NpcInfos[0].Costs[0].Item1.ToString();
+                return $"Shop Selling Price: {costStr}";
+            case ItemType.GcShop:
+                var npcInfos = itemInfo.NpcInfos;
+                var playerGC = UIState.Instance()->PlayerState.GrandCompany;
+                var otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[playerGC]);
+                // Only remove items if doing so doesn't remove all the results
+                if (npcInfos.Any(i => !otherGcVendorIds.Contains(i.Id)))
+                {
+                    _ = npcInfos.RemoveAll(i => otherGcVendorIds.Contains(i.Id));
+                }
+
+                var info = npcInfos.First();
+
+                costStr = $"{info.Costs[0].Item2} x{info.Costs[0].Item1}";
+
+                return $"Shop Selling Price: {costStr}";
+            case ItemType.SpecialShop:
+                return "Shop Selling Price: Special Shop";
+            case ItemType.FcShop:
+                info = itemInfo.NpcInfos.First();
+                costStr = $"FC Credits x{info.Costs[0].Item1}";
+                return $"Shop Selling Price: {costStr}";
+            case ItemType.CollectableExchange:
+                return $"Shop Selling Price: Collectables Exchange Reward";
+            default:
+                return "Shop Selling Price: None";
+        }
+
     }
 }

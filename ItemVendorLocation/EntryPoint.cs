@@ -100,7 +100,12 @@ public class EntryPoint : IDalamudPlugin
             return;
         }
         var addon = (AtkUnitBase*)addonPtr;
-        var textNode = addon->GetComponentByNodeId(16)->GetTextNodeById(2)->GetAsAtkTextNode();
+        var componentNode = addon->GetComponentByNodeId(16);
+        if (componentNode == null)
+        {
+            return;
+        }
+        var textNode = componentNode->GetTextNodeById(2)->GetAsAtkTextNode();
         var text = textNode->NodeText;
         if (text.ToString().Contains("Shop Selling Price"))
         {

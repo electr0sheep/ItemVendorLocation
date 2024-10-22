@@ -14,6 +14,8 @@ using ItemVendorLocation.XIVCommon;
 using ItemVendorLocation.XIVCommon.Functions.Tooltips;
 using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
 using System.Threading.Tasks;
+using Dalamud.Game.Addon.Lifecycle;
+using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.Gui.ContextMenu;
 using Dalamud.Game.Text;
@@ -84,33 +86,32 @@ public class EntryPoint : IDalamudPlugin
         Service.ContextMenu.OnMenuOpened += ContextMenu_OnMenuOpened;
         Service.Interface.UiBuilder.Draw += _windowSystem.Draw;
         Service.Interface.UiBuilder.OpenConfigUi += OnOpenConfigUi;
+
+        Service.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, "MiragePrismPrismItemDetail", OnMiragePrismPrismItemDetailPreDraw);
+
         _ = Service.CommandManager.AddHandler(_commandName, new(OnCommand)
         {
             HelpMessage = "Displays the Item Vendor Location config window",
 
         });
-        Service.Framework.Update += Framework_Update;
     }
 
-    private unsafe void Framework_Update(Dalamud.Plugin.Services.IFramework framework)
+    private static unsafe void OnMiragePrismPrismItemDetailPreDraw(AddonEvent type, AddonArgs args)
     {
-        var addonPtr = Service.GameGui.GetAddonByName("MiragePrismPrismItemDetail");
-        if (addonPtr == nint.Zero)
-        {
-            return;
-        }
-        var addon = (AtkUnitBase*)addonPtr;
+        var addon = (AtkUnitBase*)args.Addon;
         var componentNode = addon->GetComponentByNodeId(16);
         if (componentNode == null)
         {
             return;
         }
+
         var textNode = componentNode->GetTextNodeById(2)->GetAsAtkTextNode();
         var text = textNode->NodeText;
         if (text.ToString().Contains("Shop Selling Price"))
         {
             return;
         }
+
         var uiModule = (UIModule*)Service.GameGui.GetUIModule();
         var agents = uiModule->GetAgentModule();
         var agent = (AgentMiragePrismPrismItemDetail*)agents->GetAgentByInternalId(AgentId.MiragePrismPrismItemDetail);
@@ -365,6 +366,8 @@ public class EntryPoint : IDalamudPlugin
         {
             return;
         }
+
+        Service.AddonLifecycle.UnregisterListener(AddonEvent.PreDraw, "MiragePrismPrismItemDetail", OnMiragePrismPrismItemDetailPreDraw);
 
         Service.Ipc.OnOpenChatTwoItemContextMenu -= OnOpenChatTwoItemContextMenu;
         Service.Ipc.Disable();

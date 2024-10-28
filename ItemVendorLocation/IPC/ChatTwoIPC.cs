@@ -6,11 +6,11 @@ using Dalamud.Plugin;
 
 //https://git.anna.lgbt/anna/ChatTwo/src/branch/main/ipc.md
 
-namespace ItemVendorLocation;
+namespace ItemVendorLocation.IPC;
 
-internal class Ipc
+internal class ChatTwoIPC
 {
-    public Ipc(IDalamudPluginInterface pi)
+    public ChatTwoIPC(IDalamudPluginInterface pi)
     {
         Register = pi.GetIpcSubscriber<string>("ChatTwo.Register");
         Unregister = pi.GetIpcSubscriber<string, object?>("ChatTwo.Unregister");
@@ -64,7 +64,7 @@ internal class Ipc
 
     public void Disable()
     {
-        if (!string.IsNullOrEmpty(_id)) 
+        if (!string.IsNullOrEmpty(_id))
             Unregister.InvokeAction(_id);
 
         Invoke?.Unsubscribe(Integration);

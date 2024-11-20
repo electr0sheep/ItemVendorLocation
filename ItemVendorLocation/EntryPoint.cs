@@ -9,7 +9,7 @@ using Dalamud.Utility;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ItemVendorLocation.Models;
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using ItemVendorLocation.XIVCommon;
 using ItemVendorLocation.XIVCommon.Functions.Tooltips;
 using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
@@ -168,9 +168,9 @@ public class EntryPoint : IDalamudPlugin
 
         _ = Task.Run(() =>
         {
-            if (_items.Any(i => string.Equals(i.Name.RawString, args, StringComparison.OrdinalIgnoreCase)))
+            if (_items.Any(i => string.Equals(i.Name.ExtractText(), args, StringComparison.OrdinalIgnoreCase)))
             {
-                foreach (var itemDetails in _items.Where(i => string.Equals(i.Name.RawString, args, StringComparison.OrdinalIgnoreCase))
+                foreach (var itemDetails in _items.Where(i => string.Equals(i.Name.ExtractText(), args, StringComparison.OrdinalIgnoreCase))
                                                   .Select(item => ItemLookup.GetItemInfo(item.RowId)).Where(itemDetails => itemDetails != null))
                 {
                     ShowSingleVendor(itemDetails!);
@@ -179,7 +179,7 @@ public class EntryPoint : IDalamudPlugin
                 return;
             }
 
-            var items = _items.Where(i => i.Name.RawString.Contains(args, StringComparison.OrdinalIgnoreCase)).ToList();
+            var items = _items.Where(i => i.Name.ExtractText().Contains(args, StringComparison.OrdinalIgnoreCase)).ToList();
             switch (items.Count)
             {
                 case 0:

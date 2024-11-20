@@ -7,7 +7,7 @@ using ItemVendorLocation.Models;
 using Lumina.Data.Files;
 using Lumina.Data.Parsing.Layer;
 using Lumina.Excel;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 
 namespace ItemVendorLocation;
 #if DEBUG
@@ -18,27 +18,27 @@ public partial class ItemLookup
 {
     private readonly ExcelSheet<Achievement> _achievements;
     private readonly ExcelSheet<CustomTalk> _customTalks;
-    private readonly ExcelSheet<CustomTalkNestHandlers> _customTalkNestHandlers;
+    private readonly SubrowExcelSheet<CustomTalkNestHandlers> _customTalkNestHandlers;
     private readonly ExcelSheet<CollectablesShop> _collectablesShops;
-    private readonly ExcelSheet<CollectablesShopItem> _collectablesShopItems;
+    private readonly SubrowExcelSheet<CollectablesShopItem> _collectablesShopItems;
     private readonly ExcelSheet<CollectablesShopRefine> _collectablesShopRefines;
     private readonly ExcelSheet<CollectablesShopRewardItem> _collectablesShopRewardItems;
     private readonly ExcelSheet<ENpcBase> _eNpcBases;
     private readonly ExcelSheet<ENpcResident> _eNpcResidents;
-    private readonly ExcelSheet<FateShopCustom> _fateShops;
+    private readonly ExcelSheet<FateShop> _fateShops;
     private readonly ExcelSheet<FccShop> _fccShops;
     private readonly ExcelSheet<GCShop> _gcShops;
     private readonly ExcelSheet<GCScripShopCategory> _gcScripShopCategories;
-    private readonly ExcelSheet<GCScripShopItem> _gcScripShopItems;
+    private readonly SubrowExcelSheet<GCScripShopItem> _gcScripShopItems;
     private readonly ExcelSheet<GilShop> _gilShops;
-    private readonly ExcelSheet<GilShopItem> _gilShopItems;
+    private readonly SubrowExcelSheet<GilShopItem> _gilShopItems;
     private readonly ExcelSheet<InclusionShop> _inclusionShops;
-    private readonly ExcelSheet<InclusionShopSeriesCustom> _inclusionShopSeries;
+    private readonly SubrowExcelSheet<InclusionShopSeries> _inclusionShopSeries;
     private readonly ExcelSheet<Item> _items;
     private readonly ExcelSheet<Map> _maps;
     private readonly ExcelSheet<PreHandler> _preHandlers;
-    private readonly ExcelSheet<QuestClassJobReward> _questClassJobRewards;
-    private readonly ExcelSheet<SpecialShopCustom> _specialShops;
+    private readonly SubrowExcelSheet<QuestClassJobReward> _questClassJobRewards;
+    private readonly ExcelSheet<SpecialShop> _specialShops;
     private readonly ExcelSheet<TerritoryType> _territoryType;
     private readonly ExcelSheet<TopicSelect> _topicSelects;
 
@@ -69,27 +69,27 @@ public partial class ItemLookup
 
         _achievements = Service.DataManager.GetExcelSheet<Achievement>();
         _customTalks = Service.DataManager.GetExcelSheet<CustomTalk>();
-        _customTalkNestHandlers = Service.DataManager.GetExcelSheet<CustomTalkNestHandlers>();
+        _customTalkNestHandlers = Service.DataManager.GetSubrowExcelSheet<CustomTalkNestHandlers>();
         _collectablesShops = Service.DataManager.GetExcelSheet<CollectablesShop>();
-        _collectablesShopItems = Service.DataManager.GetExcelSheet<CollectablesShopItem>();
+        _collectablesShopItems = Service.DataManager.GetSubrowExcelSheet<CollectablesShopItem>();
         _collectablesShopRefines = Service.DataManager.GetExcelSheet<CollectablesShopRefine>();
         _collectablesShopRewardItems = Service.DataManager.GetExcelSheet<CollectablesShopRewardItem>();
         _eNpcBases = Service.DataManager.GetExcelSheet<ENpcBase>();
         _eNpcResidents = Service.DataManager.GetExcelSheet<ENpcResident>();
-        _fateShops = Service.DataManager.GetExcelSheet<FateShopCustom>();
+        _fateShops = Service.DataManager.GetExcelSheet<FateShop>();
         _fccShops = Service.DataManager.GetExcelSheet<FccShop>();
         _gcShops = Service.DataManager.GetExcelSheet<GCShop>();
         _gcScripShopCategories = Service.DataManager.GetExcelSheet<GCScripShopCategory>();
-        _gcScripShopItems = Service.DataManager.GetExcelSheet<GCScripShopItem>();
+        _gcScripShopItems = Service.DataManager.GetSubrowExcelSheet<GCScripShopItem>();
         _gilShops = Service.DataManager.GetExcelSheet<GilShop>();
-        _gilShopItems = Service.DataManager.GetExcelSheet<GilShopItem>();
+        _gilShopItems = Service.DataManager.GetSubrowExcelSheet<GilShopItem>();
         _inclusionShops = Service.DataManager.GetExcelSheet<InclusionShop>();
-        _inclusionShopSeries = Service.DataManager.GetExcelSheet<InclusionShopSeriesCustom>();
+        _inclusionShopSeries = Service.DataManager.GetSubrowExcelSheet<InclusionShopSeries>();
         _items = Service.DataManager.GetExcelSheet<Item>();
         _maps = Service.DataManager.GetExcelSheet<Map>();
         _preHandlers = Service.DataManager.GetExcelSheet<PreHandler>();
-        _questClassJobRewards = Service.DataManager.GetExcelSheet<QuestClassJobReward>();
-        _specialShops = Service.DataManager.GetExcelSheet<SpecialShopCustom>();
+        _questClassJobRewards = Service.DataManager.GetSubrowExcelSheet<QuestClassJobReward>();
+        _specialShops = Service.DataManager.GetExcelSheet<SpecialShop>();
         _territoryType = Service.DataManager.GetExcelSheet<TerritoryType>();
         _topicSelects = Service.DataManager.GetExcelSheet<TopicSelect>();
 
@@ -141,13 +141,13 @@ public partial class ItemLookup
 #if DEBUG
     public void BuildDebugVendorInfo(uint vendorId)
     {
-        var npcBase = _eNpcBases.GetRow(vendorId);
-        if (npcBase == null)
+        var npcBase = _eNpcBases.GetRowOrDefault(vendorId);
+        if (!npcBase.HasValue)
         {
             return;
         }
 
-        BuildVendorInfo(npcBase);
+        BuildVendorInfo(npcBase.Value);
     }
 #endif
 
@@ -155,10 +155,10 @@ public partial class ItemLookup
     {
         foreach (var npcBase in _eNpcBases)
         {
-            if (npcBase == null)
-            {
-                continue;
-            }
+            //if (npcBase == null)
+            //{
+            //    continue;
+            //}
 
             BuildVendorInfo(npcBase);
         }
@@ -173,24 +173,25 @@ public partial class ItemLookup
             return;
         }
 
-        var fateShop = _fateShops.GetRow(npcBase.RowId);
-        if (fateShop != null)
+        var fateShop = _fateShops.GetRowOrDefault(npcBase.RowId);
+        if (fateShop.HasValue)
         {
-            foreach (var specialShop in fateShop.SpecialShop)
+            foreach (var specialShop in fateShop.Value.SpecialShop)
             {
-                if (specialShop.Value == null)
+                var specialShopCustom = _specialShops.GetRowOrDefault(specialShop.RowId);
+
+                if (specialShopCustom == null)
                 {
                     continue;
                 }
 
-                var specialShopCustom = _specialShops.GetRow(specialShop.Row);
-                AddSpecialItem(specialShopCustom, npcBase, resident);
+                AddSpecialItem(specialShopCustom.Value, npcBase, resident);
             }
 
             return;
         }
 
-        foreach (var npcData in npcBase.ENpcData)
+        foreach (var npcData in npcBase.ENpcData.Select(x => x.RowId))
         {
             if (npcData == 0)
             {
@@ -242,7 +243,7 @@ public partial class ItemLookup
             if (MatchEventHandlerType(npcData, EventHandlerType.SpecialShop))
             {
                 var specialShop = _specialShops.GetRow(npcData);
-                AddSpecialItem(specialShop, npcBase, resident, shop: specialShop?.Name?.RawString);
+                AddSpecialItem(specialShop, npcBase, resident, shop: specialShop.Name.ExtractText());
                 continue;
             }
 
@@ -255,51 +256,51 @@ public partial class ItemLookup
 
             if (MatchEventHandlerType(npcData, EventHandlerType.CustomTalk))
             {
-                var customTalk = _customTalks.GetRow(npcData);
-                if (customTalk == null)
+                var customTalk = _customTalks.GetRowOrDefault(npcData);
+                if (!customTalk.HasValue)
                 {
                     break;
                 }
 
-                var scriptArgs = customTalk.ScriptArg;
+                var scriptArgs = customTalk.Value.Script.Select(x => x.ScriptArg).ToArray();
                 if (npcData == 721068)
                 {
                     // scriptArgs[0] -> QuestId
                     // scriptArgs[2] -> ItemId
                     // scriptArgs[3] -> Amount of item
                     // scriptArgs[4] -> Amount of currency
-                    AddItem_Internal(scriptArgs[2], _items.GetRow(scriptArgs[2]).Name.RawString, npcBase.RowId, resident.Singular, customTalk.MainOption.RawString,
+                    AddItem_Internal(scriptArgs[2], _items.GetRow(scriptArgs[2]).Name.ExtractText(), npcBase.RowId, resident.Singular.ExtractText(), customTalk.Value.MainOption.ExtractText(),
                                      new()
                                      {
-                                         new(scriptArgs[4], _items.GetRow(28).Name.RawString),
+                                         new(scriptArgs[4], _items.GetRow(28).Name.ExtractText()),
                                      },
                                      _npcLocations.TryGetValue(npcBase.RowId, out var value) ? value : null,
                                      ItemType.SpecialShop);
                     continue;
                 }
 
-                if (customTalk.SpecialLinks != 0)
+                if (customTalk.Value.SpecialLinks.RowId != 0)
                 {
                     try
                     {
-                        for (uint index = 0; index <= 30; index++)
+                        for (ushort index = 0; index <= 30; index++)
                         {
-                            var customTalkNestHandler = _customTalkNestHandlers.GetRow(customTalk.SpecialLinks, index);
-                            if (customTalkNestHandler == null)
+                            var customTalkNestHandler = _customTalkNestHandlers.GetSubrowOrDefault(customTalk.Value.SpecialLinks.RowId, index);
+                            if (!customTalkNestHandler.HasValue)
                             {
                                 break;
                             }
 
-                            if (MatchEventHandlerType(customTalkNestHandler.NestHandler, EventHandlerType.SpecialShop))
+                            if (MatchEventHandlerType(customTalkNestHandler.Value.NestHandler.RowId, EventHandlerType.SpecialShop))
                             {
-                                var specialShop = _specialShops.GetRow(customTalkNestHandler.NestHandler);
+                                var specialShop = _specialShops.GetRow(customTalkNestHandler.Value.NestHandler.RowId);
                                 AddSpecialItem(specialShop, npcBase, resident);
                                 continue;
                             }
 
-                            if (MatchEventHandlerType(customTalkNestHandler.NestHandler, EventHandlerType.GilShop))
+                            if (MatchEventHandlerType(customTalkNestHandler.Value.NestHandler.RowId, EventHandlerType.GilShop))
                             {
-                                var gilShop = _gilShops.GetRow(customTalkNestHandler.NestHandler);
+                                var gilShop = _gilShops.GetRow(customTalkNestHandler.Value.NestHandler.RowId);
                                 AddGilShopItem(gilShop, npcBase, resident);
                             }
                         }
@@ -341,14 +342,14 @@ public partial class ItemLookup
     {
         HashSet<uint> addedAetheryte = new();
         var aetheryteSheet = Service.DataManager.GetExcelSheet<Aetheryte>();
-        foreach (var territory in aetheryteSheet!.Where(i => i.Territory.Value != null && i.Territory.Row != 1).Select(i => i.Territory.Value))
+        foreach (var territory in aetheryteSheet!.Where(i => i.Territory.IsValid && i.Territory.RowId != 1).Select(i => i.Territory.Value))
         {
             if (addedAetheryte.Contains(territory.RowId))
             {
                 continue;
             }
 
-            ParseLgbFile(GetLgbFileFromBg(territory.Bg), territory, npcId);
+            ParseLgbFile(GetLgbFileFromBg(territory.Bg.ExtractText()), territory, npcId);
             addedAetheryte.Add(territory.RowId);
         }
 
@@ -356,28 +357,28 @@ public partial class ItemLookup
                  {
                      var condition = type.ContentFinderCondition.Value;
                      // eureka, bozja, gathering
-                     return condition?.ContentType.Row is 26 or 29 or 16;
+                     return condition.ContentType.RowId is 26 or 29 or 16;
                  }))
         {
-            ParseLgbFile(GetLgbFileFromBg(territory.Bg), territory, npcId);
+            ParseLgbFile(GetLgbFileFromBg(territory.Bg.ExtractText()), territory, npcId);
         }
 
         var levels = Service.DataManager.GetExcelSheet<Level>();
-        foreach (var level in levels!.Where(i => i.Type == 8 && i.Territory.Value != null))
+        foreach (var level in levels!.Where(i => i.Type == 8 && i.Territory.ValueNullable != null))
         {
             // NPC Id
-            if (level.Object != npcId)
+            if (level.Object.RowId != npcId)
             {
                 continue;
             }
 
-            var npcBase = _eNpcBases.GetRow(level.Object);
+            var npcBase = _eNpcBases.GetRowOrDefault(level.Object.RowId);
             if (npcBase == null)
             {
                 continue;
             }
 
-            var match = npcBase.ENpcData.Any(data => _eventHandlerTypes.Any(i => MatchEventHandlerType(data, i)));
+            var match = npcBase.Value.ENpcData.Any(data => _eventHandlerTypes.Any(i => MatchEventHandlerType(data.RowId, i)));
 
             if (!match)
             {
@@ -386,11 +387,11 @@ public partial class ItemLookup
 
             try
             {
-                _npcLocations.Add(level.Object, new NpcLocation(level.X, level.Z, level.Territory.Value));
+                _npcLocations.Add(level.Object.RowId, new NpcLocation(level.X, level.Z, level.Territory.Value));
             }
             catch (ArgumentException)
             {
-                _ = _npcLocations.TryGetValue(level.Object, out var npcLocation);
+                _ = _npcLocations.TryGetValue(level.Object.RowId, out var npcLocation);
                 Service.PluginLog.Debug($"This npc has this location: Map {npcLocation.MapId} Territory {npcLocation.TerritoryType}");
                 // The row should already exist. This is just for debugging.
             }
@@ -433,28 +434,29 @@ public partial class ItemLookup
                 }
 #endif
 
-                var npcBase = _eNpcBases.GetRow(npcRowId);
-                if (npcBase == null)
+                var npcBase = _eNpcBases.GetRowOrDefault(npcRowId);
+                if (!npcBase.HasValue)
                 {
                     continue;
                 }
 
-                var resident = _eNpcResidents.GetRow(npcRowId);
-                if (resident == null)
+                var resident = _eNpcResidents.GetRowOrDefault(npcRowId);
+                if (!resident.HasValue)
                 {
                     continue;
                 }
 
-                var match = npcBase.ENpcData.Any(data => _eventHandlerTypes.Any(i => MatchEventHandlerType(data, i)));
+                var match = npcBase.Value.ENpcData.Any(data => _eventHandlerTypes.Any(i => MatchEventHandlerType(data.RowId, i)));
                 if (!match)
                 {
                     continue;
                 }
 
-                var mapId = resident.Map;
+
+                var mapId = resident.Value.Map;
                 try
                 {
-                    var map = _maps.First(i => i.TerritoryType.Row == sTerritoryType.RowId && i.MapIndex == mapId);
+                    var map = _maps.First(i => i.TerritoryType.RowId == sTerritoryType.RowId && i.MapIndex == mapId);
                     _npcLocations.Add(npcRowId, new(instanceObject.Transform.Translation.X, instanceObject.Transform.Translation.Z, sTerritoryType, map.RowId));
                 }
                 catch (InvalidOperationException)
@@ -474,14 +476,14 @@ public partial class ItemLookup
     {
         HashSet<uint> addedAetheryte = new();
         var aetheryteSheet = Service.DataManager.GetExcelSheet<Aetheryte>();
-        foreach (var territory in aetheryteSheet!.Where(i => i.Territory.Value != null && i.Territory.Row != 1).Select(i => i.Territory.Value))
+        foreach (var territory in aetheryteSheet!.Where(i => i.Territory.IsValid && i.Territory.RowId != 1).Select(i => i.Territory.Value))
         {
             if (addedAetheryte.Contains(territory.RowId))
             {
                 continue;
             }
 
-            var file = GetLgbFileFromBg(territory.Bg);
+            var file = GetLgbFileFromBg(territory.Bg.ExtractText());
             if (file == null)
             {
                 Service.PluginLog.Debug($"[Aetheryte] LgbFile is null. territory: ({territory.PlaceName.Value.Name}){territory.RowId}, Bg: {territory.Bg}");
@@ -496,10 +498,10 @@ public partial class ItemLookup
                  {
                      var condition = type.ContentFinderCondition.Value;
                      // eureka, bozja, gathering
-                     return condition?.ContentType.Row is 26 or 29 or 16;
+                     return condition.ContentType.RowId is 26 or 29 or 16;
                  }))
         {
-            var file = GetLgbFileFromBg(territory.Bg);
+            var file = GetLgbFileFromBg(territory.Bg.ExtractText());
             if (file == null)
             {
                 Service.PluginLog.Debug($"[TerritoryType] LgbFile is null. territory: ({territory.PlaceName.Value.Name}){territory.RowId}, Bg: {territory.Bg}");
@@ -510,38 +512,37 @@ public partial class ItemLookup
         }
 
         var levels = Service.DataManager.GetExcelSheet<Level>();
-        foreach (var level in levels!.Where(i => i.Type == 8 && i.Territory.Value != null))
+        foreach (var level in levels!.Where(i => i.Type == 8 && i.Territory.ValueNullable != null))
         {
-            if (_npcLocations.ContainsKey(level.Object))
+            if (_npcLocations.ContainsKey(level.Object.RowId))
             {
                 continue;
             }
 
-            var npcBase = _eNpcBases.GetRow(level.Object);
-            if (npcBase == null)
+            var npcBase = _eNpcBases.GetRowOrDefault(level.Object.RowId);
+            if (!npcBase.HasValue)
             {
                 continue;
             }
-
-            var match = npcBase.ENpcData.Any(data => _eventHandlerTypes.Any(i => MatchEventHandlerType(data, i)));
+            var match = npcBase.Value.ENpcData.Any(data => _eventHandlerTypes.Any(i => MatchEventHandlerType(data.RowId, i)));
 
             if (!match)
             {
                 continue;
             }
 
-            _npcLocations.Add(level.Object, new(level.X, level.Z, level.Territory.Value));
+            _npcLocations.Add(level.Object.RowId, new(level.X, level.Z, level.Territory.Value));
         }
 
         // housing vendors
-        var employmentNpcLists = Service.DataManager.GetExcelSheet<HousingEmploymentNpcList>();
+        var employmentNpcLists = Service.DataManager.GetSubrowExcelSheet<HousingEmploymentNpcList>();
         var housingTerrotry = _territoryType.GetRow(282);
 
-        foreach (var npc in employmentNpcLists!)
+        foreach (var npc in employmentNpcLists)
         {
-            foreach (var id in npc.ENpcBase.Where(i => i.Row != 0))
+            foreach (var id in npc.Select(x => x.MaleENpcBase).Where(i => i.RowId != 0))
             {
-                _npcLocations.Add(id.Row, new(0, 0, housingTerrotry));
+                _npcLocations.Add(id.RowId, new(0, 0, housingTerrotry));
             }
         }
     }
@@ -566,7 +567,7 @@ public partial class ItemLookup
     // https://github.com/SapphireServer/Sapphire/blob/a5c15f321f7e795ed7362ae15edaada99ca7d9be/src/world/Manager/EventMgr.cpp#L14
     private static bool MatchEventHandlerType(uint data, EventHandlerType type)
     {
-        return ((data >> 16) & (uint)type) == (uint)type;
+        return (data >> 16) == (uint)type;
     }
 
     // https://github.com/SapphireServer/Sapphire/blob/a5c15f321f7e795ed7362ae15edaada99ca7d9be/src/world/Event/EventHandler.h#L48-L83
@@ -577,9 +578,9 @@ public partial class ItemLookup
         GcShop = 0x0016,
         SpecialShop = 0x001B,
         FcShop = 0x002A, // not sure how these numbers were obtained by the folks at sapphire. This works for my isolated use case though I guess.
-        TopicSelect = 0x32,
-        PreHandler = 0x36,
-        InclusionShop = 0x3a,
+        TopicSelect = 0x0032,
+        PreHandler = 0x0036,
+        InclusionShop = 0x003a,
         CollectablesShop = 0x003B,
     }
 }

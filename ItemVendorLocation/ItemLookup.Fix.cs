@@ -1,5 +1,5 @@
 ﻿using ItemVendorLocation.Models;
-using Lumina.Excel.GeneratedSheets;
+using Lumina.Excel.Sheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -92,37 +92,37 @@ public partial class ItemLookup
     {
         switch (npcBase.RowId)
         {
-            case 1043463: // horrendous hoarder
-                // very ugly code and i dont like it, because se inserted new data between rows in patch 6.5
-                // see here (https://github.com/xivapi/ffxiv-datamining/commit/fd1e8189682d52ee239b9037815a54d54b17a7bc#diff-983b68d9961598b3f0a8cecfc05d0f76f93afd0fd31b6a0cfea188ec12a729a1)
-                // who knows if they will do it again when they add new stuffs to sanctuary -- nuko
+            //case 1043463: // horrendous hoarder
+            //    // very ugly code and i dont like it, because se inserted new data between rows in patch 6.5
+            //    // see here (https://github.com/xivapi/ffxiv-datamining/commit/fd1e8189682d52ee239b9037815a54d54b17a7bc#diff-983b68d9961598b3f0a8cecfc05d0f76f93afd0fd31b6a0cfea188ec12a729a1)
+            //    // who knows if they will do it again when they add new stuffs to sanctuary -- nuko
 
-                var rawExcel = Service.DataManager.GameData.Excel.GetSheetRaw("custom/007/CtsMjiSpecialShop_00789");
-                Dictionary<string, string> mjiSpecialShopNames = new();
+            //    var rawExcel = Service.DataManager.GameData.Excel.GetRawSheet("custom/007/CtsMjiSpecialShop_00789");
+            //    Dictionary<string, string> mjiSpecialShopNames = new();
 
-                foreach (var parser in rawExcel.GetRowParsers())
-                {
-                    var key = parser.ReadColumn<string>(0);
-                    var name = parser.ReadColumn<string>(1);
-                    mjiSpecialShopNames[key] = name;
-                }
+            //    foreach (var parser in rawExcel.GetRowParsers())
+            //    {
+            //        var key = parser.ReadColumn<string>(0);
+            //        var name = parser.ReadColumn<string>(1);
+            //        mjiSpecialShopNames[key] = name;
+            //    }
 
-                AddSpecialItem(_specialShops.GetRow(1770601), npcBase, resident, ItemType.SpecialShop,
-                               $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")}\n{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_000")}");
-                AddSpecialItem(_specialShops.GetRow(1770659), npcBase, resident, ItemType.SpecialShop,
-                               $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")} \n {GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_005")}");
-                AddSpecialItem(_specialShops.GetRow(1770660), npcBase, resident, ItemType.SpecialShop,
-                               $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")}\n{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_010")}");
-                AddSpecialItem(_specialShops.GetRow(1770602), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_005")}");
-                AddSpecialItem(_specialShops.GetRow(1770603), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_010")}");
-                AddSpecialItem(_specialShops.GetRow(1770723), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_025")}");
-                AddSpecialItem(_specialShops.GetRow(1770734), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_030")}");
-                return true;
+            //    AddSpecialItem(_specialShops.GetRow(1770601), npcBase, resident, ItemType.SpecialShop,
+            //                   $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")}\n{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_000")}");
+            //    AddSpecialItem(_specialShops.GetRow(1770659), npcBase, resident, ItemType.SpecialShop,
+            //                   $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")} \n {GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_005")}");
+            //    AddSpecialItem(_specialShops.GetRow(1770660), npcBase, resident, ItemType.SpecialShop,
+            //                   $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")}\n{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_010")}");
+            //    AddSpecialItem(_specialShops.GetRow(1770602), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_005")}");
+            //    AddSpecialItem(_specialShops.GetRow(1770603), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_010")}");
+            //    AddSpecialItem(_specialShops.GetRow(1770723), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_025")}");
+            //    AddSpecialItem(_specialShops.GetRow(1770734), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_030")}");
+            //    return true;
 
-                string GetNameFromKey(string key)
-                {
-                    return mjiSpecialShopNames.TryGetValue(key, out var str) ? str : string.Empty;
-                }
+            //    string GetNameFromKey(string key)
+            //    {
+            //        return mjiSpecialShopNames.TryGetValue(key, out var str) ? str : string.Empty;
+            //    }
             case 1018655: // disreputable priest
                 AddSpecialItem(_specialShops.GetRow(1769743), npcBase, resident);
                 AddSpecialItem(_specialShops.GetRow(1769744), npcBase, resident);
@@ -157,13 +157,13 @@ public partial class ItemLookup
             // hopefully someone can find a better way to handle this -- nuko
             case 1035012: // Emeny
                 // 14, 15, 19 -- SkySteel tool
-                for (uint i = 0; i <= 10; i++)
+                for (ushort i = 0; i <= 10; i++)
                 {
-                    var questClassJobReward = _questClassJobRewards.GetRow(14, i);
+                    var questClassJobReward = _questClassJobRewards.GetSubrow(14, i);
                     AddQuestReward(questClassJobReward, npcBase, resident);
-                    questClassJobReward = _questClassJobRewards.GetRow(15, i);
+                    questClassJobReward = _questClassJobRewards.GetSubrow(15, i);
                     AddQuestReward(questClassJobReward, npcBase, resident);
-                    questClassJobReward = _questClassJobRewards.GetRow(19, i);
+                    questClassJobReward = _questClassJobRewards.GetSubrow(19, i);
                     AddQuestReward(questClassJobReward, npcBase, resident);
                 }
 
@@ -175,33 +175,33 @@ public partial class ItemLookup
                     {
                         3 => new()
                         {
-                            new(1, _items.GetRow(13575).Name), new(1, _items.GetRow(13576).Name),
+                            new(1, _items.GetRow(13575).Name.ExtractText()), new(1, _items.GetRow(13576).Name.ExtractText()),
                         },
                         5 => new()
                         {
-                            new(1, _items.GetRow(13577).Name), new(1, _items.GetRow(13578).Name), new(1, _items.GetRow(13579).Name),
-                            new(1, _items.GetRow(13580).Name),
+                            new(1, _items.GetRow(13577).Name.ExtractText()), new(1, _items.GetRow(13578).Name.ExtractText()), new(1, _items.GetRow(13579).Name.ExtractText()),
+                            new(1, _items.GetRow(13580).Name.ExtractText()),
                         },
                         6 => new()
                         {
-                            new(5, _items.GetRow(14899).Name),
+                            new(5, _items.GetRow(14899).Name.ExtractText()),
                         },
                         7 => new()
                         {
                             // The amounts are uncertain, so will use the maximum amount
-                            new(60, _items.GetRow(15840).Name), new(60, _items.GetRow(15841).Name),
+                            new(60, _items.GetRow(15840).Name.ExtractText()), new(60, _items.GetRow(15841).Name.ExtractText()),
                         },
                         8 => new()
                         {
-                            new(50, _items.GetRow(16064).Name),
+                            new(50, _items.GetRow(16064).Name.ExtractText()),
                         },
                         9 => new()
                         {
-                            new(1, _items.GetRow(16932).Name),
+                            new(1, _items.GetRow(16932).Name.ExtractText()),
                         },
                         10 => new()
                         {
-                            new(1, _items.GetRow(16934).Name),
+                            new(1, _items.GetRow(16934).Name.ExtractText()),
                         },
                         _ => null
                     };
@@ -209,9 +209,9 @@ public partial class ItemLookup
                 // 3 ~ 10 Anima Weapons
                 for (uint i = 3; i <= 10; i++)
                 {
-                    for (uint j = 0; j <= 12; j++)
+                    for (ushort j = 0; j <= 12; j++)
                     {
-                        var questClassJobReward = _questClassJobRewards.GetRow(i, j);
+                        var questClassJobReward = _questClassJobRewards.GetSubrow(i, j);
                         AddQuestReward(questClassJobReward, npcBase, resident);
                         AddQuestRewardCost(questClassJobReward, npcBase, GetCost(i));
                     }
@@ -220,12 +220,12 @@ public partial class ItemLookup
                 return true;
             case 1032903: // gerolt Resistance Weapons
                 // Build the cost/required items manually, they dont exist in the sheet
-                for (uint i = 0; i <= 16; i++)
+                for (ushort i = 0; i <= 16; i++)
                 {
-                    var questClassJobReward = _questClassJobRewards.GetRow(12, i);
+                    var questClassJobReward = _questClassJobRewards.GetSubrow(12, i);
                     AddQuestReward(questClassJobReward, npcBase, resident, new()
                     {
-                        new(4, _items.GetRow(30273).Name),
+                        new(4, _items.GetRow(30273).Name.ExtractText()),
                     });
                 }
 
@@ -234,59 +234,59 @@ public partial class ItemLookup
             case 1032905: // Zlatan
                 // Build the cost/required items manually, they dont exist in the sheet
                 // IL 485
-                for (uint i = 0; i <= 16; i++)
+                for (ushort i = 0; i <= 16; i++)
                 {
-                    var questClassJobReward = _questClassJobRewards.GetRow(13, i);
+                    var questClassJobReward = _questClassJobRewards.GetSubrow(13, i);
                     AddQuestReward(questClassJobReward, npcBase, resident, new()
                     {
-                        new(4, _items.GetRow(30273).Name),
+                        new(4, _items.GetRow(30273).Name.ExtractText()),
                     });
                 }
 
                 // build reward items first, then we manually add cost/required items
                 // code is messy, this could be more optimized and readable, but leave it as it is for now -- nuko
-                for (uint i = 0; i <= 16; i++)
+                for (ushort i = 0; i <= 16; i++)
                 {
                     // IL 500
-                    var questClassJobReward = _questClassJobRewards.GetRow(17, i);
+                    var questClassJobReward = _questClassJobRewards.GetSubrow(17, i);
                     AddQuestReward(questClassJobReward, npcBase, resident);
                     AddQuestRewardCost(questClassJobReward, npcBase, new()
                     {
-                        new(20, _items.GetRow(31573).Name),
-                        new(20, _items.GetRow(31574).Name),
-                        new(20, _items.GetRow(31575).Name),
+                        new(20, _items.GetRow(31573).Name.ExtractText()),
+                        new(20, _items.GetRow(31574).Name.ExtractText()),
+                        new(20, _items.GetRow(31575).Name.ExtractText()),
                     });
 
                     // IL 500 #2
-                    questClassJobReward = _questClassJobRewards.GetRow(18, i);
+                    questClassJobReward = _questClassJobRewards.GetSubrow(18, i);
                     AddQuestReward(questClassJobReward, npcBase, resident);
                     AddQuestRewardCost(questClassJobReward, npcBase, new()
                     {
-                        new(6, _items.GetRow(31576).Name)
+                        new(6, _items.GetRow(31576).Name.ExtractText())
                     });
 
                     // IL 510
-                    questClassJobReward = _questClassJobRewards.GetRow(20, i);
+                    questClassJobReward = _questClassJobRewards.GetSubrow(20, i);
                     AddQuestReward(questClassJobReward, npcBase, resident);
                     AddQuestRewardCost(questClassJobReward, npcBase, new()
                     {
-                        new(15, _items.GetRow(32956).Name)
+                        new(15, _items.GetRow(32956).Name.ExtractText())
                     });
 
                     // IL 515
-                    questClassJobReward = _questClassJobRewards.GetRow(21, i);
+                    questClassJobReward = _questClassJobRewards.GetSubrow(21, i);
                     AddQuestReward(questClassJobReward, npcBase, resident);
                     AddQuestRewardCost(questClassJobReward, npcBase, new()
                     {
-                        new(15, _items.GetRow(32959).Name)
+                        new(15, _items.GetRow(32959).Name.ExtractText())
                     });
 
                     // IL 535
-                    questClassJobReward = _questClassJobRewards.GetRow(22, i);
+                    questClassJobReward = _questClassJobRewards.GetSubrow(22, i);
                     AddQuestReward(questClassJobReward, npcBase, resident);
                     AddQuestRewardCost(questClassJobReward, npcBase, new()
                     {
-                        new(15, _items.GetRow(33767).Name)
+                        new(15, _items.GetRow(33767).Name.ExtractText())
                     });
                 }
 

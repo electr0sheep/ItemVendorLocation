@@ -141,12 +141,12 @@ internal class Utilities
             }
             case "ChatLog":
             {
-                var agent = Service.GameGui.FindAgentInterface(addonName);
-                Service.PluginLog.Debug($"{agent:X}");
-                // 6.58 sig: 89 83 ? ? ? ? E8 ? ? ? ? 66 89 83 ? ? ? ? 66 85 C0
-                // DT benchmark sig: 41 89 86 ? ? ? ? E8 ? ? ? ? 66 41 89 86 ? ? ? ? 66 85 C0 (offset changes in dt benchmark)
-                itemId = *(uint*)(agent + 0x950);
-                break;
+                    var agent = Service.GameGui.FindAgentInterface(addonName);
+                    Service.PluginLog.Debug($"{agent:X}");
+                    // 6.58 sig: 89 83 ? ? ? ? E8 ? ? ? ? 66 89 83 ? ? ? ? 66 85 C0
+                    // DT benchmark sig: 41 89 86 ? ? ? ? E8 ? ? ? ? 66 41 89 86 ? ? ? ? 66 85 C0 (offset changes in dt benchmark)
+                    itemId = *(uint*)(agent + 0x958);
+                    break;
             }
             case "ContentsInfoDetail":
             {

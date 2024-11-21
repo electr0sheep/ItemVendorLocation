@@ -1,8 +1,12 @@
 ﻿using System;
 using Dalamud.Game.Gui;
 using Dalamud.Hooking;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace ItemVendorLocation.XIVCommon.Functions.Tooltips;
+
+// Credit for this obviously goes to Anna, who initially created XIVCommon
+// Also, CriticalImpact for 7.1 updates https://github.com/Critical-Impact/CriticalCommonLib/blob/9f018daf2bf2214facc74ed94298a756b7754fa1/Services/TooltipService.cs
 
 /// <summary>
 /// The class containing tooltip functionality
@@ -11,30 +15,17 @@ public class Tooltips : IDisposable
 {
     private static class Signatures
     {
-        internal const string AgentItemDetailUpdateTooltip = "E8 ?? ?? ?? ?? 48 8B 6C 24 ?? 48 8B 74 24 ?? 4C 89 B7";
-        internal const string AgentActionDetailUpdateTooltip = "E8 ?? ?? ?? ?? E9 ?? ?? ?? ?? FF 50 40";
+        internal const string AgentItemDetailUpdateTooltip = "48 89 5C 24 ?? 55 56 57 41 54 41 55 41 56 41 57 48 83 EC 50 48 8B 42 28";
     }
 
-    // Last checked: 6.0
-    // E8 ?? ?? ?? ?? EB 68 FF 50 40
-    private const int AgentActionDetailUpdateFlagOffset = 0x58;
-
-    private unsafe delegate ulong ItemUpdateTooltipDelegate(IntPtr agent, int** numberArrayData, byte*** stringArrayData, float a4);
-
-    private unsafe delegate void ActionUpdateTooltipDelegate(IntPtr agent, int** numberArrayData, byte*** stringArrayData);
+    private unsafe delegate void* ItemUpdateTooltipDelegate(AtkUnitBase* agent,NumberArrayData* numberArrayData, StringArrayData* stringArrayData);
 
     private Hook<ItemUpdateTooltipDelegate>? ItemUpdateTooltipHook { get; }
-    private Hook<ActionUpdateTooltipDelegate>? ActionGenerateTooltipHook { get; }
 
     /// <summary>
     /// The delegate for item tooltip events.
     /// </summary>
     public delegate void ItemTooltipEventDelegate(ItemTooltip itemTooltip, ulong itemId);
-
-    /// <summary>
-    /// The tooltip for action tooltip events.
-    /// </summary>
-    public delegate void ActionTooltipEventDelegate(ActionTooltip actionTooltip, HoveredAction action);
 
     /// <summary>
     /// <para>
@@ -46,18 +37,8 @@ public class Tooltips : IDisposable
     /// </summary>
     public event ItemTooltipEventDelegate? OnItemTooltip;
 
-    /// <summary>
-    /// <para>
-    /// The event that is fired when an action tooltip is being generated for display.
-    /// </para>
-    /// <para>
-    /// Requires the <see cref="Hooks.Tooltips"/> hook to be enabled.
-    /// </para>
-    /// </summary>
-    public event ActionTooltipEventDelegate? OnActionTooltip;
 
     private ItemTooltip? ItemTooltip { get; set; }
-    private ActionTooltip? ActionTooltip { get; set; }
 
     internal Tooltips()
     {
@@ -70,45 +51,29 @@ public class Tooltips : IDisposable
 
             ItemUpdateTooltipHook.Enable();
         }
-
-        if (Service.SigScanner.TryScanText(Signatures.AgentActionDetailUpdateTooltip, out var updateActionPtr))
-        {
-            unsafe
-            {
-                ActionGenerateTooltipHook = Service.GameInteropProvider.HookFromAddress<ActionUpdateTooltipDelegate>(updateActionPtr, ActionUpdateTooltipDetour);
-            }
-
-            ActionGenerateTooltipHook.Enable();
-        }
     }
 
     /// <inheritdoc />
     public void Dispose()
     {
-        ActionGenerateTooltipHook?.Dispose();
         ItemUpdateTooltipHook?.Dispose();
     }
 
-    private unsafe ulong ItemUpdateTooltipDetour(IntPtr agent, int** numberArrayData, byte*** stringArrayData, float a4)
+    private unsafe void* ItemUpdateTooltipDetour(AtkUnitBase* agent, NumberArrayData* numberArrayData, StringArrayData* stringArrayData)
     {
-        var ret = ItemUpdateTooltipHook!.Original(agent, numberArrayData, stringArrayData, a4);
-
-        if (ret > 0)
+        try
         {
-            try
-            {
-                ItemUpdateTooltipDetourInner(numberArrayData, stringArrayData);
-            }
-            catch (Exception ex)
-            {
-                Service.PluginLog.Error(ex, "Exception in item tooltip detour");
-            }
+            ItemUpdateTooltipDetourInner(numberArrayData, stringArrayData);
+        }
+        catch (Exception ex)
+        {
+            Service.PluginLog.Error(ex, "Exception in item tooltip detour");
         }
 
-        return ret;
+        return ItemUpdateTooltipHook!.Original(agent, numberArrayData, stringArrayData);
     }
 
-    private unsafe void ItemUpdateTooltipDetourInner(int** numberArrayData, byte*** stringArrayData)
+    private unsafe void ItemUpdateTooltipDetourInner(NumberArrayData* numberArrayData, StringArrayData* stringArrayData)
     {
         ItemTooltip = new ItemTooltip(stringArrayData, numberArrayData);
 
@@ -119,40 +84,6 @@ public class Tooltips : IDisposable
         catch (Exception ex)
         {
             Service.PluginLog.Error(ex, "Exception in OnItemTooltip event");
-        }
-    }
-
-    private unsafe void ActionUpdateTooltipDetour(IntPtr agent, int** numberArrayData, byte*** stringArrayData)
-    {
-        var flag = *(byte*)(agent + AgentActionDetailUpdateFlagOffset);
-        ActionGenerateTooltipHook!.Original(agent, numberArrayData, stringArrayData);
-
-        if (flag == 0)
-        {
-            return;
-        }
-
-        try
-        {
-            ActionUpdateTooltipDetourInner(numberArrayData, stringArrayData);
-        }
-        catch (Exception ex)
-        {
-            Service.PluginLog.Error(ex, "Exception in action tooltip detour");
-        }
-    }
-
-    private unsafe void ActionUpdateTooltipDetourInner(int** numberArrayData, byte*** stringArrayData)
-    {
-        ActionTooltip = new ActionTooltip(stringArrayData, numberArrayData);
-
-        try
-        {
-            OnActionTooltip?.Invoke(ActionTooltip, Service.GameGui.HoveredAction);
-        }
-        catch (Exception ex)
-        {
-            Service.PluginLog.Error(ex, "Exception in OnActionTooltip event");
         }
     }
 }

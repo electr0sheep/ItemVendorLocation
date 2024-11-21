@@ -1,4 +1,6 @@
 ﻿using Dalamud.Game.Text.SeStringHandling;
+using FFXIVClientStructs.FFXIV.Client.UI;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace ItemVendorLocation.XIVCommon.Functions.Tooltips;
 
@@ -7,7 +9,7 @@ namespace ItemVendorLocation.XIVCommon.Functions.Tooltips;
 /// </summary>
 public unsafe class ItemTooltip : BaseTooltip
 {
-    internal ItemTooltip(byte*** stringArrayData, int** numberArrayData) : base(stringArrayData, numberArrayData)
+    internal ItemTooltip(StringArrayData* stringArrayData, NumberArrayData* numberArrayData) : base(stringArrayData, numberArrayData)
     {
     }
 
@@ -26,7 +28,7 @@ public unsafe class ItemTooltip : BaseTooltip
     /// </summary>
     public ItemTooltipFields Fields
     {
-        get => (ItemTooltipFields)(*(*(NumberArrayData + 4) + 4));
-        set => *(*(NumberArrayData + 4) + 4) = (int)value;
+        get => (ItemTooltipFields)(*(*((int**)NumberArrayData + 4) + 4));
+        set => *(*((int**)NumberArrayData + 4) + 4) = (int)value;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Dalamud.Game.Text.SeStringHandling;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using XIVCommon;
@@ -13,14 +14,14 @@ public abstract unsafe class BaseTooltip
     /// <summary>
     /// A pointer to the StringArrayData class for this tooltip.
     /// </summary>
-    private readonly byte*** _stringArrayData; // this is StringArrayData* when ClientStructs is updated
+    private readonly StringArrayData* _stringArrayData; // this is StringArrayData* when ClientStructs is updated
 
     /// <summary>
     /// A pointer to the NumberArrayData class for this tooltip.
     /// </summary>
-    protected readonly int** NumberArrayData;
+    protected readonly NumberArrayData* NumberArrayData;
 
-    internal BaseTooltip(byte*** stringArrayData, int** numberArrayData)
+    internal BaseTooltip(StringArrayData* stringArrayData, NumberArrayData* numberArrayData)
     {
         _stringArrayData = stringArrayData;
         NumberArrayData = numberArrayData;
@@ -39,17 +40,14 @@ public abstract unsafe class BaseTooltip
     {
         get
         {
-            var ptr = *(_stringArrayData + 4) + index;
-            return Util.ReadSeString((IntPtr)(*ptr));
+            var stringAddress = new IntPtr(_stringArrayData->StringArray[index]);
+            return Util.ReadSeString(stringAddress);
         }
         set
         {
-            var encoded = value.Encode().Terminate();
-
-            fixed (byte* encodedPtr = encoded)
-            {
-                ((StringArrayData*)_stringArrayData)->SetValue(index, encodedPtr, false, true, true);
-            }
+            var encoded = value.Encode().ToList();
+            encoded.Add(0);
+            _stringArrayData->SetValue(index, encoded.ToArray(), false, true, false);
         }
     }
 }

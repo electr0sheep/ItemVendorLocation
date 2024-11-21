@@ -41,6 +41,7 @@ public partial class ItemLookup
     private readonly ExcelSheet<SpecialShop> _specialShops;
     private readonly ExcelSheet<TerritoryType> _territoryType;
     private readonly ExcelSheet<TopicSelect> _topicSelects;
+    private readonly ExcelSheet<TomestoneConvert> _tomestoneConvert;
 
     private readonly Item _gil;
     private readonly List<Item> _gcSeal;
@@ -92,6 +93,7 @@ public partial class ItemLookup
         _specialShops = Service.DataManager.GetExcelSheet<SpecialShop>();
         _territoryType = Service.DataManager.GetExcelSheet<TerritoryType>();
         _topicSelects = Service.DataManager.GetExcelSheet<TopicSelect>();
+        _tomestoneConvert = Service.DataManager.GetExcelSheet<TomestoneConvert>();
 
         _fccName = Service.DataManager.GetExcelSheet<Addon>().GetRow(102233);
         _gil = _items.GetRow(1);

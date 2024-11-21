@@ -9,6 +9,8 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ItemVendorLocation.Models;
 using ItemVendorLocation.XIVCommon.Functions.Tooltips;
 using System.Linq;
+using Lumina.Excel.Sheets;
+using Lumina.Excel;
 
 namespace ItemVendorLocation;
 
@@ -125,7 +127,7 @@ internal class Utilities
             case "ColorantColoring":
             {
                 var colorantColoringAgent = Service.GameGui.FindAgentInterface(addonName);
-                itemId = *(uint*)(colorantColoringAgent + 0x34);
+                itemId = *(uint*)(colorantColoringAgent + 0x3C);
                 break;
             }
             case "GrandCompanyExchange":
@@ -244,5 +246,20 @@ internal class Utilities
                 return "Shop Selling Price: None";
         }
 
+    }
+
+    internal static Item ConvertCurrency(uint itemId, SpecialShop specialShop)
+    {
+        var tomestonesItemSheet = Service.DataManager.GetExcelSheet<TomestonesItem>();
+        var itemSheet = Service.DataManager.GetExcelSheet<Item>();
+        return itemId is >= 8 or 0
+            ? itemSheet.GetRow(itemId)
+            : specialShop.UseCurrencyType switch
+            {
+                16 => itemSheet.GetRow((uint)Dictionaries.Currencies[itemId]),
+                8 => itemSheet.GetRow(1),
+                4 => itemSheet.GetRow(tomestonesItemSheet.First(i => i.Tomestones.Value.RowId == itemId).Item.RowId),
+                _ => itemSheet.GetRow(itemId),
+            };
     }
 }

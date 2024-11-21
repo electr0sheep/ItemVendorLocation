@@ -16,55 +16,26 @@ public partial class ItemLookup
 {
     private void AddSpecialItem(SpecialShop specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, string shop = null)
     {
-        return;
-        ////if (specialShop == null)
-        ////{
-        ////    return;
-        ////}
+        foreach (var entry in specialShop.Item)
+        {
+            for (var i = 0; i < entry.ReceiveItems.Count; i++)
+            {
+                var item = entry.ReceiveItems[i].Item.Value;
+                var costs = (from e in entry.ItemCosts where e.ItemCost.IsValid && e.ItemCost.Value.Name != string.Empty select new Tuple<uint, string>(e.CurrencyCost, Utilities.ConvertCurrency(e.ItemCost.Value.RowId, specialShop).Name.ExtractText())).ToList();
 
-        ////foreach (var entry in specialShop.Entries)
-        //foreach (var entry in specialShop.Item)
-        //{
-        //    //if (entry.Result == null || entry.Cost == null)
-        //    //{
-        //    //    continue;
-        //    //}
-        //    for (var i = 0; i < entry.ItemCosts.Count; i++) {
+                var achievementDescription = "";
+                if (type == ItemType.Achievement)
+                {
+                    achievementDescription = _achievements.Where(i => i.Item.Value.RowId == item.RowId).Select(i => i.Description).First().ExtractText();
+                }
 
-        //    //foreach (var result in entry.Result)
-        //    //{
-        //        //if (result.Item.Value == null)
-        //        //{
-        //        //    continue;
-        //        //}
-
-        //        //if (result.Item.Value.Name == string.Empty)
-        //        //{
-        //        //    continue;
-        //        //}
-
-        //        var costs =
-        //            (from e in entry.Cost where e.Item != null && e.Item.Value.Name != string.Empty select new Tuple<uint, string>(e.Count, e.Item.Value.Name)).ToList();
-
-        //        var achievementDescription = "";
-        //        if (type == ItemType.Achievement)
-        //        {
-        //            achievementDescription = _achievements.Where(i => i.Item.Value == result.Item.Value).Select(i => i.Description).First();
-        //        }
-
-        //        AddItem_Internal(result.Item.Value.RowId, result.Item.Value.Name, npcBase.RowId, resident.Singular, shop,
-        //                         costs, _npcLocations.TryGetValue(npcBase.RowId, out var value) ? value : null, type, achievementDescription);
-        //    }
-        //}
+                AddItem_Internal(item.RowId, item.Name.ExtractText(), npcBase.RowId, resident.Singular.ExtractText(), shop, costs, _npcLocations.TryGetValue(npcBase.RowId, out var value) ? value : null, type, achievementDescription);
+            }
+        }
     }
 
     private void AddGilShopItem(GilShop gilShop, ENpcBase npcBase, ENpcResident resident, string shop = null)
     {
-        //if (gilShop == null)
-        //{
-        //    return;
-        //}
-
         for (ushort i = 0; ; i++)
         {
             try

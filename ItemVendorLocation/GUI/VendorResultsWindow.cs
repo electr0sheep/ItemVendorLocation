@@ -46,7 +46,7 @@ public class VendorResultsWindow : Window
             else
             {
                 // The <i>Endeavor</i> fix
-                string placeString = location.TerritoryExcel.PlaceName.Value.Name;
+                string placeString = location.TerritoryExcel.PlaceName.Value.Name.ExtractText();
                 placeString = placeString.Replace("\u0002", "");
                 placeString = placeString.Replace("\u001a", "");
                 placeString = placeString.Replace("\u0003", "");

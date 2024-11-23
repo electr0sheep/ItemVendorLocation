@@ -9,6 +9,8 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ItemVendorLocation.Models;
 using ItemVendorLocation.XIVCommon.Functions.Tooltips;
 using System.Linq;
+using Lumina.Excel.Sheets;
+using Lumina.Excel;
 
 namespace ItemVendorLocation;
 
@@ -125,7 +127,7 @@ internal class Utilities
             case "ColorantColoring":
             {
                 var colorantColoringAgent = Service.GameGui.FindAgentInterface(addonName);
-                itemId = *(uint*)(colorantColoringAgent + 0x34);
+                itemId = *(uint*)(colorantColoringAgent + 0x3C);
                 break;
             }
             case "GrandCompanyExchange":
@@ -141,12 +143,11 @@ internal class Utilities
             }
             case "ChatLog":
             {
-                var agent = Service.GameGui.FindAgentInterface(addonName);
-                Service.PluginLog.Debug($"{agent:X}");
-                // 6.58 sig: 89 83 ? ? ? ? E8 ? ? ? ? 66 89 83 ? ? ? ? 66 85 C0
-                // DT benchmark sig: 41 89 86 ? ? ? ? E8 ? ? ? ? 66 41 89 86 ? ? ? ? 66 85 C0 (offset changes in dt benchmark)
-                itemId = *(uint*)(agent + 0x950);
-                break;
+                    var agent = Service.GameGui.FindAgentInterface(addonName);
+                    // 6.58 sig: 89 83 ? ? ? ? E8 ? ? ? ? 66 89 83 ? ? ? ? 66 85 C0
+                    // DT benchmark sig: 41 89 86 ? ? ? ? E8 ? ? ? ? 66 41 89 86 ? ? ? ? 66 85 C0 (offset changes in dt benchmark)
+                    itemId = *(uint*)(agent + 0x958);
+                    break;
             }
             case "ContentsInfoDetail":
             {
@@ -221,7 +222,7 @@ internal class Utilities
             case ItemType.GcShop:
                 var npcInfos = itemInfo.NpcInfos;
                 var playerGC = UIState.Instance()->PlayerState.GrandCompany;
-                var otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[playerGC]);
+                var otherGcVendorIds = Dictionaries.GcVendorIdMap.Values.Where(i => i != Dictionaries.GcVendorIdMap[playerGC]);
                 // Only remove items if doing so doesn't remove all the results
                 if (npcInfos.Any(i => !otherGcVendorIds.Contains(i.Id)))
                 {
@@ -245,5 +246,20 @@ internal class Utilities
                 return "Shop Selling Price: None";
         }
 
+    }
+
+    internal static Item ConvertCurrency(uint itemId, SpecialShop specialShop)
+    {
+        var tomestonesItemSheet = Service.DataManager.GetExcelSheet<TomestonesItem>();
+        var itemSheet = Service.DataManager.GetExcelSheet<Item>();
+        return itemId is >= 8 or 0
+            ? itemSheet.GetRow(itemId)
+            : specialShop.UseCurrencyType switch
+            {
+                16 => itemSheet.GetRow((uint)Dictionaries.Currencies[itemId]),
+                8 => itemSheet.GetRow(1),
+                4 => itemSheet.GetRow(tomestonesItemSheet.First(i => i.Tomestones.Value.RowId == itemId).Item.RowId),
+                _ => itemSheet.GetRow(itemId),
+            };
     }
 }

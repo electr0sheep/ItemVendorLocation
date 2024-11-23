@@ -1,4 +1,4 @@
-﻿using Lumina.Excel.GeneratedSheets;
+﻿using Lumina.Excel.Sheets;
 using System;
 
 namespace ItemVendorLocation.Models
@@ -10,7 +10,7 @@ namespace ItemVendorLocation.Models
             X = x;
             Y = y;
             TerritoryExcel = territoryType;
-            MapId = map != null ? (uint)map : territoryType.Map.Row;
+            MapId = map != null ? (uint)map : territoryType.Map.RowId;
         }
 
         public TerritoryType TerritoryExcel { get; set; }

@@ -49,7 +49,7 @@ namespace ItemVendorLocation.Models
             // we remove non player affiliated gc vendors rather thank keeping player affiliated gc vendors
             // because there could be other vendors in the list
             var playerGC = UIState.Instance()->PlayerState.GrandCompany;
-            var otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[playerGC]);
+            var otherGcVendorIds = Dictionaries.GcVendorIdMap.Values.Where(i => i != Dictionaries.GcVendorIdMap[playerGC]);
             // Only remove items if doing so doesn't remove all the results
             if (NpcInfos.Any(i => !otherGcVendorIds.Contains(i.Id)))
             {
@@ -65,7 +65,7 @@ namespace ItemVendorLocation.Models
 
             var freeCompanyInfoProxy = (InfoProxyFreeCompany*)infoProxy;
             var playerFreeCompanyGC = freeCompanyInfoProxy->GrandCompany;
-            var otherOicVendorIds = Service.Plugin.OicVendorIdMap.Values.Where(i => i != Service.Plugin.OicVendorIdMap[playerFreeCompanyGC]);
+            var otherOicVendorIds = Dictionaries.OicVendorIdMap.Values.Where(i => i != Dictionaries.OicVendorIdMap[playerFreeCompanyGC]);
 
             if (otherOicVendorIds != null && NpcInfos.Any(i => !otherOicVendorIds.Contains(i.Id)))
             {

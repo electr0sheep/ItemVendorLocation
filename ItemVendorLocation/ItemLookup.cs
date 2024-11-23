@@ -52,18 +52,6 @@ public partial class ItemLookup
 
     private readonly EventHandlerType[] _eventHandlerTypes;
 
-    private readonly Dictionary<uint, uint> _shbFateShopNpc = new()
-    {
-        { 1027998, 1769957 },
-        { 1027538, 1769958 },
-        { 1027385, 1769959 },
-        { 1027497, 1769960 },
-        { 1027892, 1769961 },
-        { 1027665, 1769962 },
-        { 1027709, 1769963 },
-        { 1027766, 1769964 },
-    };
-
     public ItemLookup()
     {
         _eventHandlerTypes = Enum.GetValues<EventHandlerType>();

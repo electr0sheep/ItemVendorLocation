@@ -12,7 +12,6 @@ using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using ItemVendorLocation.XIVCommon;
 using ItemVendorLocation.XIVCommon.Functions.Tooltips;
-using GrandCompany = FFXIVClientStructs.FFXIV.Client.UI.Agent.GrandCompany;
 using System.Threading.Tasks;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
@@ -29,22 +28,6 @@ namespace ItemVendorLocation;
 
 public class EntryPoint : IDalamudPlugin
 {
-    public readonly Dictionary<byte, uint> GcVendorIdMap = new()
-    {
-        { 0, 0 },
-        { 1, 1002387 },
-        { 2, 1002393 },
-        { 3, 1002390 },
-    };
-
-    public readonly Dictionary<GrandCompany, uint> OicVendorIdMap = new()
-    {
-        { GrandCompany.Maelstrom, 1002389 },
-        { GrandCompany.TwinAdder, 1000165 },
-        { GrandCompany.ImmortalFlames, 1003925 },
-        { GrandCompany.None, 0 },
-    };
-
     private readonly string _buttonName;
 
     public ItemLookup ItemLookup;
@@ -256,7 +239,7 @@ public class EntryPoint : IDalamudPlugin
             case ItemType.GcShop:
                 var npcInfos = itemInfo.NpcInfos;
                 var playerGC = UIState.Instance()->PlayerState.GrandCompany;
-                var otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[playerGC]);
+                var otherGcVendorIds = Dictionaries.GcVendorIdMap.Values.Where(i => i != Dictionaries.GcVendorIdMap[playerGC]);
                 // Only remove items if doing so doesn't remove all the results
                 if (npcInfos.Any(i => !otherGcVendorIds.Contains(i.Id)))
                 {

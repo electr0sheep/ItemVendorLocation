@@ -222,7 +222,7 @@ internal class Utilities
             case ItemType.GcShop:
                 var npcInfos = itemInfo.NpcInfos;
                 var playerGC = UIState.Instance()->PlayerState.GrandCompany;
-                var otherGcVendorIds = Service.Plugin.GcVendorIdMap.Values.Where(i => i != Service.Plugin.GcVendorIdMap[playerGC]);
+                var otherGcVendorIds = Dictionaries.GcVendorIdMap.Values.Where(i => i != Dictionaries.GcVendorIdMap[playerGC]);
                 // Only remove items if doing so doesn't remove all the results
                 if (npcInfos.Any(i => !otherGcVendorIds.Contains(i.Id)))
                 {

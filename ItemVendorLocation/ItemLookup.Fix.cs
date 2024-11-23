@@ -92,37 +92,58 @@ public partial class ItemLookup
     {
         switch (npcBase.RowId)
         {
-            //case 1043463: // horrendous hoarder
-            //    // very ugly code and i dont like it, because se inserted new data between rows in patch 6.5
-            //    // see here (https://github.com/xivapi/ffxiv-datamining/commit/fd1e8189682d52ee239b9037815a54d54b17a7bc#diff-983b68d9961598b3f0a8cecfc05d0f76f93afd0fd31b6a0cfea188ec12a729a1)
-            //    // who knows if they will do it again when they add new stuffs to sanctuary -- nuko
+            case 1043463: // horrendous hoarder
+                // very ugly code and i dont like it, because se inserted new data between rows in patch 6.5
+                // see here (https://github.com/xivapi/ffxiv-datamining/commit/fd1e8189682d52ee239b9037815a54d54b17a7bc#diff-983b68d9961598b3f0a8cecfc05d0f76f93afd0fd31b6a0cfea188ec12a729a1)
+                // who knows if they will do it again when they add new stuffs to sanctuary -- nuko
 
-            //    var rawExcel = Service.DataManager.GameData.Excel.GetRawSheet("custom/007/CtsMjiSpecialShop_00789");
-            //    Dictionary<string, string> mjiSpecialShopNames = new();
+                //var rawExcel = Service.DataManager.GameData.Excel.GetRawSheet("custom/007/CtsMjiSpecialShop_00789");
 
-            //    foreach (var parser in rawExcel.GetRowParsers())
-            //    {
-            //        var key = parser.ReadColumn<string>(0);
-            //        var name = parser.ReadColumn<string>(1);
-            //        mjiSpecialShopNames[key] = name;
-            //    }
+                // can't figure out how to read data from custom/007/CtsMjiSpecialShop_00789, so I'm just gonna recreate it!
+                Dictionary<string, string> mjiSpecialShopNames = new()
+                {
+                    { "0",  "TEXT_CTSMJISPECIALSHOP_00789_TALK_ACTOR" },
+                    { "1",  "TEXT_CTSMJISPECIALSHOP_00789_SYSTEM_000_000" },
+                    { "2",  "TEXT_CTSMJISPECIALSHOP_00789_SYSTEM_000_005" },
+                    { "3",  "TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000" },
+                    { "4",  "TEXT_CTSMJISPECIALSHOP_00789_Q1_000_005" },
+                    { "5",  "TEXT_CTSMJISPECIALSHOP_00789_Q1_000_010" },
+                    { "6",  "TEXT_CTSMJISPECIALSHOP_00789_Q1_000_015" },
+                    { "7",  "TEXT_CTSMJISPECIALSHOP_00789_Q1_000_020" },
+                    { "8",  "TEXT_CTSMJISPECIALSHOP_00789_Q1_000_025" },
+                    { "9",  "TEXT_CTSMJISPECIALSHOP_00789_Q1_000_030" },
+                    { "10", "TEXT_CTSMJISPECIALSHOP_00789_Q2_000_000" },
+                    { "11", "TEXT_CTSMJISPECIALSHOP_00789_Q2_000_005" },
+                    { "12", "TEXT_CTSMJISPECIALSHOP_00789_Q2_000_010" },
+                    { "13", "TEXT_CTSMJISPECIALSHOP_00789_Q2_000_015" },
+                    { "14", "TEXT_CTSMJISPECIALSHOP_00789_OMISE_100_000" },
+                    { "15", "TEXT_CTSMJISPECIALSHOP_00789_SYSTEM_100_000" },
+                    { "16", "TEXT_CTSMJISPECIALSHOP_00789_OMISE_200_000" },
+                };
 
-            //    AddSpecialItem(_specialShops.GetRow(1770601), npcBase, resident, ItemType.SpecialShop,
-            //                   $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")}\n{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_000")}");
-            //    AddSpecialItem(_specialShops.GetRow(1770659), npcBase, resident, ItemType.SpecialShop,
-            //                   $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")} \n {GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_005")}");
-            //    AddSpecialItem(_specialShops.GetRow(1770660), npcBase, resident, ItemType.SpecialShop,
-            //                   $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")}\n{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_010")}");
-            //    AddSpecialItem(_specialShops.GetRow(1770602), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_005")}");
-            //    AddSpecialItem(_specialShops.GetRow(1770603), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_010")}");
-            //    AddSpecialItem(_specialShops.GetRow(1770723), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_025")}");
-            //    AddSpecialItem(_specialShops.GetRow(1770734), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_030")}");
-            //    return true;
+                //foreach (var parser in rawExcel.GetRowParsers())
+                //{
+                //    var key = parser.ReadColumn<string>(0);
+                //    var name = parser.ReadColumn<string>(1);
+                //    mjiSpecialShopNames[key] = name;
+                //}
 
-            //    string GetNameFromKey(string key)
-            //    {
-            //        return mjiSpecialShopNames.TryGetValue(key, out var str) ? str : string.Empty;
-            //    }
+                AddSpecialItem(_specialShops.GetRow(1770601), npcBase, resident, ItemType.SpecialShop,
+                               $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")}\n{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_000")}");
+                AddSpecialItem(_specialShops.GetRow(1770659), npcBase, resident, ItemType.SpecialShop,
+                               $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")} \n {GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_005")}");
+                AddSpecialItem(_specialShops.GetRow(1770660), npcBase, resident, ItemType.SpecialShop,
+                               $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_000")}\n{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q2_000_010")}");
+                AddSpecialItem(_specialShops.GetRow(1770602), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_005")}");
+                AddSpecialItem(_specialShops.GetRow(1770603), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_010")}");
+                AddSpecialItem(_specialShops.GetRow(1770723), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_025")}");
+                AddSpecialItem(_specialShops.GetRow(1770734), npcBase, resident, ItemType.SpecialShop, $"{GetNameFromKey("TEXT_CTSMJISPECIALSHOP_00789_Q1_000_030")}");
+                return true;
+
+                string GetNameFromKey(string key)
+                {
+                    return mjiSpecialShopNames.TryGetValue(key, out var str) ? str : string.Empty;
+                }
             case 1018655: // disreputable priest
                 AddSpecialItem(_specialShops.GetRow(1769743), npcBase, resident);
                 AddSpecialItem(_specialShops.GetRow(1769744), npcBase, resident);
@@ -170,8 +191,9 @@ public partial class ItemLookup
                 return true;
             case 1016135: // Ardashir
 
-                List<Tuple<uint, string>> GetCost(uint i) =>
-                    i switch
+                List<Tuple<uint, string>>? GetCost(uint i)
+                {
+                    return i switch
                     {
                         3 => new()
                         {
@@ -205,6 +227,7 @@ public partial class ItemLookup
                         },
                         _ => null
                     };
+                }
 
                 // 3 ~ 10 Anima Weapons
                 for (uint i = 3; i <= 10; i++)
@@ -292,7 +315,7 @@ public partial class ItemLookup
 
                 return true;
             default:
-                if (!_shbFateShopNpc.TryGetValue(npcBase.RowId, out var value))
+                if (!Dictionaries.ShbFateShopNpc.TryGetValue(npcBase.RowId, out var value))
                 {
                     return false;
                 }

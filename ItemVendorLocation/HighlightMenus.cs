@@ -18,7 +18,7 @@ namespace ItemVendorLocation;
 internal class HighlightMenus : IDisposable
 {
     private NpcInfo[] _npcInfo = [];
-    private uint[] _targetNpcDataId = [];
+    private string _itemName = string.Empty;
 
     public HighlightMenus()
     {
@@ -29,6 +29,7 @@ internal class HighlightMenus : IDisposable
     {
         HighlightShopAddon();
         HighlightSelectIconStringAddon();
+        HighlightInclusionShopAddon();
     }
 
     private unsafe void HighlightShopAddon()
@@ -79,9 +80,97 @@ internal class HighlightMenus : IDisposable
         }
     }
 
+    private unsafe void HighlightInclusionShopAddon()
+    {
+        var inclusionShopAddonPtr = Service.GameGui.GetAddonByName("InclusionShop");
+
+        if (inclusionShopAddonPtr == nint.Zero)
+        {
+            return;
+        }
+
+        var inclusionShopAddon = (AtkUnitBase*)inclusionShopAddonPtr;
+
+        var category = (AtkComponentDropDownList*)inclusionShopAddon->GetComponentByNodeId(7);
+        var subcategory = (AtkComponentDropDownList*)inclusionShopAddon->GetComponentByNodeId(9);
+        var itemList = (AtkComponentTreeList*)inclusionShopAddon->GetComponentByNodeId(19);
+
+        if (category == null || subcategory == null)
+        {
+            return;
+        }
+        foreach (uint index in Enumerable.Range(0, category->List->ListLength))
+        {
+            var listItemRenderer = category->List->ItemRendererList[index].AtkComponentListItemRenderer;
+            if (listItemRenderer == null)
+            {
+                continue;
+            }
+            var text = (AtkTextNode*)listItemRenderer->GetTextNodeById(4);
+            if (text == null)
+            {
+                continue;
+            }
+            var textValue = SeString.Parse(text->GetText()).TextValue;
+            if (!string.IsNullOrEmpty(textValue) && _npcInfo.Any(n => n.ShopName.Contains(textValue)))
+            {
+                text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+            }
+        }
+        foreach (uint index in Enumerable.Range(0, subcategory->List->ListLength))
+        {
+            var listItemRenderer = subcategory->List->ItemRendererList[index].AtkComponentListItemRenderer;
+            if (listItemRenderer == null)
+            {
+                continue;
+            }
+            var text = (AtkTextNode*)listItemRenderer->GetTextNodeById(4);
+            if (text == null)
+            {
+                continue;
+            }
+            var textValue = SeString.Parse(text->GetText()).TextValue;
+            if (!string.IsNullOrEmpty(textValue) && _npcInfo.Any(n => n.ShopName.Contains(textValue)))
+            {
+                text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+            }
+        }
+
+        if (itemList == null)
+        {
+            return;
+        }
+
+        foreach (var item in itemList->Items)
+        {
+            var listItemRenderer = item.Value->Renderer;
+            if (listItemRenderer == null)
+            {
+                continue;
+            }
+            var text = (AtkTextNode*)listItemRenderer->GetTextNodeById(5);
+            if (text == null)
+            {
+                continue;
+            }
+            var itemName = SeString.Parse(text->GetText()).TextValue;
+            if (itemName == _itemName)
+            {
+                text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                // strangely, it doesn't seem like the list gets its color updated until we set the text below
+                text->SetText(SeString.Parse(text->GetText()).TextValue);
+            }
+        }
+    }
+
     public void SetNpcInfo(NpcInfo[] npcInfos)
     {
         _npcInfo = npcInfos;
+    }
+
+    public void SetItemName(string itemName)
+    {
+        _itemName = itemName;
     }
 
     public void Dispose()

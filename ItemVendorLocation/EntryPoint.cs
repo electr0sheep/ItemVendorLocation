@@ -300,6 +300,7 @@ public class EntryPoint : IDalamudPlugin
         Service.VendorResultsUi.CollapsedCondition = ImGuiCond.Once;
         Service.HighlightObject.SetNpcInfo([.. item.NpcInfos]);
         Service.HighlightMenus.SetNpcInfo([.. item.NpcInfos]);
+        Service.HighlightMenus.SetItemName(item.Name);
     }
 
     private static void ShowSingleVendor(ItemInfo item)
@@ -328,6 +329,7 @@ public class EntryPoint : IDalamudPlugin
         Utilities.OutputChatLine(sb.BuiltString);
         Service.HighlightObject.SetNpcInfo([vendor]);
         Service.HighlightMenus.SetNpcInfo([vendor]);
+        Service.HighlightMenus.SetItemName(item.Name);
     }
 
     private static void ResultDisplayHandler(ItemInfo item)

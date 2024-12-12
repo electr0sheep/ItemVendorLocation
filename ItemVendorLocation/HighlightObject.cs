@@ -16,7 +16,6 @@ internal class HighlightObject : IDisposable
 
     public HighlightObject()
     {
-        Service.ClientState.TerritoryChanged += ClientState_OnTerritoryChanged;
         Service.Framework.Update += Framework_OnUpdate;
     }
 
@@ -36,22 +35,6 @@ internal class HighlightObject : IDisposable
         }
 
         ToggleHighlight(true);
-    }
-
-    private void ClientState_OnTerritoryChanged(ushort territoryId)
-    {
-        if (_npcInfo == null)
-        {
-            return;
-        }
-
-        if (_npcInfo.Any(n => n.Location.TerritoryType == territoryId))
-        {
-            return;
-        }
-
-        _npcInfo = [];
-        _targetNpcDataId = [];
     }
 
     public void SetNpcInfo(NpcInfo[] npcInfos)
@@ -101,7 +84,6 @@ internal class HighlightObject : IDisposable
 
     public void Dispose()
     {
-        Service.ClientState.TerritoryChanged -= ClientState_OnTerritoryChanged;
         Service.Framework.Update -= Framework_OnUpdate;
     }
 }

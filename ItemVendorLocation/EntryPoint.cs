@@ -297,6 +297,7 @@ public class EntryPoint : IDalamudPlugin
         Service.VendorResultsUi.IsOpen = true;
         Service.VendorResultsUi.Collapsed = false;
         Service.VendorResultsUi.CollapsedCondition = ImGuiCond.Once;
+        Service.HighlightObject.SetNpcInfo([.. item.NpcInfos]);
     }
 
     private static void ShowSingleVendor(ItemInfo item)
@@ -323,7 +324,7 @@ public class EntryPoint : IDalamudPlugin
         _ = sb.AddText(" at ");
         _ = sb.Append(SeString.CreateMapLink(vendor.Location.TerritoryType, vendor.Location.MapId, vendor.Location.MapX, vendor.Location.MapY));
         Utilities.OutputChatLine(sb.BuiltString);
-        Service.HighlightObject.SetNpcInfo(vendor);
+        Service.HighlightObject.SetNpcInfo([vendor]);
     }
 
     private static void ResultDisplayHandler(ItemInfo item)

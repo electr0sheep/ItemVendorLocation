@@ -10,8 +10,8 @@ namespace ItemVendorLocation;
 
 internal class HighlightObject : IDisposable
 {
-    private NpcInfo _npcInfo;
-    private uint _targetNpcDataId;
+    private NpcInfo[] _npcInfo = [];
+    private uint[] _targetNpcDataId = [];
     private DateTime _lastUpdateTime = DateTime.Now;
 
     public HighlightObject()
@@ -22,7 +22,7 @@ internal class HighlightObject : IDisposable
 
     private void Framework_OnUpdate(IFramework framework)
     {
-        // we want to update every 300 ms
+        //we want to update every 300 ms
         if (DateTime.Now - _lastUpdateTime <= TimeSpan.FromMilliseconds(300))
         {
             return;
@@ -45,34 +45,37 @@ internal class HighlightObject : IDisposable
             return;
         }
 
-        if (_npcInfo.Location.TerritoryType == territoryId)
+        if (_npcInfo.Any(n => n.Location.TerritoryType == territoryId))
         {
             return;
         }
 
-        _npcInfo = null;
-        _targetNpcDataId = 0;
+        _npcInfo = [];
+        _targetNpcDataId = [];
     }
 
-    public void SetNpcInfo(NpcInfo npcInfo)
+    public void SetNpcInfo(NpcInfo[] npcInfos)
     {
         _ = Service.Framework.Run(() =>
         {
             // before we update, we want to know if the previous npc object is still valid
-            if (_targetNpcDataId > 0)
+            if (_targetNpcDataId.Any(n => n > 0))
             {
                 ToggleHighlight(false);
             }
 
-            Service.PluginLog.Debug($"Setting npc info for HighlightObject. {npcInfo.Id} / {npcInfo.Name}");
-            _targetNpcDataId = npcInfo.Id;
-            _npcInfo = npcInfo;
+            foreach (var npcInfo in npcInfos)
+            {
+                Service.PluginLog.Debug($"Setting npc info for HighlightObject. {npcInfo.Id} / {npcInfo.Name}");
+            }
+            _targetNpcDataId = npcInfos.Select(n => n.Id).ToArray();
+            _npcInfo = npcInfos;
         });
     }
 
     public unsafe void ToggleHighlight(bool on)
     {
-        if (_targetNpcDataId == 0)
+        if (_targetNpcDataId.All(n => n == 0))
         {
             return;
         }
@@ -82,7 +85,7 @@ internal class HighlightObject : IDisposable
             if (!i.IsValid())
                 return false;
             var obj = (GameObject*)i.Address;
-            var found = obj->BaseId == _targetNpcDataId;
+            var found = _targetNpcDataId.Contains(obj->BaseId);
             return found;
         });
 
@@ -93,7 +96,7 @@ internal class HighlightObject : IDisposable
 
         Service.PluginLog.Debug("Setting highlight color");
 
-        ((GameObject*)gameObject.Address)->Highlight(on ? ObjectHighlightColor.Red : ObjectHighlightColor.None);
+        ((GameObject*)gameObject.Address)->Highlight(on ? Service.Configuration.HighlightColor : ObjectHighlightColor.None);
     }
 
     public void Dispose()

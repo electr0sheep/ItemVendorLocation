@@ -6,6 +6,7 @@ using Dalamud.Interface.Components;
 using Lumina.Excel.Sheets;
 using System.Linq;
 using Dalamud.Game.ClientState.Keys;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
 
 namespace ItemVendorLocation.GUI;
 
@@ -83,7 +84,17 @@ public class SettingsWindow : Window
             Service.Configuration.Save();
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker(@"If checked, will highlight the selected npc in red once it is in object list");
+        ImGuiComponents.HelpMarker(@"If checked, will highlight npcs that sell last item searched for once they are visible on-screen");
+        ImGui.SameLine();
+        var highlightColorNames = Enum.GetNames<ObjectHighlightColor>();
+        var highlightColorValues = Enum.GetValues<ObjectHighlightColor>();
+        var selectedHighlightColor = Array.IndexOf(highlightColorValues, Service.Configuration.HighlightColor);
+        ImGui.SetNextItemWidth(150f);
+        if (ImGui.Combo("Highlight Color", ref selectedHighlightColor, highlightColorNames, highlightColorNames.Length))
+        {
+            Service.Configuration.HighlightColor = (ObjectHighlightColor)selectedHighlightColor;
+            Service.Configuration.Save();
+        }
 
         ImGui.SetNextItemWidth(200f);
         int maxSearchResults = Service.Configuration.MaxSearchResults;

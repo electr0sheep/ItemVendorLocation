@@ -80,23 +80,23 @@ internal class HighlightObject : IDisposable
             return;
         }
 
-        var gameObject = Service.ObjectTable.FirstOrDefault(i =>
+        var gameObjects = Service.ObjectTable.Where(i =>
         {
             if (!i.IsValid())
                 return false;
             var obj = (GameObject*)i.Address;
-            var found = _targetNpcDataId.Contains(obj->BaseId);
-            return found;
+            return _targetNpcDataId.Contains(obj->BaseId);
         });
 
-        if (gameObject == null)
+        if (!gameObjects.Any())
         {
             return;
         }
 
-        Service.PluginLog.Debug("Setting highlight color");
-
-        ((GameObject*)gameObject.Address)->Highlight(on ? Service.Configuration.HighlightColor : ObjectHighlightColor.None);
+        foreach (var obj in gameObjects)
+        {
+            ((GameObject*)obj.Address)->Highlight(on ? Service.Configuration.HighlightColor : ObjectHighlightColor.None);
+        }
     }
 
     public void Dispose()

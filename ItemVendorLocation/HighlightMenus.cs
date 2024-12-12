@@ -29,6 +29,7 @@ internal class HighlightMenus : IDisposable
     {
         HighlightShopAddon();
         HighlightSelectIconStringAddon();
+        HighlightSelectStringAddon();
         HighlightInclusionShopAddon();
     }
 
@@ -70,6 +71,43 @@ internal class HighlightMenus : IDisposable
     private unsafe void HighlightSelectIconStringAddon()
     {
         var selectIconStringAddonPtr = Service.GameGui.GetAddonByName("SelectIconString");
+
+        if (selectIconStringAddonPtr == nint.Zero)
+        {
+            return;
+        }
+
+        var selectIconStringAddon = (AtkUnitBase*)selectIconStringAddonPtr;
+
+        var componentList = selectIconStringAddon->GetComponentListById(3);
+
+        if (componentList == null)
+        {
+            return;
+        }
+
+        foreach (uint index in Enumerable.Range(0, componentList->ListLength))
+        {
+            var listItemRenderer = componentList->ItemRendererList[index].AtkComponentListItemRenderer;
+            if (listItemRenderer == null)
+            {
+                continue;
+            }
+            var text = (AtkTextNode*)listItemRenderer->GetTextNodeById(2);
+            if (text == null)
+            {
+                continue;
+            }
+            if (_npcInfo.Any(n => n.ShopName.Contains(SeString.Parse(text->GetText()).TextValue)))
+            {
+                text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+            }
+        }
+    }
+
+    private unsafe void HighlightSelectStringAddon()
+    {
+        var selectIconStringAddonPtr = Service.GameGui.GetAddonByName("SelectString");
 
         if (selectIconStringAddonPtr == nint.Zero)
         {

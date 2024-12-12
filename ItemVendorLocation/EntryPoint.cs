@@ -327,8 +327,8 @@ public class EntryPoint : IDalamudPlugin
         _ = sb.AddText(" at ");
         _ = sb.Append(SeString.CreateMapLink(vendor.Location.TerritoryType, vendor.Location.MapId, vendor.Location.MapX, vendor.Location.MapY));
         Utilities.OutputChatLine(sb.BuiltString);
-        Service.HighlightObject.SetNpcInfo([vendor]);
-        Service.HighlightMenus.SetNpcInfo([vendor]);
+        Service.HighlightObject.SetNpcInfo([.. item.NpcInfos]);
+        Service.HighlightMenus.SetNpcInfo([.. item.NpcInfos]);
         Service.HighlightMenus.SetItemName(item.Name);
     }
 

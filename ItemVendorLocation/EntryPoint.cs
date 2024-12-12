@@ -54,6 +54,7 @@ public class EntryPoint : IDalamudPlugin
 
         _xivCommon = new();
         Service.HighlightObject = new();
+        Service.HighlightMenus = new();
 
         // Initialize the UI
         _windowSystem = new(typeof(EntryPoint).AssemblyQualifiedName);
@@ -298,6 +299,7 @@ public class EntryPoint : IDalamudPlugin
         Service.VendorResultsUi.Collapsed = false;
         Service.VendorResultsUi.CollapsedCondition = ImGuiCond.Once;
         Service.HighlightObject.SetNpcInfo([.. item.NpcInfos]);
+        Service.HighlightMenus.SetNpcInfo([.. item.NpcInfos]);
     }
 
     private static void ShowSingleVendor(ItemInfo item)
@@ -325,6 +327,7 @@ public class EntryPoint : IDalamudPlugin
         _ = sb.Append(SeString.CreateMapLink(vendor.Location.TerritoryType, vendor.Location.MapId, vendor.Location.MapX, vendor.Location.MapY));
         Utilities.OutputChatLine(sb.BuiltString);
         Service.HighlightObject.SetNpcInfo([vendor]);
+        Service.HighlightMenus.SetNpcInfo([vendor]);
     }
 
     private static void ResultDisplayHandler(ItemInfo item)
@@ -360,6 +363,7 @@ public class EntryPoint : IDalamudPlugin
         Service.ChatTwoIpc.Disable();
         Service.ItemVendorLocationIpc.Dispose();
         Service.HighlightObject.Dispose();
+        Service.HighlightMenus.Dispose();
 
         _ = Service.CommandManager.RemoveHandler(_commandName);
         _xivCommon.Functions.Tooltips.OnItemTooltip -= Tooltips_OnOnItemTooltip;

@@ -7,6 +7,8 @@ using Lumina.Excel.Sheets;
 using System.Linq;
 using Dalamud.Game.ClientState.Keys;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using Dalamud.Interface.Style;
+using Dalamud.Interface.Colors;
 
 namespace ItemVendorLocation.GUI;
 
@@ -93,6 +95,25 @@ public class SettingsWindow : Window
         if (ImGui.Combo("Highlight Color", ref selectedHighlightColor, highlightColorNames, highlightColorNames.Length))
         {
             Service.Configuration.HighlightColor = (ObjectHighlightColor)selectedHighlightColor;
+            Service.Configuration.Save();
+        }
+
+        var highlightMenuSelections = Service.Configuration.HighlightMenuSelections;
+        if (ImGui.Checkbox("Highlight menu selections", ref highlightMenuSelections))
+        {
+            Service.Configuration.HighlightMenuSelections = highlightMenuSelections;
+            Service.Configuration.Save();
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(@"If checked, will highlight menu selections so items are easier to find.");
+        ImGui.SameLine();
+        // this part seems dumb to me, but it works
+        var selectedShopHighlightColor = Service.Configuration.ShopHighlightColor;
+        ImGui.SetNextItemWidth(150f);
+        selectedShopHighlightColor = ImGuiComponents.ColorPickerWithPalette(1, "Highlight Color", selectedShopHighlightColor, ImGuiColorEditFlags.NoAlpha);
+        if (selectedShopHighlightColor != Service.Configuration.ShopHighlightColor)
+        {
+            Service.Configuration.ShopHighlightColor = selectedShopHighlightColor;
             Service.Configuration.Save();
         }
 

@@ -41,6 +41,30 @@ internal class HighlightMenus : IDisposable
         }
 
         var shopAddon = (AtkUnitBase*)shopAddonPtr;
+
+        var itemList = (AtkComponentList*)shopAddon->GetComponentByNodeId(16);
+
+        foreach (uint index in Enumerable.Range(0, itemList->ListLength))
+        {
+            var listItemRenderer = itemList->ItemRendererList[index].AtkComponentListItemRenderer;
+
+            if (listItemRenderer == null)
+            {
+                continue;
+            }
+            var text = (AtkTextNode*)listItemRenderer->GetTextNodeById(3);
+            if (text == null)
+            {
+                continue;
+            }
+            var itemName = SeString.Parse(text->GetText()).TextValue;
+            if (itemName == _itemName)
+            {
+                text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                // strangely, it doesn't seem like the list gets its color updated until we set the text below
+                text->SetText(SeString.Parse(text->GetText()).TextValue);
+            }
+        }
     }
 
     private unsafe void HighlightSelectIconStringAddon()
@@ -99,6 +123,7 @@ internal class HighlightMenus : IDisposable
         {
             return;
         }
+
         foreach (uint index in Enumerable.Range(0, category->List->ListLength))
         {
             var listItemRenderer = category->List->ItemRendererList[index].AtkComponentListItemRenderer;

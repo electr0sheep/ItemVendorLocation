@@ -105,7 +105,12 @@ public class SettingsWindow : Window
             Service.Configuration.Save();
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker(@"If checked, will highlight menu selections so items are easier to find.");
+        ImGuiComponents.HelpMarker(@"If checked, will highlight menu selections so items are easier to find.
+
+NOTE: If you search for another item that is sold by a vendor whose menu you already have open, this
+will cause both the previous item and the new item to be highlighted. I could fix this, but the only way I
+know how is to redraw every non-highlighted item with the original color. The highlighting occurs every
+frame, and I'm not willing to add another loop per frame for this use case which I think is stupid.");
         ImGui.SameLine();
         // this part seems dumb to me, but it works
         var selectedShopHighlightColor = Service.Configuration.ShopHighlightColor;

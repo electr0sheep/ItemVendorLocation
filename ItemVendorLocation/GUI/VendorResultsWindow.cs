@@ -57,7 +57,7 @@ public class VendorResultsWindow : Window
                 // need to use an ID here, the armorer/blacksmith vendors have the same location, resulting in a problem otherwise
                 if (ImGui.Button($"{placeString}###{npcInfo.Id}"))
                 {
-                    Service.HighlightObject.SetNpcInfo(npcInfo);
+                    Service.HighlightObject.SetNpcInfo([npcInfo]);
                     _ = Service.GameGui.OpenMapWithMapLink(new(location.TerritoryType, location.MapId, location.MapX, location.MapY, 0f));
                 }
 

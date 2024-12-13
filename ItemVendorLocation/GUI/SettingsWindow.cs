@@ -6,6 +6,9 @@ using Dalamud.Interface.Components;
 using Lumina.Excel.Sheets;
 using System.Linq;
 using Dalamud.Game.ClientState.Keys;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using Dalamud.Interface.Style;
+using Dalamud.Interface.Colors;
 
 namespace ItemVendorLocation.GUI;
 
@@ -83,7 +86,41 @@ public class SettingsWindow : Window
             Service.Configuration.Save();
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker(@"If checked, will highlight the selected npc in red once it is in object list");
+        ImGuiComponents.HelpMarker(@"If checked, will highlight npcs that sell last item searched for once they are visible on-screen");
+        ImGui.SameLine();
+        var highlightColorNames = Enum.GetNames<ObjectHighlightColor>();
+        var highlightColorValues = Enum.GetValues<ObjectHighlightColor>();
+        var selectedHighlightColor = Array.IndexOf(highlightColorValues, Service.Configuration.HighlightColor);
+        ImGui.SetNextItemWidth(150f);
+        if (ImGui.Combo("Highlight Color", ref selectedHighlightColor, highlightColorNames, highlightColorNames.Length))
+        {
+            Service.Configuration.HighlightColor = (ObjectHighlightColor)selectedHighlightColor;
+            Service.Configuration.Save();
+        }
+
+        var highlightMenuSelections = Service.Configuration.HighlightMenuSelections;
+        if (ImGui.Checkbox("Highlight menu selections", ref highlightMenuSelections))
+        {
+            Service.Configuration.HighlightMenuSelections = highlightMenuSelections;
+            Service.Configuration.Save();
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(@"If checked, will highlight menu selections so items are easier to find.
+
+NOTE: If you search for another item that is sold by a vendor whose menu you already have open, this
+will cause both the previous item and the new item to be highlighted. I could fix this, but the only way I
+know how is to redraw every non-highlighted item with the original color. The highlighting occurs every
+frame, and I'm not willing to add another loop per frame for this use case which I think is stupid.");
+        ImGui.SameLine();
+        // this part seems dumb to me, but it works
+        var selectedShopHighlightColor = Service.Configuration.ShopHighlightColor;
+        ImGui.SetNextItemWidth(150f);
+        selectedShopHighlightColor = ImGuiComponents.ColorPickerWithPalette(1, "Highlight Color", selectedShopHighlightColor, ImGuiColorEditFlags.NoAlpha);
+        if (selectedShopHighlightColor != Service.Configuration.ShopHighlightColor)
+        {
+            Service.Configuration.ShopHighlightColor = selectedShopHighlightColor;
+            Service.Configuration.Save();
+        }
 
         ImGui.SetNextItemWidth(200f);
         int maxSearchResults = Service.Configuration.MaxSearchResults;

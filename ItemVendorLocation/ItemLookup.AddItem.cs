@@ -14,7 +14,7 @@ public partial class ItemLookup
 public partial class ItemLookup
 #endif
 {
-    private void AddSpecialItem(SpecialShop specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, string shop = null)
+    private void AddSpecialItem(SpecialShop specialShop, ENpcBase npcBase, ENpcResident resident, ItemType type = ItemType.SpecialShop, string? shop = null)
     {
         foreach (var entry in specialShop.Item)
         {
@@ -212,7 +212,8 @@ public partial class ItemLookup
             if (MatchEventHandlerType(data, EventHandlerType.SpecialShop))
             {
                 var specialShop = _specialShops.GetRow(data);
-                AddSpecialItem(specialShop, npcBase, resident, shop: topicSelect.Name.ExtractText());
+                
+                AddSpecialItem(specialShop, npcBase, resident, shop: $"{topicSelect.Name.ExtractText()}\n{specialShop.Name.ExtractText()}");
 
                 continue;
             }
@@ -406,7 +407,7 @@ public partial class ItemLookup
         result.Costs.AddRange(cost);
     }
 
-    private void AddItem_Internal(uint itemId, string itemName, uint npcId, string npcName, string shopName, List<Tuple<uint, string>> cost, NpcLocation npcLocation,
+    private void AddItem_Internal(uint itemId, string itemName, uint npcId, string npcName, string? shopName, List<Tuple<uint, string>> cost, NpcLocation npcLocation,
                                   ItemType type,
                                   string achievementDesc = "")
     {

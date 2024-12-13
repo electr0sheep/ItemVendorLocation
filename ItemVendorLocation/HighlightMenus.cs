@@ -31,6 +31,7 @@ internal class HighlightMenus : IDisposable
         HighlightSelectIconStringAddon();
         HighlightSelectStringAddon();
         HighlightInclusionShopAddon();
+        HighlightShopExchangeCurrencyAddon();
     }
 
     private unsafe void HighlightShopAddon()
@@ -212,6 +213,50 @@ internal class HighlightMenus : IDisposable
                 continue;
             }
             var text = (AtkTextNode*)listItemRenderer->GetTextNodeById(5);
+            if (text == null)
+            {
+                continue;
+            }
+            var itemName = SeString.Parse(text->GetText()).TextValue;
+            if (itemName == _itemName)
+            {
+                text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                // strangely, it doesn't seem like the list gets its color updated until we set the text below
+                text->SetText(SeString.Parse(text->GetText()).TextValue);
+            }
+        }
+    }
+
+    private unsafe void HighlightShopExchangeCurrencyAddon()
+    {
+        var shopExchangeCurrencyAddonPtr = Service.GameGui.GetAddonByName("ShopExchangeCurrency");
+
+        if (shopExchangeCurrencyAddonPtr == nint.Zero)
+        {
+            return;
+        }
+
+        var shopExchangeCurrencyAddon = (AtkUnitBase*)shopExchangeCurrencyAddonPtr;
+
+        var itemList = (AtkComponentTreeList*)shopExchangeCurrencyAddon->GetComponentByNodeId(19);
+
+        if (itemList == null)
+        {
+            return;
+        }
+
+        foreach (var item in itemList->Items)
+        {
+            var listItemRenderer = item.Value->Renderer;
+            if (listItemRenderer == null)
+            {
+                continue;
+            }
+            var text = (AtkTextNode*)listItemRenderer->GetTextNodeById(3);
+            if (text == null)
+            {
+                text = (AtkTextNode*)listItemRenderer->GetTextNodeById(8);
+            }
             if (text == null)
             {
                 continue;

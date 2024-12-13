@@ -27,6 +27,11 @@ internal class HighlightMenus : IDisposable
 
     private unsafe void Framework_OnUpdate(IFramework framework)
     {
+        if (!Service.Configuration.HighlightMenuSelections || _npcInfo == null)
+        {
+            return;
+        }
+
         HighlightShopAddon();
         HighlightSelectIconStringAddon();
         HighlightSelectStringAddon();

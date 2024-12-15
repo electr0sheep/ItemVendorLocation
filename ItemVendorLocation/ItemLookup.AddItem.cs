@@ -61,18 +61,9 @@ public partial class ItemLookup
 
     private void AddGcShopItem(GCShop gcId, ENpcBase npcBase, ENpcResident resident)
     {
-        //if (gcId == null)
-        //{
-        //    return;
-        //}
-
         // cannot use EndsWith here because the description for each gc seal is different in every language
         // but they all have the grandcompany name in it so Contains is needed
         var seal = _gcSeal.Find(i => i.Description.ExtractText().Contains($"{gcId.GrandCompany.Value.Name.ExtractText()}"));
-        //if (seal == null)
-        //{
-        //    return;
-        //}
 
         foreach (var category in _gcScripShopCategories.Where(i => i.GrandCompany.RowId == gcId.GrandCompany.RowId))
         {
@@ -105,11 +96,6 @@ public partial class ItemLookup
 
     private void AddInclusionShop(InclusionShop inclusionShop, ENpcBase npcBase, ENpcResident resident)
     {
-        //if (inclusionShop == null)
-        //{
-        //    return;
-        //}
-
         foreach (var category in inclusionShop.Category)
         {
             if (category.Value.RowId == 0)
@@ -128,7 +114,13 @@ public partial class ItemLookup
                     }
 
                     var specialShop = series.Value.SpecialShop.Value;
-                    AddSpecialItem(specialShop, npcBase, resident, shop: $"{category.Value.Name}\n{specialShop.Name}");
+                    var shop = "";
+                    if (!string.IsNullOrEmpty(inclusionShop.Unknown0.ExtractText()))
+                    {
+                        shop += $"{inclusionShop.Unknown0.ExtractText()}\n";
+                    }
+                    shop += $"{category.Value.Name}\n{specialShop.Name}";
+                    AddSpecialItem(specialShop, npcBase, resident, shop: shop);
                 }
                 catch (Exception)
                 {
@@ -140,11 +132,6 @@ public partial class ItemLookup
 
     private void AddFccShop(FccShop shop, ENpcBase npcBase, ENpcResident resident)
     {
-        //if (shop == null)
-        //{
-        //    return;
-        //}
-
         for (var i = 0; i < shop.ItemData.Count; i++)
         {
             var item = _items.GetRowOrDefault(shop.ItemData[i].Item.RowId);
@@ -162,11 +149,6 @@ public partial class ItemLookup
 
     private void AddItemsInPrehandler(PreHandler preHandler, ENpcBase npcBase, ENpcResident resident)
     {
-        //if (preHandler == null)
-        //{
-        //    return;
-        //}
-
         var target = preHandler.Target.RowId;
         if (target == 0)
         {
@@ -197,11 +179,6 @@ public partial class ItemLookup
 
     private void AddItemsInTopicSelect(TopicSelect topicSelect, ENpcBase npcBase, ENpcResident resident)
     {
-        //if (topicSelect == null)
-        //{
-        //    return;
-        //}
-
         foreach (var data in topicSelect.Shop.Select(x => x.RowId))
         {
             if (data == 0)
@@ -236,11 +213,6 @@ public partial class ItemLookup
 
     private void AddCollectablesShop(CollectablesShop shop, ENpcBase npcBase, ENpcResident resident)
     {
-        //if (shop == null)
-        //{
-        //    return;
-        //}
-
         // skip rows without name
         if (shop.Name.ExtractText() == string.Empty)
         {
@@ -298,11 +270,6 @@ public partial class ItemLookup
 
     private void AddQuestReward(QuestClassJobReward questReward, ENpcBase npcBase, ENpcResident resident, List<Tuple<uint, string>> cost = null)
     {
-        //if (questReward == null)
-        //{
-        //    return;
-        //}
-
         if (questReward.ClassJobCategory.RowId == 0)
         {
             return;
@@ -342,20 +309,10 @@ public partial class ItemLookup
 
     private void AddQuestRewardCost(QuestClassJobReward questReward, ENpcBase npcBase, List<Tuple<uint, string>> cost)
     {
-        //if (questReward == null || cost == null)
-        //{
-        //    return;
-        //}
-
         if (cost == null || questReward.ClassJobCategory.RowId == 0)
         {
             return;
         }
-
-        //if (questReward.ClassJobCategory.RowId == 0)
-        //{
-        //    return;
-        //}
 
         for (int i = 0; i < questReward.RewardItem.Count; i++)
         {

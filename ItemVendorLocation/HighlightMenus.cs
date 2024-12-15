@@ -105,9 +105,16 @@ internal class HighlightMenus : IDisposable
             {
                 continue;
             }
-            if (_npcInfo.Any(n => n.ShopName.Contains(SeString.Parse(text->GetText()).TextValue)))
+            try
             {
-                text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                if (_npcInfo.Any(n => n.ShopName.Contains(SeString.Parse(text->GetText()).TextValue)))
+                {
+                    text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                }
+            }
+            catch (NullReferenceException)
+            {
+                continue;
             }
         }
     }
@@ -142,9 +149,16 @@ internal class HighlightMenus : IDisposable
             {
                 continue;
             }
-            if (_npcInfo.Any(n => n.ShopName.Contains(SeString.Parse(text->GetText()).TextValue)))
+            try
             {
-                text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                if (_npcInfo.Any(n => n.ShopName.Contains(SeString.Parse(text->GetText()).TextValue)))
+                {
+                    text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                }
+            }
+            catch (NullReferenceException)
+            {
+                continue;
             }
         }
     }
@@ -182,9 +196,16 @@ internal class HighlightMenus : IDisposable
                 continue;
             }
             var textValue = SeString.Parse(text->GetText()).TextValue;
-            if (!string.IsNullOrEmpty(textValue) && _npcInfo.Any(n => n.ShopName.Contains(textValue)))
+            try
             {
-                text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                if (!string.IsNullOrEmpty(textValue) && _npcInfo.Any(n => n.ShopName.Contains(textValue)))
+                {
+                    text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                }
+            }
+            catch (NullReferenceException)
+            {
+                continue;
             }
         }
         foreach (uint index in Enumerable.Range(0, subcategory->List->ListLength))
@@ -200,9 +221,16 @@ internal class HighlightMenus : IDisposable
                 continue;
             }
             var textValue = SeString.Parse(text->GetText()).TextValue;
-            if (!string.IsNullOrEmpty(textValue) && _npcInfo.Any(n => n.ShopName.Contains(textValue)))
+            try
             {
-                text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                if (!string.IsNullOrEmpty(textValue) && _npcInfo.Any(n => n.ShopName.Contains(textValue)))
+                {
+                    text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                }
+            }
+            catch (NullReferenceException)
+            {
+                continue;
             }
         }
 

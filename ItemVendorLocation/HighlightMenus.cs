@@ -107,7 +107,7 @@ internal class HighlightMenus : IDisposable
             }
             try
             {
-                if (_npcInfo.Any(n => n.ShopName.Contains(SeString.Parse(text->GetText()).TextValue)))
+                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, SeString.Parse(text->GetText()).TextValue))))
                 {
                     text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 }
@@ -151,7 +151,7 @@ internal class HighlightMenus : IDisposable
             }
             try
             {
-                if (_npcInfo.Any(n => n.ShopName.Contains(SeString.Parse(text->GetText()).TextValue)))
+                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, SeString.Parse(text->GetText()).TextValue))))
                 {
                     text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 }
@@ -198,7 +198,7 @@ internal class HighlightMenus : IDisposable
             var textValue = SeString.Parse(text->GetText()).TextValue;
             try
             {
-                if (!string.IsNullOrEmpty(textValue) && _npcInfo.Any(n => n.ShopName.Contains(textValue)))
+                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, SeString.Parse(text->GetText()).TextValue))))
                 {
                     text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 }
@@ -223,7 +223,7 @@ internal class HighlightMenus : IDisposable
             var textValue = SeString.Parse(text->GetText()).TextValue;
             try
             {
-                if (!string.IsNullOrEmpty(textValue) && _npcInfo.Any(n => n.ShopName.Contains(textValue)))
+                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, SeString.Parse(text->GetText()).TextValue))))
                 {
                     text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 }

@@ -1,18 +1,9 @@
 ﻿using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Interface.Colors;
 using Dalamud.Plugin.Services;
-using Dalamud.Utility;
-using FFXIVClientStructs.FFXIV.Client.Graphics;
-using FFXIVClientStructs.FFXIV.Client.UI;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using ItemVendorLocation.Models;
 using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Text.Unicode;
-using System.Threading.Tasks;
 
 namespace ItemVendorLocation;
 internal class HighlightMenus : IDisposable
@@ -37,7 +28,8 @@ internal class HighlightMenus : IDisposable
         HighlightSelectStringAddon();
         HighlightInclusionShopAddon();
         HighlightShopExchangeCurrencyAddon();
-        HighlightShopExchangeItem();
+        HighlightShopExchangeItemAddon();
+        HighlightCollectablesShopAddon();
     }
 
     private unsafe void HighlightShopAddon()
@@ -305,7 +297,7 @@ internal class HighlightMenus : IDisposable
         }
     }
 
-    private unsafe void HighlightShopExchangeItem()
+    private unsafe void HighlightShopExchangeItemAddon()
     {
         var shopExchangeItemAddonPtr = Service.GameGui.GetAddonByName("ShopExchangeItem");
 
@@ -343,6 +335,113 @@ internal class HighlightMenus : IDisposable
                 text->SetText(SeString.Parse(text->GetText()).TextValue);
             }
         }
+    }
+
+    private unsafe void HighlightCollectablesShopAddon()
+    {
+        var collectablesShopAddonPtr = Service.GameGui.GetAddonByName("CollectablesShop");
+
+        if (collectablesShopAddonPtr == nint.Zero)
+        {
+            return;
+        }
+
+        var collectablesShopAddon = (AtkUnitBase*)collectablesShopAddonPtr;
+
+        try
+        {
+            var shop = _npcInfo.First(n => n.ShopName.Contains("Oddly Specific Materials Exchange"));
+            var shopType = shop.ShopName.Split("\n")[1].Split("Oddly Specific Materials Exchange (")[1].Split(")")[0];
+            var index = Enum.GetValues<CollectablesShopIconIndex>()[Enum.GetNames<CollectablesShopIconIndex>().ToList().FindIndex(e => e == shopType)];
+            var itemCost = shop.Costs[0].Item2.Split(" min ")[0];
+
+            var radioButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId((uint)index);
+            radioButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+
+            var itemList = (AtkComponentTreeList*)collectablesShopAddon->GetComponentByNodeId(28);
+
+            if (itemList == null)
+            {
+                return;
+            }
+
+            foreach (var item in itemList->Items)
+            {
+                var listItemRenderer = item.Value->Renderer;
+                if (listItemRenderer == null)
+                {
+                    continue;
+                }
+                var text = (AtkTextNode*)listItemRenderer->GetTextNodeById(4);
+                if (text == null)
+                {
+                    continue;
+                }
+                var itemName = SeString.Parse(text->GetText()).TextValue.Split(" ")[0];
+                if (itemName == itemCost)
+                {
+                    text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+                    // strangely, it doesn't seem like the list gets its color updated until we set the text below
+                    text->SetText(SeString.Parse(text->GetText()).TextValue);
+                }
+            }
+        }
+        catch (InvalidOperationException)
+        {
+            return;
+        }
+
+        //var carpenterButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId(3);
+        //carpenterButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+        //var blacksmithButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId(4);
+        //blacksmithButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+        //var armorerButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId(5);
+        //armorerButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+        //var goldsmithButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId(6);
+        //goldsmithButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+        //var leatherworkerButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId(7);
+        //leatherworkerButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+        //var weaverButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId(8);
+        //weaverButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+        //var alchemistButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId(9);
+        //alchemistButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+        //var culinarianButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId(10);
+        //culinarianButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+        //var minerButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId(11);
+        //minerButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+        //var botanistButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId(12);
+        //botanistButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+        //var fisherButton = (AtkComponentRadioButton*)collectablesShopAddon->GetComponentByNodeId(13);
+        //fisherButton->ButtonBGNode->Color = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+
+
+        //var itemList = (AtkComponentTreeList*)collectablesShopAddon->GetComponentByNodeId(28);
+
+        //if (itemList == null)
+        //{
+        //    return;
+        //}
+
+        //foreach (var item in itemList->Items)
+        //{
+        //    var listItemRenderer = item.Value->Renderer;
+        //    if (listItemRenderer == null)
+        //    {
+        //        continue;
+        //    }
+        //    var text = (AtkTextNode*)listItemRenderer->GetTextNodeById(7);
+        //    if (text == null)
+        //    {
+        //        continue;
+        //    }
+        //    var itemName = SeString.Parse(text->GetText()).TextValue;
+        //    if (itemName == _itemName)
+        //    {
+        //        text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+        //        // strangely, it doesn't seem like the list gets its color updated until we set the text below
+        //        text->SetText(SeString.Parse(text->GetText()).TextValue);
+        //    }
+        //}
     }
 
     public void SetNpcInfo(NpcInfo[] npcInfos)

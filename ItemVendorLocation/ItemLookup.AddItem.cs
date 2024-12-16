@@ -248,9 +248,15 @@ public partial class ItemLookup
                     // CollectableShopRewardScrip is column 8, which is actually the ID in CollectableShopRewardItem
                     // The reward item is the item that you exchange the collectalbe for.
 
+                    var shopName = "";
+                    if (!string.IsNullOrEmpty(shop.Name.ExtractText()))
+                    {
+                        shopName += $"{shop.Name.ExtractText()}\n";
+                    }
+                    shopName += $"{exchangeItem.CollectablesShopItemGroup.Value.Name.ExtractText()}";
 
                     AddItem_Internal(rewardItem.Item.Value.RowId, rewardItem.Item.Value.Name.ExtractText(), npcBase.RowId,
-                                     resident.Singular.ExtractText(), exchangeItem.CollectablesShopItemGroup.Value.Name.ExtractText(),
+                                     resident.Singular.ExtractText(), shopName,
                                      new()
                                      {
                                          new(rewardItem.RewardLow, $"{exchangeItem.Item.Value.Name} min collectability of {refine.LowCollectability}"),

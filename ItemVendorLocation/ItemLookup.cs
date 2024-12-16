@@ -145,11 +145,6 @@ public partial class ItemLookup
     {
         foreach (var npcBase in _eNpcBases)
         {
-            //if (npcBase == null)
-            //{
-            //    continue;
-            //}
-
             BuildVendorInfo(npcBase);
         }
     }

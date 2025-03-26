@@ -57,12 +57,12 @@ internal class HighlightMenus : IDisposable
             {
                 continue;
             }
-            var itemName = SeString.Parse(text->GetText()).TextValue;
+            var itemName = text->GetText().ToString();
             if (itemName == _itemName)
             {
                 text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 // strangely, it doesn't seem like the list gets its color updated until we set the text below
-                text->SetText(SeString.Parse(text->GetText()).TextValue);
+                text->SetText(text->GetText().ToString());
             }
         }
     }
@@ -99,7 +99,7 @@ internal class HighlightMenus : IDisposable
             }
             try
             {
-                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, SeString.Parse(text->GetText()).TextValue))))
+                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, text->GetText().ToString()))))
                 {
                     text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 }
@@ -143,7 +143,7 @@ internal class HighlightMenus : IDisposable
             }
             try
             {
-                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, SeString.Parse(text->GetText()).TextValue))))
+                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, text->GetText().ToString()))))
                 {
                     text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 }
@@ -187,10 +187,10 @@ internal class HighlightMenus : IDisposable
             {
                 continue;
             }
-            var textValue = SeString.Parse(text->GetText()).TextValue;
+            var textValue = text->GetText().ToString();
             try
             {
-                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, SeString.Parse(text->GetText()).TextValue))))
+                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, text->GetText().ToString()))))
                 {
                     text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 }
@@ -212,10 +212,10 @@ internal class HighlightMenus : IDisposable
             {
                 continue;
             }
-            var textValue = SeString.Parse(text->GetText()).TextValue;
+            var textValue = text->GetText().ToString();
             try
             {
-                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, SeString.Parse(text->GetText()).TextValue))))
+                if (_npcInfo.Any(n => n.ShopName.Split("\n").Any(s => string.Equals(s, text->GetText().ToString()))))
                 {
                     text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 }
@@ -243,12 +243,12 @@ internal class HighlightMenus : IDisposable
             {
                 continue;
             }
-            var itemName = SeString.Parse(text->GetText()).TextValue;
+            var itemName = text->GetText().ToString();
             if (itemName == _itemName)
             {
                 text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 // strangely, it doesn't seem like the list gets its color updated until we set the text below
-                text->SetText(SeString.Parse(text->GetText()).TextValue);
+                text->SetText(text->GetText().ToString());
             }
         }
     }
@@ -287,12 +287,12 @@ internal class HighlightMenus : IDisposable
             {
                 continue;
             }
-            var itemName = SeString.Parse(text->GetText()).TextValue;
+            var itemName = text->GetText().ToString();
             if (itemName == _itemName)
             {
                 text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 // strangely, it doesn't seem like the list gets its color updated until we set the text below
-                text->SetText(SeString.Parse(text->GetText()).TextValue);
+                text->SetText(text->GetText().ToString());
             }
         }
     }
@@ -327,12 +327,12 @@ internal class HighlightMenus : IDisposable
             {
                 continue;
             }
-            var itemName = SeString.Parse(text->GetText()).TextValue;
+            var itemName = text->GetText().ToString();
             if (itemName == _itemName)
             {
                 text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 // strangely, it doesn't seem like the list gets its color updated until we set the text below
-                text->SetText(SeString.Parse(text->GetText()).TextValue);
+                text->SetText(text->GetText().ToString());
             }
         }
     }
@@ -377,12 +377,12 @@ internal class HighlightMenus : IDisposable
                 {
                     continue;
                 }
-                var itemName = SeString.Parse(text->GetText()).TextValue.Split(" ")[0];
+                var itemName = text->GetText().ToString().Split(" ")[0];
                 if (itemName == itemCost)
                 {
                     text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                     // strangely, it doesn't seem like the list gets its color updated until we set the text below
-                    text->SetText(SeString.Parse(text->GetText()).TextValue);
+                    text->SetText(text->GetText().ToString());
                 }
             }
         }

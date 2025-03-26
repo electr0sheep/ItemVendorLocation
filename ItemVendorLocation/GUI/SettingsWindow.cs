@@ -153,7 +153,7 @@ Single will pick the first result and print it to your chat window.
 
 Multiple will display the results in a popup window. If you leave it as this the plugin will function as it did before with no changes.");
 
-        var uiColors = Service.DataManager.GetExcelSheet<UIColor>().DistinctBy(i => i.UIForeground).ToList();
+        var uiColors = Service.DataManager.GetExcelSheet<UIColor>().DistinctBy(i => i.ClassicFF).ToList();
         int npcNameChatColor = Service.Configuration.NPCNameChatColor;
         ImGui.SetNextItemWidth(200f);
         // my lame way to allow selection of colors as defined in the UIColor sheet
@@ -162,7 +162,7 @@ Multiple will display the results in a popup window. If you leave it as this the
             foreach (var color in uiColors)
             {
                 var isChecked = Service.Configuration.NPCNameChatColor == color.RowId;
-                var reversedColors = ImGui.ColorConvertU32ToFloat4(color.UIForeground);
+                var reversedColors = ImGui.ColorConvertU32ToFloat4(color.ClassicFF);
                 // Seems like the above function reverses the order of the bytes
                 // There's got to be a better way to do this, but brain no working :P
                 Vector4 correctColors = new()
@@ -174,7 +174,7 @@ Multiple will display the results in a popup window. If you leave it as this the
                 };
                 if (ImGui.Checkbox($"###{color.RowId}", ref isChecked))
                 {
-                    Service.Configuration.NPCNameChatColor = (ushort)uiColors.Find(i => i.UIForeground == ImGui.ColorConvertFloat4ToU32(reversedColors)).RowId;
+                    Service.Configuration.NPCNameChatColor = (ushort)uiColors.Find(i => i.ClassicFF == ImGui.ColorConvertFloat4ToU32(reversedColors)).RowId;
                     Service.Configuration.Save();
                 }
                 ImGui.SameLine();
@@ -183,12 +183,12 @@ Multiple will display the results in a popup window. If you leave it as this the
             ImGui.EndCombo();
         }
         ImGui.SameLine();
-        ImGuiComponents.HelpMarker(@"The chat text highlight color of the NPC name.");
+        ImGuiComponents.HelpMarker(@"The chat text color of the NPC name when searching via /pvendor.");
 
         var keyNames = Service.KeyState.GetValidVirtualKeys().Select(i => i.GetFancyName()).ToArray();
-        keyNames = keyNames.Prepend("None").ToArray();
+        keyNames = [.. keyNames.Prepend("None")];
         var keyValues = Service.KeyState.GetValidVirtualKeys().ToArray();
-        keyValues = keyValues.Prepend(VirtualKey.NO_KEY).ToArray();
+        keyValues = [.. keyValues.Prepend(VirtualKey.NO_KEY)];
         var selectedKey = Array.IndexOf(keyValues, Service.Configuration.SearchDisplayModifier);
         ImGui.SetNextItemWidth(200f);
         if (ImGui.Combo("Results View Type Modifier", ref selectedKey, keyNames, keyNames.Length))

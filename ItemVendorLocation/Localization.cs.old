@@ -48,4 +48,4 @@ internal class Localization
 
         Loc.Setup(localizationJson);
     }
-}
+}*/

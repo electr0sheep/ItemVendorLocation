@@ -1,6 +1,6 @@
 ﻿using System.Linq;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using ItemVendorLocation.Models;
 using System.Numerics;
 using Dalamud.Interface.Components;

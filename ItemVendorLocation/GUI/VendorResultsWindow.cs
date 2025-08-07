@@ -1,10 +1,10 @@
 ﻿using System.Linq;
 using Dalamud.Interface.Windowing;
-using ImGuiNET;
 using ItemVendorLocation.Models;
 using System.Numerics;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.ImGuiNotification;
+using Dalamud.Bindings.ImGui;
 
 namespace ItemVendorLocation.GUI;
 

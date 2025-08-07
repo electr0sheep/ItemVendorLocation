@@ -117,7 +117,7 @@ internal class Utilities
             }
             case "RecipeTree" or "RecipeMaterialList":
             {
-                var uiModule = (UIModule*)Service.GameGui.GetUIModule();
+                var uiModule = (UIModule*)Service.GameGui.GetUIModule().Address;
                 var agents = uiModule->GetAgentModule();
                 var agent = agents->GetAgentByInternalId(AgentId.RecipeItemContext);
                 // sig: 89 51 ? 48 8B D9 48 8B 49 ? 4D 8B F9 (offset is still the same in dt benchmark)
@@ -176,7 +176,7 @@ internal class Utilities
             }
             case "MiragePrismPrismBoxCrystallize":
                 {
-                    var uiModule = (UIModule*)Service.GameGui.GetUIModule();
+                    var uiModule = (UIModule*)Service.GameGui.GetUIModule().Address;
                     var agents = uiModule->GetAgentModule();
                     var agent = (AgentMiragePrismPrismBox*)agents->GetAgentByInternalId(AgentId.MiragePrismPrismBox);
                     itemId = CorrectItemId(agent->Data->TempContextItem.ItemId);

@@ -5,7 +5,7 @@
 		<TargetFramework>net9.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Description>Dalamud plugin for item vendors</Description>
-		<Version>2.10.0.0</Version>
+		<Version>2.11.0.0</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -14,13 +14,15 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="CheapLoc" Version="1.1.8" />
-		<PackageReference Include="Dalamud.DrunkenToad" Version="1.9.2" />
-		<PackageReference Include="DalamudPackager" Version="12.0.0" />
+		<!--<PackageReference Include="CheapLoc" Version="1.1.8" /> Not updated anymore, has newstonsoft.json conflicts -->
+		<!--<PackageReference Include="Dalamud.DrunkenToad" Version="1.9.2" /> No usages found -->
+		<PackageReference Include="DalamudPackager" Version="13.0.0" />
 	</ItemGroup>
 
 	<PropertyGroup>
-		<DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+		<DalamudLibPath Condition="$([MSBuild]::IsOSPlatform('Windows'))">$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+		<DalamudLibPath Condition="$([MSBuild]::IsOSPlatform('Linux'))">$(HOME)/.xlcore/dalamud/Hooks/dev/</DalamudLibPath>
+		<DalamudLibPath Condition="$([MSBuild]::IsOSPlatform('OSX'))">$(HOME)/Library/Application Support/XIV on Mac/dalamud/Hooks/dev/</DalamudLibPath>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
@@ -33,7 +35,7 @@
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="ImGui.NET">
-			<HintPath>$(DalamudLibPath)\ImGui.NET.dll</HintPath>
+			<HintPath>$(DalamudLibPath)\Dalamud.Bindings.ImGui.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="ImGuiScene">

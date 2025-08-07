@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using CheapLoc;
+//using CheapLoc;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
@@ -18,7 +18,7 @@ using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.Gui.ContextMenu;
 using Dalamud.Game.Text;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using ItemInfo = ItemVendorLocation.Models.ItemInfo;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
@@ -43,8 +43,8 @@ public class EntryPoint : IDalamudPlugin
     {
         _ = pi.Create<Service>();
 
-        Localization.SetupLocalization(Service.ClientState.ClientLanguage);
-        _buttonName = Loc.Localize("ContextMenuItem", "Vendor location");
+        //Localization.SetupLocalization(Service.ClientState.ClientLanguage);
+        _buttonName = "Vendor location";
         ItemLookup = new();
         Service.Plugin = this;
         Service.Configuration = pi.GetPluginConfig() as PluginConfiguration ?? new PluginConfiguration();
@@ -85,7 +85,7 @@ public class EntryPoint : IDalamudPlugin
 
     private static unsafe void OnMiragePrismPrismItemDetailPreDraw(AddonEvent type, AddonArgs args)
     {
-        var addon = (AtkUnitBase*)args.Addon;
+        var addon = (AtkUnitBase*)args.Addon.Address;
         var componentNode = addon->GetComponentByNodeId(16);
         if (componentNode == null)
         {
@@ -99,7 +99,7 @@ public class EntryPoint : IDalamudPlugin
             return;
         }
 
-        var uiModule = (UIModule*)Service.GameGui.GetUIModule();
+        var uiModule = (UIModule*)Service.GameGui.GetUIModule().Address;
         var agents = uiModule->GetAgentModule();
         var agent = (AgentMiragePrismPrismItemDetail*)agents->GetAgentByInternalId(AgentId.MiragePrismPrismItemDetail);
         var itemId = Utilities.CorrectItemId(agent->ItemId);

@@ -47,14 +47,8 @@ internal class HighlightMenus : IDisposable
             return;
         }
 
-        //var agent = (AgentShop*)Service.GameGui.FindAgentInterface(shopAddonPtr);
-        //if (agent != null)
-        //{
-        //    var test = agent->EventReceiver;
-        //    var test2 = (AtkModuleInterface*)test;
-        //}
 
-        var shopAddon = (AtkUnitBase*)shopAddonPtr;
+        var shopAddon = (AtkUnitBase*)shopAddonPtr.Address;
 
         var itemList = (AtkComponentList*)shopAddon->GetComponentByNodeId(16);
 
@@ -114,7 +108,7 @@ internal class HighlightMenus : IDisposable
             return;
         }
 
-        var selectIconStringAddon = (AtkUnitBase*)selectIconStringAddonPtr;
+        var selectIconStringAddon = (AtkUnitBase*)selectIconStringAddonPtr.Address;
 
         var componentList = selectIconStringAddon->GetComponentListById(3);
 
@@ -159,7 +153,7 @@ internal class HighlightMenus : IDisposable
             return;
         }
 
-        var selectIconStringAddon = (AtkUnitBase*)selectIconStringAddonPtr;
+        var selectIconStringAddon = (AtkUnitBase*)selectIconStringAddonPtr.Address;
 
         var componentList = selectIconStringAddon->GetComponentListById(3);
 
@@ -204,7 +198,7 @@ internal class HighlightMenus : IDisposable
             return;
         }
 
-        var inclusionShopAddon = (AtkUnitBase*)inclusionShopAddonPtr;
+        var inclusionShopAddon = (AtkUnitBase*)inclusionShopAddonPtr.Address;
 
         var category = (AtkComponentDropDownList*)inclusionShopAddon->GetComponentByNodeId(7);
         var subcategory = (AtkComponentDropDownList*)inclusionShopAddon->GetComponentByNodeId(9);
@@ -305,7 +299,7 @@ internal class HighlightMenus : IDisposable
             return;
         }
 
-        var shopExchangeCurrencyAddon = (AtkUnitBase*)shopExchangeCurrencyAddonPtr;
+        var shopExchangeCurrencyAddon = (AtkUnitBase*)shopExchangeCurrencyAddonPtr.Address;
 
         var itemList = (AtkComponentTreeList*)shopExchangeCurrencyAddon->GetComponentByNodeId(19);
 
@@ -350,7 +344,7 @@ internal class HighlightMenus : IDisposable
             return;
         }
 
-        var shopExchangeItemAddon = (AtkUnitBase*)shopExchangeItemAddonPtr;
+        var shopExchangeItemAddon = (AtkUnitBase*)shopExchangeItemAddonPtr.Address;
 
         var itemList = (AtkComponentTreeList*)shopExchangeItemAddon->GetComponentByNodeId(19);
 
@@ -391,7 +385,7 @@ internal class HighlightMenus : IDisposable
             return;
         }
 
-        var collectablesShopAddon = (AtkUnitBase*)collectablesShopAddonPtr;
+        var collectablesShopAddon = (AtkUnitBase*)collectablesShopAddonPtr.Address;
 
         try
         {

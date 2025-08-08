@@ -1,11 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Dalamud.NET.Sdk/13.0.0">
 
 	<PropertyGroup>
 		<Authors>electr0sheep, Nuko</Authors>
 		<TargetFramework>net9.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Description>Dalamud plugin for item vendors</Description>
-		<Version>2.10.0.0</Version>
+		<Version>2.11.0.0</Version>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -15,46 +15,13 @@
 
 	<ItemGroup>
 		<PackageReference Include="CheapLoc" Version="1.1.8" />
-		<PackageReference Include="Dalamud.DrunkenToad" Version="1.9.2" />
-		<PackageReference Include="DalamudPackager" Version="12.0.0" />
 	</ItemGroup>
 
 	<PropertyGroup>
-		<DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 		<RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<Reference Include="Dalamud">
-			<HintPath>$(DalamudLibPath)\Dalamud.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="ImGui.NET">
-			<HintPath>$(DalamudLibPath)\ImGui.NET.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="ImGuiScene">
-			<HintPath>$(DalamudLibPath)\ImGuiScene.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="InteropGenerator.Runtime">
-		  <HintPath>$(DalamudLibPath)\InteropGenerator.Runtime.dll</HintPath>
-		</Reference>
-		<Reference Include="Lumina">
-			<HintPath>$(DalamudLibPath)\Lumina.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="Lumina.Excel">
-			<HintPath>$(DalamudLibPath)\Lumina.Excel.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-		<Reference Include="FFXIVClientStructs">
-			<HintPath>$(DalamudLibPath)\FFXIVClientStructs.dll</HintPath>
-			<Private>false</Private>
-		</Reference>
-	</ItemGroup>
 
 </Project>

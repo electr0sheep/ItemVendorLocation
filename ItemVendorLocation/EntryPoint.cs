@@ -18,11 +18,11 @@ using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
 using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.Gui.ContextMenu;
 using Dalamud.Game.Text;
-using ImGuiNET;
 using ItemInfo = ItemVendorLocation.Models.ItemInfo;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI;
+using Dalamud.Bindings.ImGui;
 
 namespace ItemVendorLocation;
 
@@ -85,7 +85,7 @@ public class EntryPoint : IDalamudPlugin
 
     private static unsafe void OnMiragePrismPrismItemDetailPreDraw(AddonEvent type, AddonArgs args)
     {
-        var addon = (AtkUnitBase*)args.Addon;
+        var addon = (AtkUnitBase*)args.Addon.Address;
         var componentNode = addon->GetComponentByNodeId(16);
         if (componentNode == null)
         {
@@ -99,7 +99,7 @@ public class EntryPoint : IDalamudPlugin
             return;
         }
 
-        var uiModule = (UIModule*)Service.GameGui.GetUIModule();
+        var uiModule = (UIModule*)Service.GameGui.GetUIModule().Address;
         var agents = uiModule->GetAgentModule();
         var agent = (AgentMiragePrismPrismItemDetail*)agents->GetAgentByInternalId(AgentId.MiragePrismPrismItemDetail);
         var itemId = Utilities.CorrectItemId(agent->ItemId);

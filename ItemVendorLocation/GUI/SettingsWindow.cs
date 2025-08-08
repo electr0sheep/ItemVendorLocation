@@ -1,5 +1,4 @@
 ﻿using Dalamud.Interface.Windowing;
-using ImGuiNET;
 using System;
 using System.Numerics;
 using Dalamud.Interface.Components;
@@ -9,6 +8,7 @@ using Dalamud.Game.ClientState.Keys;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using Dalamud.Interface.Style;
 using Dalamud.Interface.Colors;
+using Dalamud.Bindings.ImGui;
 
 namespace ItemVendorLocation.GUI;
 

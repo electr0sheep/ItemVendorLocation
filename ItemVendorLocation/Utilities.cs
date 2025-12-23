@@ -252,9 +252,17 @@ internal class Utilities
     {
         var tomestonesItemSheet = Service.DataManager.GetExcelSheet<TomestonesItem>();
         var itemSheet = Service.DataManager.GetExcelSheet<Item>();
+        var useCurrencyType = specialShop.UseCurrencyType;
+
+        // hack for Quinnana's special shops (ex. Select Ironwood Lumber)
+        if (specialShop.RowId is 1770637 or 1770638)
+        {
+            useCurrencyType = 16;
+        }
+
         return itemId is >= 8 or 0
             ? itemSheet.GetRow(itemId)
-            : specialShop.UseCurrencyType switch
+            : useCurrencyType switch
             {
                 16 => itemSheet.GetRow((uint)Dictionaries.Currencies[itemId]),
                 8 => itemSheet.GetRow(1),

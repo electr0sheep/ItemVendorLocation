@@ -29,7 +29,7 @@ public partial class ItemLookup
                     achievementDescription = _achievements.Where(i => i.Item.Value.RowId == item.RowId).Select(i => i.Description).First().ExtractText();
                 }
 
-                AddItem_Internal(item.RowId, item.Name.ExtractText(), npcBase.RowId, resident.Singular.ExtractText(), shop, costs, _npcLocations.TryGetValue(npcBase.RowId, out var value) ? value : null, type, achievementDescription);
+                AddItem_Internal(item.RowId, item.Name.ExtractText(), npcBase.RowId, resident.Singular.ExtractText(), shop, costs, _npcLocations.TryGetValue(npcBase.RowId, out var value) ? value : null, type, achievementDescription, entry.Category.First().RowId);
             }
         }
     }
@@ -372,7 +372,7 @@ public partial class ItemLookup
 
     private void AddItem_Internal(uint itemId, string itemName, uint npcId, string npcName, string? shopName, List<Tuple<uint, string>> cost, NpcLocation npcLocation,
                                   ItemType type,
-                                  string achievementDesc = "")
+                                  string achievementDesc = "", uint categoryId = 0)
     {
         if (itemId == 0)
         {
@@ -391,6 +391,7 @@ public partial class ItemLookup
                 NpcInfos = new() { new() { Id = npcId, Location = npcLocation, Costs = cost, Name = npcName, ShopName = shopName } },
                 Type = type,
                 AchievementDescription = achievementDesc,
+                SpecialShopCategory = categoryId,
             });
             return;
         }
@@ -404,6 +405,7 @@ public partial class ItemLookup
                 NpcInfos = new() { new() { Id = npcId, Location = npcLocation, Costs = cost, Name = npcName, ShopName = shopName } },
                 Type = type,
                 AchievementDescription = achievementDesc,
+                SpecialShopCategory = categoryId,
             });
         }
 

@@ -25,6 +25,7 @@ namespace ItemVendorLocation.Models
         public List<NpcInfo> NpcInfos;
         public ItemType Type;
         public string AchievementDescription;
+        public uint SpecialShopCategory;
 
         public bool HasShopNames()
         {

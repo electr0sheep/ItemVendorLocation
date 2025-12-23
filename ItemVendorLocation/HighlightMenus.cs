@@ -16,7 +16,7 @@ namespace ItemVendorLocation;
 internal class HighlightMenus : IDisposable
 {
     private NpcInfo[] _npcInfo = [];
-    private string _itemName = string.Empty;
+    private ItemInfo? _itemInfo = null;
 
     public HighlightMenus()
     {
@@ -72,7 +72,7 @@ internal class HighlightMenus : IDisposable
             // is foolproof, but it's good enough for now. I'm trying to figure out if I can use the agent for exact name
             // matches, but what I'm seeing doesn't quite match up with what I see in CS. So until I figure that out, I'm
             // going with this.
-            if (string.Equals(_itemName, itemName))
+            if (string.Equals(_itemInfo?.Name, itemName))
             {
                 // if we ever find an exact match, that must be it, so highlight it and return.
                 text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
@@ -81,7 +81,7 @@ internal class HighlightMenus : IDisposable
             }
             else if (itemName.EndsWith("..."))
             {
-                if (_itemName.StartsWith(itemName.TrimEnd('.')))
+                if (_itemInfo?.Name.StartsWith(itemName.TrimEnd('.')))
                 {
                     bestMatchIndex = index;
                 }
@@ -280,7 +280,7 @@ internal class HighlightMenus : IDisposable
                 continue;
             }
             var itemName = ((ReadOnlySeStringSpan)text->NodeText.AsSpan()).ExtractText();
-            if (itemName == _itemName)
+            if (itemName == _itemInfo?.Name)
             {
                 text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 // strangely, it doesn't seem like the list gets its color updated until we set the text below
@@ -301,7 +301,41 @@ internal class HighlightMenus : IDisposable
 
         var shopExchangeCurrencyAddon = (AtkUnitBase*)shopExchangeCurrencyAddonPtr.Address;
 
+
+        // highlight tab
+        var tabs = (AtkResNode*)shopExchangeCurrencyAddon->GetNodeById(7);
+
+        if (tabs != null)
+        {
+            AtkResNode* othersTab = tabs->ChildNode;
+            AtkResNode* accessoriesTab = othersTab->PrevSiblingNode;
+            AtkResNode* armorTab = accessoriesTab->PrevSiblingNode;
+            AtkResNode* weaponsTab = armorTab->PrevSiblingNode;
+            if (othersTab != null && _itemInfo?.SpecialShopCategory == 4)
+            {
+                othersTab->GetAsAtkComponentRadioButton()->GetTextNodeById(2)->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+            }
+            if (accessoriesTab != null && _itemInfo?.SpecialShopCategory == 3)
+            {
+                accessoriesTab->GetAsAtkComponentRadioButton()->GetTextNodeById(2)->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+            }
+            if (armorTab != null && _itemInfo?.SpecialShopCategory == 2)
+            {
+                armorTab->GetAsAtkComponentRadioButton()->GetTextNodeById(2)->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+            }
+            if (weaponsTab != null && _itemInfo?.SpecialShopCategory == 1)
+            {
+                weaponsTab->GetAsAtkComponentRadioButton()->GetTextNodeById(2)->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
+            }
+        }
+
+        // highlight item in list
         var itemList = (AtkComponentTreeList*)shopExchangeCurrencyAddon->GetComponentByNodeId(19);
+
+        if (itemList == null)
+        {
+            itemList = (AtkComponentTreeList*)shopExchangeCurrencyAddon->GetComponentByNodeId(20);
+        }
 
         if (itemList == null)
         {
@@ -325,7 +359,7 @@ internal class HighlightMenus : IDisposable
                 continue;
             }
             var itemName = ((ReadOnlySeStringSpan)text->NodeText.AsSpan()).ExtractText();
-            if (itemName == _itemName)
+            if (itemName == _itemInfo?.Name)
             {
                 text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 // strangely, it doesn't seem like the list gets its color updated until we set the text below
@@ -366,7 +400,7 @@ internal class HighlightMenus : IDisposable
                 continue;
             }
             var itemName = ((ReadOnlySeStringSpan)text->NodeText.AsSpan()).ExtractText();
-            if (itemName == _itemName)
+            if (itemName == _itemInfo?.Name)
             {
                 text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
                 // strangely, it doesn't seem like the list gets its color updated until we set the text below
@@ -489,9 +523,9 @@ internal class HighlightMenus : IDisposable
         _npcInfo = npcInfos;
     }
 
-    public void SetItemName(string itemName)
+    public void SetItemInfo(ItemInfo item)
     {
-        _itemName = itemName;
+        _itemInfo = item;
     }
 
     public void Dispose()

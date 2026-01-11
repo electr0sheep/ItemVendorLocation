@@ -56,6 +56,13 @@ internal class HighlightObject : IDisposable
         });
     }
 
+    public void ClearNpcInfo()
+    {
+        ToggleHighlight(false);
+        _npcInfo = [];
+        _targetNpcDataId = [];
+    }
+
     public unsafe void ToggleHighlight(bool on)
     {
         if (_targetNpcDataId.All(n => n == 0))

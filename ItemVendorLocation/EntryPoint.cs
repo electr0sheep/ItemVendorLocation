@@ -23,6 +23,8 @@ using FFXIVClientStructs.FFXIV.Component.GUI;
 using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Client.UI;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Game.Inventory;
+using Dalamud.Game.Inventory.InventoryEventArgTypes;
 
 namespace ItemVendorLocation;
 
@@ -38,6 +40,9 @@ public class EntryPoint : IDalamudPlugin
     private readonly WindowSystem _windowSystem;
     private readonly XivCommonBase _xivCommon;
     private readonly ExcelSheet<Item> _items;
+
+    // TODO: I'm keeping track of this in too many locations. It needs to be cleaned up.
+    private static uint _currentItemId = 0;
 
     public EntryPoint(IDalamudPluginInterface pi)
     {
@@ -73,6 +78,7 @@ public class EntryPoint : IDalamudPlugin
         Service.ContextMenu.OnMenuOpened += ContextMenu_OnMenuOpened;
         Service.Interface.UiBuilder.Draw += _windowSystem.Draw;
         Service.Interface.UiBuilder.OpenConfigUi += OnOpenConfigUi;
+        Service.GameInventory.InventoryChangedRaw += OnInventoryChanged;
 
         Service.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, "MiragePrismPrismItemDetail", OnMiragePrismPrismItemDetailPreDraw);
 
@@ -81,6 +87,18 @@ public class EntryPoint : IDalamudPlugin
             HelpMessage = "Displays the Item Vendor Location config window",
 
         });
+    }
+
+    private void OnInventoryChanged(IReadOnlyCollection<InventoryEventArgs> events)
+    {
+        foreach (var e in events)
+        {
+            if ((e.Type == GameInventoryEvent.Changed || e.Type == GameInventoryEvent.Added) && e.Item.ItemId == _currentItemId)
+            {
+                Service.HighlightObject.ClearNpcInfo();
+                Service.HighlightMenus.ClearAllInfo();
+            }
+        }
     }
 
     private static unsafe void OnMiragePrismPrismItemDetailPreDraw(AddonEvent type, AddonArgs args)
@@ -335,6 +353,7 @@ public class EntryPoint : IDalamudPlugin
 
     private static void ResultDisplayHandler(ItemInfo item)
     {
+        _currentItemId = item.Id;
         var viewType = Service.Configuration.ResultsViewType;
         if (Service.Configuration.SearchDisplayModifier != VirtualKey.NO_KEY && Service.KeyState.GetRawValue(Service.Configuration.SearchDisplayModifier) == 1)
         {
@@ -375,6 +394,7 @@ public class EntryPoint : IDalamudPlugin
 
         Service.Interface.UiBuilder.Draw -= _windowSystem.Draw;
         Service.Interface.UiBuilder.OpenConfigUi -= OnOpenConfigUi;
+        Service.GameInventory.InventoryChangedRaw -= OnInventoryChanged;
         _windowSystem.RemoveAllWindows();
     }
 

@@ -532,6 +532,12 @@ internal class HighlightMenus : IDisposable
         _itemInfo = item;
     }
 
+    public void ClearAllInfo()
+    {
+        _npcInfo = [];
+        _itemInfo = null;
+    }
+
     public void Dispose()
     {
         Service.Framework.Update -= Framework_OnUpdate;

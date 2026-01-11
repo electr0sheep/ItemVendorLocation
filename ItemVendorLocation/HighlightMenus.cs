@@ -41,6 +41,10 @@ internal class HighlightMenus : IDisposable
 
     private unsafe void HighlightShopAddon()
     {
+        if (_itemInfo == null)
+        {
+            return;
+        }
         var shopAddonPtr = Service.GameGui.GetAddonByName("Shop");
         if (shopAddonPtr == nint.Zero)
         {
@@ -72,7 +76,7 @@ internal class HighlightMenus : IDisposable
             // is foolproof, but it's good enough for now. I'm trying to figure out if I can use the agent for exact name
             // matches, but what I'm seeing doesn't quite match up with what I see in CS. So until I figure that out, I'm
             // going with this.
-            if (string.Equals(_itemInfo?.Name, itemName))
+            if (string.Equals(_itemInfo.Name, itemName))
             {
                 // if we ever find an exact match, that must be it, so highlight it and return.
                 text->TextColor = Dalamud.Utility.Numerics.VectorExtensions.ToByteColor(Service.Configuration.ShopHighlightColor);
@@ -81,7 +85,7 @@ internal class HighlightMenus : IDisposable
             }
             else if (itemName.EndsWith("..."))
             {
-                if (_itemInfo?.Name.StartsWith(itemName.TrimEnd('.')))
+                if (_itemInfo.Name.StartsWith(itemName.TrimEnd('.')))
                 {
                     bestMatchIndex = index;
                 }
@@ -380,7 +384,7 @@ internal class HighlightMenus : IDisposable
 
         var shopExchangeItemAddon = (AtkUnitBase*)shopExchangeItemAddonPtr.Address;
 
-        var itemList = (AtkComponentTreeList*)shopExchangeItemAddon->GetComponentByNodeId(19);
+        var itemList = (AtkComponentTreeList*)shopExchangeItemAddon->GetComponentByNodeId(20);
 
         if (itemList == null)
         {

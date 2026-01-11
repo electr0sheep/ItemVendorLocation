@@ -543,6 +543,11 @@ public partial class ItemLookup
         return _itemDataMap.TryGetValue(itemId, out var itemInfo) ? itemInfo : null;
     }
 
+    public NpcLocation? GetNpcLocation(uint npcId)
+    {
+        return _npcLocations.TryGetValue(npcId, out var npcInfo) ? npcInfo : null;
+    }
+
     public Dictionary<uint, ItemInfo> GetItems()
     {
         return _itemDataMap;

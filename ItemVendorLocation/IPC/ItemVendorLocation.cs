@@ -51,8 +51,15 @@ public class ItemVendorLocationIpc : IDisposable
 
         foreach (var npcInfo in itemInfo.NpcInfos)
         {
-            var location = npcInfo.Location;
-            vendors.Add((npcInfo.Id, location.TerritoryType, (location.MapX, location.MapX)));
+            if (npcInfo.Location != null)
+            {
+                var location = npcInfo.Location;
+                vendors.Add((npcInfo.Id, location.TerritoryType, (location.MapX, location.MapX)));
+            }
+            else if(!Service.Configuration.FilterNPCsWithNoLocation)
+            {
+                vendors.Add((npcInfo.Id, 0, (0, 0)));
+            }
         }
 
         return vendors;

@@ -115,9 +115,9 @@ public partial class ItemLookup
 
                     var specialShop = series.Value.SpecialShop.Value;
                     var shop = "";
-                    if (!string.IsNullOrEmpty(inclusionShop.Unknown0.ExtractText()))
+                    if (!string.IsNullOrEmpty(inclusionShop.ShopName.ExtractText()))
                     {
-                        shop += $"{inclusionShop.Unknown0.ExtractText()}\n";
+                        shop += $"{inclusionShop.ShopName.ExtractText()}\n";
                     }
                     shop += $"{category.Value.Name}\n{specialShop.Name}";
                     AddSpecialItem(specialShop, npcBase, resident, shop: shop);

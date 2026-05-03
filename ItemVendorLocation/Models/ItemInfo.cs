@@ -21,15 +21,15 @@ namespace ItemVendorLocation.Models
     public class ItemInfo
     {
         public uint Id;
-        public string Name;
-        public List<NpcInfo> NpcInfos;
+        public string? Name;
+        public List<NpcInfo>? NpcInfos;
         public ItemType Type;
-        public string AchievementDescription;
+        public string? AchievementDescription;
         public uint SpecialShopCategory;
 
         public bool HasShopNames()
         {
-            return NpcInfos.Any(i => i.ShopName != null);
+            return NpcInfos!.Any(i => i.ShopName != null);
         }
 
         public void ApplyFilters()
@@ -52,9 +52,9 @@ namespace ItemVendorLocation.Models
             var playerGC = UIState.Instance()->PlayerState.GrandCompany;
             var otherGcVendorIds = Dictionaries.GcVendorIdMap.Values.Where(i => i != Dictionaries.GcVendorIdMap[playerGC]);
             // Only remove items if doing so doesn't remove all the results
-            if (NpcInfos.Any(i => !otherGcVendorIds.Contains(i.Id)))
+            if (NpcInfos!.Any(i => !otherGcVendorIds.Contains(i.Id)))
             {
-                _ = NpcInfos.RemoveAll(i => otherGcVendorIds.Contains(i.Id));
+                _ = NpcInfos?.RemoveAll(i => otherGcVendorIds.Contains(i.Id));
             }
 
             // filter fc gc vendors
@@ -68,9 +68,9 @@ namespace ItemVendorLocation.Models
             var playerFreeCompanyGC = freeCompanyInfoProxy->GrandCompany;
             var otherOicVendorIds = Dictionaries.OicVendorIdMap.Values.Where(i => i != Dictionaries.OicVendorIdMap[playerFreeCompanyGC]);
 
-            if (otherOicVendorIds != null && NpcInfos.Any(i => !otherOicVendorIds.Contains(i.Id)))
+            if (otherOicVendorIds != null && NpcInfos!.Any(i => !otherOicVendorIds.Contains(i.Id)))
             {
-                _ = NpcInfos.RemoveAll(i => otherOicVendorIds.Contains(i.Id));
+                _ = NpcInfos?.RemoveAll(i => otherOicVendorIds.Contains(i.Id));
             }
         }
 
@@ -78,7 +78,7 @@ namespace ItemVendorLocation.Models
         {
             if (Service.Configuration.FilterNPCsWithNoLocation)
             {
-                _ = NpcInfos.RemoveAll(i => i.Location == null);
+                _ = NpcInfos?.RemoveAll(i => i.Location == null);
             }
         }
 
@@ -86,7 +86,7 @@ namespace ItemVendorLocation.Models
         {
             if (Service.Configuration.FilterDuplicates)
             {
-                NpcInfos = NpcInfos.GroupBy(i => new { i.Name, i.Location?.TerritoryType, i.Location?.X, i.Location?.Y }).Select(i => i.First()).ToList();
+                NpcInfos = NpcInfos?.GroupBy(i => new { i.Name, i.Location?.TerritoryType, i.Location?.X, i.Location?.Y }).Select(i => i.First()).ToList();
             }
         }
     }

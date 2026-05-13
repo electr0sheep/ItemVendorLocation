@@ -143,10 +143,10 @@ internal class Utilities
             }
             case "ChatLog":
             {
-                    var agent = Service.GameGui.FindAgentInterface(addonName);
+                    var agent = (AgentChatLog*)Service.GameGui.FindAgentInterface(addonName).Address;
                     // 6.58 sig: 89 83 ? ? ? ? E8 ? ? ? ? 66 89 83 ? ? ? ? 66 85 C0
                     // DT benchmark sig: 41 89 86 ? ? ? ? E8 ? ? ? ? 66 41 89 86 ? ? ? ? 66 85 C0 (offset changes in dt benchmark)
-                    itemId = *(uint*)(agent + 0x958);
+                    itemId = agent->ContextItemId;
                     break;
             }
             case "ContentsInfoDetail":

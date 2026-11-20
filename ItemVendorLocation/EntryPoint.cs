@@ -10,8 +10,6 @@ using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ItemVendorLocation.Models;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
-using ItemVendorLocation.XIVCommon;
-using ItemVendorLocation.XIVCommon.Functions.Tooltips;
 using System.Threading.Tasks;
 using Dalamud.Game.Addon.Lifecycle;
 using Dalamud.Game.Addon.Lifecycle.AddonArgTypes;
@@ -38,8 +36,10 @@ public class EntryPoint : IDalamudPlugin
     public const string _commandName = "/pvendor";
 
     private readonly WindowSystem _windowSystem;
-    private readonly XivCommonBase _xivCommon;
     private readonly ExcelSheet<Item> _items;
+
+    // Index of the "Shop Selling Price" line in the ItemDetail (item tooltip) string array
+    private const int ShopSellingPriceStringIndex = 63;
 
     // TODO: I'm keeping track of this in too many locations. It needs to be cleaned up.
     private static uint _currentItemId = 0;
@@ -57,7 +57,6 @@ public class EntryPoint : IDalamudPlugin
         Service.ChatTwoIpc.Enable();
         Service.ItemVendorLocationIpc = new();
 
-        _xivCommon = new();
         Service.HighlightObject = new();
         Service.HighlightMenus = new();
 
@@ -74,12 +73,12 @@ public class EntryPoint : IDalamudPlugin
         _windowSystem.AddWindow(Service.ItemSearchUi);
 
         Service.ChatTwoIpc.OnOpenChatTwoItemContextMenu += OnOpenChatTwoItemContextMenu;
-        _xivCommon.Functions.Tooltips.OnItemTooltip += Tooltips_OnOnItemTooltip;
         Service.ContextMenu.OnMenuOpened += ContextMenu_OnMenuOpened;
         Service.Interface.UiBuilder.Draw += _windowSystem.Draw;
         Service.Interface.UiBuilder.OpenConfigUi += OnOpenConfigUi;
         Service.GameInventory.InventoryChangedRaw += OnInventoryChanged;
 
+        Service.AddonLifecycle.RegisterListener(AddonEvent.PreRequestedUpdate, "ItemDetail", OnItemDetailPreRequestedUpdate);
         Service.AddonLifecycle.RegisterListener(AddonEvent.PreDraw, "MiragePrismPrismItemDetail", OnMiragePrismPrismItemDetailPreDraw);
 
         _ = Service.CommandManager.AddHandler(_commandName, new(OnCommand)
@@ -242,17 +241,37 @@ public class EntryPoint : IDalamudPlugin
         }
     }
 
-    private unsafe void Tooltips_OnOnItemTooltip(ItemTooltip itemtooltip, ulong itemid)
+    // Runs just before the item tooltip (ItemDetail addon) reads its string array,
+    // so a line rewritten here is what the tooltip ends up showing.
+    private unsafe void OnItemDetailPreRequestedUpdate(AddonEvent type, AddonArgs args)
     {
-        var itemInfo = ItemLookup.GetItemInfo(Utilities.CorrectItemId((uint)itemid));
+        var itemInfo = ItemLookup.GetItemInfo(Utilities.CorrectItemId((uint)Service.GameGui.HoveredItem));
         if (itemInfo == null)
         {
             return;
         }
 
-        var origStr = itemtooltip[ItemTooltipString.ShopSellingPrice];
-        var colonIndex = origStr.TextValue.IndexOfAny(['：', ':']);
+        var stringArray = AtkStage.Instance()->GetStringArrayData(StringArrayType.ItemDetail);
+        if (stringArray == null || stringArray->Size <= ShopSellingPriceStringIndex)
+        {
+            return;
+        }
 
+        var origPtr = stringArray->StringArray[ShopSellingPriceStringIndex];
+        if (!origPtr.HasValue)
+        {
+            return;
+        }
+
+        var origText = SeString.Parse(origPtr.AsSpan()).TextValue;
+        var colonIndex = origText.IndexOfAny(['：', ':']);
+        // Avoid modification for items with no Shop Selling Price line (e.g. certain seasonal items)
+        if (colonIndex == -1)
+        {
+            return;
+        }
+
+        string costStr;
         switch (itemInfo.Type)
         {
             case ItemType.GcShop:
@@ -266,29 +285,25 @@ public class EntryPoint : IDalamudPlugin
                 }
 
                 var info = npcInfos.First();
-
-                var costStr = $"{info.Costs[0].Item2} x{info.Costs[0].Item1}";
-
-                itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, colonIndex), ": ", costStr);
-                return;
+                costStr = $"{info.Costs[0].Item2} x{info.Costs[0].Item1}";
+                break;
             case ItemType.SpecialShop:
-                // Avoid modification for certain seasonal items with no Shop Selling Price line
-                if (colonIndex != -1)
-                {
-                    itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, colonIndex), ": Special Vendor");
-                }
-
-                return;
+                costStr = "Special Vendor";
+                break;
             case ItemType.FcShop:
-                info = itemInfo.NpcInfos.First();
-                costStr = $"FC Credits x{info.Costs[0].Item1}";
-                itemtooltip[ItemTooltipString.ShopSellingPrice] = string.Concat(origStr.TextValue.AsSpan(0, colonIndex), ": ", costStr);
-                return;
+                costStr = $"FC Credits x{itemInfo.NpcInfos.First().Costs[0].Item1}";
+                break;
             case ItemType.CollectableExchange:
-                itemtooltip[ItemTooltipString.ShopSellingPrice] =
-                    string.Concat(origStr.TextValue.AsSpan(0, colonIndex), ": Collectables Exchange Reward");
+                costStr = "Collectables Exchange Reward";
+                break;
+            default:
                 return;
         }
+
+        SeString newStr = string.Concat(origText.AsSpan(0, colonIndex), ": ", costStr);
+        byte[] encoded = [.. newStr.Encode(), 0];
+        // suppressUpdates: the addon is about to read this array anyway, so don't queue another update
+        stringArray->SetValue(ShopSellingPriceStringIndex, encoded, false, true, true);
     }
 
     private static void ContextMenuCallback(ItemInfo itemInfo)
@@ -379,6 +394,7 @@ public class EntryPoint : IDalamudPlugin
             return;
         }
 
+        Service.AddonLifecycle.UnregisterListener(AddonEvent.PreRequestedUpdate, "ItemDetail", OnItemDetailPreRequestedUpdate);
         Service.AddonLifecycle.UnregisterListener(AddonEvent.PreDraw, "MiragePrismPrismItemDetail", OnMiragePrismPrismItemDetailPreDraw);
 
         Service.ChatTwoIpc.OnOpenChatTwoItemContextMenu -= OnOpenChatTwoItemContextMenu;
@@ -388,8 +404,6 @@ public class EntryPoint : IDalamudPlugin
         Service.HighlightMenus.Dispose();
 
         _ = Service.CommandManager.RemoveHandler(_commandName);
-        _xivCommon.Functions.Tooltips.OnItemTooltip -= Tooltips_OnOnItemTooltip;
-        _xivCommon.Dispose();
         Service.ContextMenu.OnMenuOpened -= ContextMenu_OnMenuOpened;
 
         Service.Interface.UiBuilder.Draw -= _windowSystem.Draw;

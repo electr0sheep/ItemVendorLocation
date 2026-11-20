@@ -7,7 +7,6 @@ using FFXIVClientStructs.FFXIV.Client.UI;
 using ItemInfo = ItemVendorLocation.Models.ItemInfo;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using ItemVendorLocation.Models;
-using ItemVendorLocation.XIVCommon.Functions.Tooltips;
 using System.Linq;
 using Lumina.Excel.Sheets;
 using Lumina.Excel;

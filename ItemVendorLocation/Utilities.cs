@@ -109,9 +109,8 @@ internal class Utilities
         {
             case "RecipeNote":
             {
-                var recipeNoteAgent = Service.GameGui.FindAgentInterface(addonName);
-                // sig: 89 91 ? ? ? ? 48 8B D9 E8 ? ? ? ? 48 8B C8 48 8B F8 E8 ? ? ? ? 40 F6 C6 (offset is still the same in dt benchmark)
-                itemId = *(uint*)(recipeNoteAgent + 0x398);
+                var recipeNoteAgent = (AgentRecipeNote*)Service.GameGui.FindAgentInterface(addonName).Address;
+                itemId = recipeNoteAgent->ContextMenuResultItemId;
                 break;
             }
             case "RecipeTree" or "RecipeMaterialList":
@@ -125,14 +124,14 @@ internal class Utilities
             }
             case "ColorantColoring":
             {
-                var colorantColoringAgent = Service.GameGui.FindAgentInterface(addonName);
+                var colorantColoringAgent = Service.GameGui.FindAgentInterface(addonName).Address;
                 itemId = *(uint*)(colorantColoringAgent + 0x3C);
                 break;
             }
             case "GrandCompanyExchange":
             case "ShopExchangeItem":
             {
-                var agent = Service.GameGui.FindAgentInterface(addonName);
+                var agent = Service.GameGui.FindAgentInterface(addonName).Address;
                 // base sig:
                 //     dt benchmark: 48 8D 4F ? C6 44 24 ? ? 41 83 CF
                 //     6.58: 48 8D 4E ? 44 0F B6 4D
@@ -142,11 +141,11 @@ internal class Utilities
             }
             case "ChatLog":
             {
-                    var agent = (AgentChatLog*)Service.GameGui.FindAgentInterface(addonName).Address;
-                    // 6.58 sig: 89 83 ? ? ? ? E8 ? ? ? ? 66 89 83 ? ? ? ? 66 85 C0
-                    // DT benchmark sig: 41 89 86 ? ? ? ? E8 ? ? ? ? 66 41 89 86 ? ? ? ? 66 85 C0 (offset changes in dt benchmark)
-                    itemId = agent->ContextItemId;
-                    break;
+                var agent = (AgentChatLog*)Service.GameGui.FindAgentInterface(addonName).Address;
+                // 6.58 sig: 89 83 ? ? ? ? E8 ? ? ? ? 66 89 83 ? ? ? ? 66 85 C0
+                // DT benchmark sig: 41 89 86 ? ? ? ? E8 ? ? ? ? 66 41 89 86 ? ? ? ? 66 85 C0 (offset changes in dt benchmark)
+                itemId = agent->ContextItemId;
+                break;
             }
             case "ContentsInfoDetail":
             {

@@ -2,6 +2,7 @@
 using Dalamud.Interface.Windowing;
 using ItemVendorLocation.Models;
 using System.Numerics;
+using Dalamud.Interface;
 using Dalamud.Interface.Components;
 using Dalamud.Interface.ImGuiNotification;
 using Dalamud.Bindings.ImGui;
@@ -74,6 +75,21 @@ public class VendorResultsWindow : Window
                             Title = "ItemVendorLocation",
                             Type = NotificationType.Success,
                         });
+                    }
+                }
+
+                if (Service.Configuration.ShowTeleportButton && Service.Teleporter.FindNearestAetheryte(location) is { } aetheryte)
+                {
+                    ImGui.SameLine();
+                    if (ImGuiComponents.IconButton($"teleport{npcInfo.Id}", FontAwesomeIcon.LocationArrow))
+                    {
+                        Service.HighlightObject.SetNpcInfo([npcInfo]);
+                        Service.Teleporter.TeleportNear(location);
+                    }
+
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.SetTooltip($"Teleport to {aetheryte.PlaceName.Value.Name.ExtractText()}");
                     }
                 }
             }

@@ -59,6 +59,7 @@ public class EntryPoint : IDalamudPlugin
 
         Service.HighlightObject = new();
         Service.HighlightMenus = new();
+        Service.Teleporter = new();
 
         // Initialize the UI
         _windowSystem = new(typeof(EntryPoint).AssemblyQualifiedName);
@@ -360,6 +361,12 @@ public class EntryPoint : IDalamudPlugin
         _ = sb.AddUiForegroundOff();
         _ = sb.AddText(" at ");
         _ = sb.Append(SeString.CreateMapLink(vendor.Location.TerritoryType, vendor.Location.MapId, vendor.Location.MapX, vendor.Location.MapY));
+        if (Service.Configuration.ShowTeleportButton && Service.Teleporter.FindNearestAetheryte(vendor.Location) != null)
+        {
+            _ = sb.AddText(" ");
+            _ = sb.Append(Service.Teleporter.CreateChatLink(vendor));
+        }
+
         Utilities.OutputChatLine(sb.BuiltString);
         Service.HighlightObject.SetNpcInfo([.. item.NpcInfos]);
         Service.HighlightMenus.SetNpcInfo([.. item.NpcInfos]);
@@ -402,6 +409,7 @@ public class EntryPoint : IDalamudPlugin
         Service.ItemVendorLocationIpc.Dispose();
         Service.HighlightObject.Dispose();
         Service.HighlightMenus.Dispose();
+        Service.Teleporter.Dispose();
 
         _ = Service.CommandManager.RemoveHandler(_commandName);
         Service.ContextMenu.OnMenuOpened -= ContextMenu_OnMenuOpened;

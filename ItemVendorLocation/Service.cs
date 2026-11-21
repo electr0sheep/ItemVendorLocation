@@ -18,6 +18,7 @@ internal class Service
     internal static ItemVendorLocationIpc ItemVendorLocationIpc{ get; set; } = null!;
     internal static HighlightObject HighlightObject { get; set; } = null!;
     internal static HighlightMenus HighlightMenus { get; set; } = null!;
+    internal static Teleporter Teleporter { get; set; } = null!;
 
 
     [PluginService] public static IChatGui ChatGui { get; set; } = null!;

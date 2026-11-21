@@ -18,6 +18,7 @@ public class PluginConfiguration : IPluginConfiguration
     public bool FilterNPCsWithNoLocation { get; set; } = false;
     public bool FilterDuplicates { get; set; } = true;
     public bool ShowShopName { get; set; } = false;
+    public bool ShowTeleportButton { get; set; } = true;
     public ushort MaxSearchResults { get; set; } = 5;
     public bool HighlightSelectedNpc { get; set; } = true;
     public ObjectHighlightColor HighlightColor { get; set; } = ObjectHighlightColor.Red;

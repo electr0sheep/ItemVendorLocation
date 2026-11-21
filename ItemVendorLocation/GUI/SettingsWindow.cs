@@ -78,6 +78,17 @@ public class SettingsWindow : Window
         ImGui.SameLine();
         ImGuiComponents.HelpMarker(@"If checked, will show shop name info e.g. 'Purchase Disciple of Magic Gear - Purchase Gear (Lv. 20-29)'");
 
+        var showTeleportButton = Service.Configuration.ShowTeleportButton;
+        if (ImGui.Checkbox("Show Teleport Button", ref showTeleportButton))
+        {
+            Service.Configuration.ShowTeleportButton = showTeleportButton;
+            Service.Configuration.Save();
+        }
+        ImGui.SameLine();
+        ImGuiComponents.HelpMarker(@"If checked, will show a teleport button next to vendor locations, and a Teleport link in chat results.
+
+Clicking it flags the vendor on your map and teleports you to the nearest aetheryte you are attuned to.");
+
         var highlightSelectedNpc = Service.Configuration.HighlightSelectedNpc;
         if (ImGui.Checkbox("Highlight selected npc", ref highlightSelectedNpc))
         {

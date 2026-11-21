@@ -149,9 +149,7 @@ internal class Utilities
             }
             case "ContentsInfoDetail":
             {
-                var agent = Service.GameGui.FindAgentInterface("ContentsInfo");
-                // sig: 8B 97 ? ? ? ? 48 8B C8 E8 ? ? ? ? E9 ? ? ? ? 48 83 FB ? 75 ? 8B 91 (offset is still the same in dt benchmark)
-                itemId = *(uint*)(agent + 0x17CC);
+                itemId = AgentContentsTimer.Instance()->ContextMenuItemId;
                 break;
             }
             case "ItemSearch":
